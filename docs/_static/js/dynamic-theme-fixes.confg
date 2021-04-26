@@ -1,0 +1,10 @@
+dynamic-theme-fixes.config
+================================
+
+CSS
+.md-container {
+    #02080e;
+}
+.md-content {
+    background-color: #02080e;
+}

@@ -1,0 +1,104 @@
+[build-system]
+requires = ["flit_core >=2,<4",]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.metadata]
+module = "snowmobile"
+author = "Grant Murray"
+author-email = "gmurray203@gmail.com"
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+]
+description-file = "README.md"
+requires-python = ">=3.7"
+keywords = "snowflake database,snowflake python"
+requires = [
+    'snowflake-connector-python==2.3.7',
+    'pandas==1.1.5',
+    'pydantic==1.7.2',
+    'appdirs==1.4.4',
+    'toml==0.10.1',
+    'tabulate==0.8.7',
+    'brotli==1.0.9',
+    'sqlparse==0.3.1',
+#    'ipython==7.19.0',
+#    'urllib3>=1.26.0',
+]
+
+[tool.flit.metadata.urls]
+Documentation = "https://snowmobile.readthedocs.io/en/latest/index.html"
+Code = "https://github.com/GEM7318/Snowmobile"
+
+[tool.flit.sdist]
+include = ["snowmobile/.*"]
+
+[tool.flit.metadata.requires-extra]
+test = [
+    "pytest >= 5.0.0",
+    'pytest-cov>=2.10.1',
+    'flit>=3.0.0',
+    'flit-core>=3.0.0',
+]
+docs = [
+    "python==3.7",
+    "pandas>=1.1.5",
+    "pydantic>=1.7.2",
+    "appdirs==1.4.4",
+    "toml>=0.10.1",
+    "tabulate==0.8.7",
+    "snowflake-connector-python==2.3.7",
+    "sqlparse>=0.3.1",
+]
+
+[tool.isort]
+profile = "black"
+src_paths = ["snowmobile", "tests"]
+skip = ["__init__.py"]
+multi_line_output = 3
+include_trailing_comma = true
+float_to_top = true
+sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'AIRFLOW', 'FIRSTPARTY', 'LOCALFOLDER']
+
+[tool.pytest.ini_options]
+testpaths = 'test'
+python_files = 'test_*.py'
+python_functions = 'test_*'
+markers = [
+    'script',
+    'tags',
+    'names',
+    'markers',
+    'connector',
+    'qa',
+    'table',
+    'markup',
+    'configuration',
+    'sql',
+    'parsing',
+    'cache',
+    'statement',
+    'scope',
+    'exceptions',
+    'exception_handler',
+    'io',
+]
+
+
+[tool.coverage]
+
+[tool.coverage.run]
+omit = ['test/**/.*','_*.py']
+source = ['snowmobile']
+include = ['snowmobile']
+branch = true
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+exclude_lines = ['def __repr__']
+
+[tool.coverage.html]
+directory = 'htmlcov'

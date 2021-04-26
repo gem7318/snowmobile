@@ -1,0 +1,100 @@
+
+[connection]
+    default-creds = ''
+
+    [connection.credentials.creds1]
+        user = ''
+        password = ''
+        role = ''
+        account = ''
+        warehouse = ''
+        database = ''
+        schema = ''
+
+    [connection.credentials.creds2]
+        user = ''
+        password = ''
+        role = ''
+        account = ''
+        warehouse = ''
+        database = ''
+        schema = ''
+
+    [connection.default-arguments]
+#        autocommit = true
+#        authenticator = 'snowflake'
+#        timezone = 'America/Chicago'
+
+[loading]
+
+    [loading.default-table-kwargs]
+        file_format = 'snowmobile_default_psv'
+        validate_table = true
+        validate_format = true
+        if_exists = 'append'
+        keep_local = false
+        reformat_cols = true
+        upper_case_cols = true
+        check_dupes = true
+        load_copy = true
+
+    [loading.put]
+        auto_compress = true
+
+    [loading.copy-into]
+        on_error = 'continue'
+
+    [loading.save-options]
+        [loading.save-options."snowmobile_default_csv"]
+            index = false
+            header = false
+            quotechar = '"'
+            sep = ","
+        [loading.save-options."snowmobile_default_psv"]
+            index = false
+            header = false
+            quotechar = '"'
+            sep = "|"
+
+[external-sources]
+    ddl = ''
+    extension = ''
+    sql-save-heading = ''
+
+[script]
+    export-dir-name = '.snowmobile'
+    result-limit = -1
+
+    [script.patterns]
+
+        [script.patterns.core]
+            open-tag = '/*-'
+            close-tag = '-*/'
+            description-delimiter = '~'
+            description-index-prefix = "s"
+
+        [script.patterns.markup]
+            wildcard-character = '*'
+            wildcard-delimiter = '_'
+            denotes-paragraph = '*'
+            denotes-no-reformat = '**'
+            denotes-omit-name-in-output = '***'
+
+    [script.qa]
+        partition-on = 'src_description'
+        compare-patterns = ['.*_diff']
+        ignore-patterns = ['.*_tmstmp']
+        end-index-at = 'end_index'
+
+        [script.qa.default-tolerance]
+            relative = 0.0
+            absolute = 0.0
+
+    [script.markup]
+        default-marker-header = 'h1'
+        default-statement-header = 'h2'
+        default-bullet-character = '*'
+        wrap-attribute-names-with = '**'
+        wrap-attribute-values-with = '_'
+        include-statement-index-in-header = true
+        limit-query-results-to = 20
