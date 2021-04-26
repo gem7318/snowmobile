@@ -31,5 +31,3 @@
 - test: `pytest --cov-report=xml --cov=snowmobile test/`
 - docs: `sphinx-build -b html . _build`
 
-
-<style>hr {height: 0.1em;}</style>
