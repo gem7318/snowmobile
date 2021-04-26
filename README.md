@@ -22,8 +22,8 @@
 #### Installs
 
 - Core
-    - pip: `pip install --user tested_requirements/requirements_37.reqs`
-    - conda: `conda env create -f tested_requirements/environment.yml`
+    - pip: `pip install --user requirements/requirements_37.reqs`
+    - conda: `conda env create -f requirements/environment.yml`
 - docs: `pip install --user docs/requirements.txt`
 
 #### Run
