@@ -1,6 +1,9 @@
 
 version: 2
 
+build:
+  image: stable
+
 sphinx:
   builder: html
   configuration: docs/conf.py
