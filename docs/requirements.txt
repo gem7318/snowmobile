@@ -1,4 +1,4 @@
-# docs
+# snowmobile_docs
 setuptools==52.0.0
 jinja2==2.11.2
 myst-nb==0.10.1
