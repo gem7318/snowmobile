@@ -1,6 +1,7 @@
 # snowmobile_docs
 setuptools==52.0.0
 ipython==7.19.0
+ipykernel==5.4.3
 jinja2==2.11.2
 myst-nb==0.10.1
 markdown-it-py==0.6.2
