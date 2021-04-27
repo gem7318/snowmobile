@@ -14,6 +14,7 @@ python:
    install:
      - requirements: docs/requirements.txt
      - requirements: requirements/requirements.txt
+   system_packages: false
 #     - method: pip
 #       path: .
 #       extra_requirements:
