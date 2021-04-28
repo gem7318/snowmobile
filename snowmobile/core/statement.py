@@ -131,10 +131,10 @@ class Statement(Name, Generic):
         self.is_multiline = "\n" in self.attrs_raw
         self.is_tagged: bool = bool(self.attrs_raw)
         self._sql = sn.cfg.script.isolate_sql(s=self.statement)
-        self.attrs_parsed, nm = self.parse()
-
+        self.attrs_parsed, self._nm = self.parse()
+        
         Name.__init__(
-            self, index=index, sql=self.sql, nm_pr=nm, configuration=self.sn.cfg
+            self, index=index, sql=self.sql, nm_pr=self._nm, configuration=self.sn.cfg
         )
 
         self.e = e or ExceptionHandler(within=self)
@@ -142,7 +142,11 @@ class Statement(Name, Generic):
     @property
     def sql(self):
         """Raw sql from statement, including result limit if enabled."""
-        if self.sn.cfg.script.result_limit in [-1, 0]:
+        if (
+            self.sn.cfg.script.result_limit in [-1, 0]
+            or self._sql.split('\n')[-1].strip().startswith('limit')
+            or not self._nm.lower().strip().startswith('select')
+        ):
             return self._sql
         return f"{self._sql}\nlimit {self.sn.cfg.script.result_limit}"
 
@@ -267,8 +271,13 @@ class Statement(Name, Generic):
         """Depth of the statement's sql by number of lines."""
         return len(self.sql.split("\n"))
 
-    def as_section(self, incl_sql_tag: Optional[bool] = None) -> Section:
+    def as_section(self, incl_sql_tag: Optional[bool] = None, result_wrap: Optional[str] = None) -> Section:
         """Returns current statement as a :class:`Section` object."""
+        attrs = self.attrs_total
+        results = attrs.get('results')
+        if results and results.empty:
+            _ = attrs.pop('results')
+            
         return Section(
             index=self.index,
             h_contents=self.nm,
@@ -279,6 +288,7 @@ class Statement(Name, Generic):
             results=self.results,
             incl_sql_tag=incl_sql_tag,
             is_multiline=self.is_multiline,
+            result_wrap=result_wrap,
         )
 
     def set_state(
@@ -440,8 +450,8 @@ class Statement(Name, Generic):
         # ---------------------------
         # fmt: on
 
-        if render:
-            self.render()
+        # if render:
+        #     self.render()
 
         return self
 

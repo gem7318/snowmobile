@@ -27,16 +27,15 @@ from typing import Dict, List, Optional, Union
 import pandas as pd
 
 from . import Generic
-from .utils.parsing import p, strip, up
+from .utils.parsing import p, up, strip as s
 
 
 class SQL(Generic):
     """SQL class for generation & execution of common sql commands.
 
-    Intended to be interacted with as an attribute of
-    :class:`~snowmobile.Snowmobile`.
+    Intended to be interacted with as an attribute of :class:`~snowmobile.Snowmobile`.
 
-    note:
+    .. note::
         *   All arguments except for :attr:`sn` are optional.
         *   The benefit of setting the other attributes on an instance of :class:`SQL`
             is to (optionally) avoid passing the same information to multiple methods
@@ -121,9 +120,9 @@ class SQL(Generic):
             schema = self._validate(
                 val=(schema or self.schema), nm='schema', attr_nm='schema'
             )
+            
         except ValueError as e:
             raise e
-        # fmt: on
 
         restrictions = {
             **(restrictions or dict()),
@@ -138,8 +137,9 @@ class SQL(Generic):
         sql = self._info_schema_generic(
             obj="table", fields=fields, restrictions=restrictions, order_by=order_by
         )
+        # fmt: on
 
-        return self.sn.query(sql=sql) if self._run(run) else sql
+        return self.sn.query(sql=sql) if self(run) else sql
 
     def info_schema_columns(
         self,
@@ -197,13 +197,13 @@ class SQL(Generic):
             },
         }
         if all_schemas:
-            restrictions.pop("lower(table_schema)")
+            _ = restrictions.pop("lower(table_schema)")
 
         sql = self._info_schema_generic(
             obj="column", fields=fields, restrictions=restrictions, order_by=order_by
         )
 
-        return self.sn.query(sql=sql) if self._run(run) else sql
+        return self.sn.query(sql=sql) if self(run) else sql
 
     # TODO: (rename) 'count' --> 'cnt'
     def count(
@@ -231,17 +231,21 @@ class SQL(Generic):
         """
         try:
             obj_name = self._validate(
-                val=(nm or self.nm), nm="obj_name", attr_nm="obj_name"
+                val=(nm or self.nm),
+                nm="obj_name",
+                attr_nm="obj_name",
             )
         except ValueError as e:
             raise e
+        
         _from = f"from {obj_name}"
         sql = f"select count(*) {_from}"
         if dst_of:
             sql = f"select count(distinct {dst_of}) {_from}"
         if as_perc:
             sql = f"select count(distinct {dst_of}) / count(*) {_from}"
-        return self.sn.query(sql=sql).snf.to_list(n=1) if self._run(run) else sql
+            
+        return self.sn.query(sql=sql).snf.to_list(n=1) if self(run) else sql
 
     def table_last_altered(
         self, nm: Optional[str] = None, run: Optional[bool] = None
@@ -266,7 +270,7 @@ class SQL(Generic):
             sql = self.info_schema_tables(
                 nm=nm, fields=["table_name", "table_schema", "last_altered"]
             )
-            return self.sn.query(sql=sql) if self._run(run) else sql
+            return self.sn.query(sql=sql) if self(run) else sql
         except AssertionError as e:
             raise e
 
@@ -301,8 +305,8 @@ class SQL(Generic):
         """
         create = self._create(replace=replace)
         _sql = f"{create} stage {nm_stage} file_format = {nm_format};"
-        sql = strip(_sql)
-        return self.sn.query(sql=sql) if self._run(run) else sql
+        sql = s(_sql)
+        return self.sn.query(sql=sql) if self(run) else sql
 
     def drop(
         self,
@@ -348,8 +352,8 @@ class SQL(Generic):
             if obj.lower() in ["table", "view", "file_format"]
             else f"drop {obj} if exists {up(obj_name)}"
         )
-        sql = strip(_sql)
-        return self.sn.query(sql=sql) if self._run(run) else sql
+        sql = s(_sql)
+        return self.sn.query(sql=sql) if self(run) else sql
 
     def clone(
         self,
@@ -447,8 +451,8 @@ class SQL(Generic):
         _sql = (
             f"{create} {obj} {up(to_schema)}.{up(to)} " f"clone {up(schema)}.{up(nm)}"
         )
-        sql = strip(_sql)
-        return self.sn.query(sql=sql) if self._run(run) else sql
+        sql = s(_sql)
+        return self.sn.query(sql=sql) if self(run) else sql
 
     def put_file_from_stage(
         self,
@@ -497,9 +501,9 @@ class SQL(Generic):
             statement.append(f"\t{k} = {str(v).lower() if isinstance(v, bool) else v}")
         # fmt: on
         _sql = "\n".join(statement)
-        sql = strip(_sql, trailing=False, whitespace=False, blanks=True)
+        sql = s(_sql, trailing=False, whitespace=False, blanks=True)
 
-        return self.sn.query(sql=sql) if self._run(run) else sql
+        return self.sn.query(sql=sql) if self(run) else sql
 
     def copy_into_table_from_stage(
         self,
@@ -544,8 +548,8 @@ class SQL(Generic):
         for k, v in options.items():
             statement.append(f"\t{k} = {v}")
         _sql = "\n".join(statement)
-        sql = strip(_sql, trailing=False, whitespace=False, blanks=True)
-        return self.sn.query(sql=sql) if self._run(run) else sql
+        sql = s(_sql, trailing=False, whitespace=False, blanks=True)
+        return self.sn.query(sql=sql) if self(run) else sql
 
     def show_file_formats(self, run: Optional[bool] = None) -> Union[str, pd.DataFrame]:
         """Lists all file formats in the current schema.
@@ -562,7 +566,7 @@ class SQL(Generic):
 
         """
         sql = f"show file formats"
-        return self.sn.query(sql=sql) if self._run(run) else sql
+        return self.sn.query(sql=sql) if self(run) else sql
 
     def ddl(
         self,
@@ -598,8 +602,8 @@ class SQL(Generic):
         except ValueError as e:
             raise e
         _sql = f"select get_ddl('{obj}', '{up(schema)}.{up(nm)}') as ddl"
-        sql = strip(_sql)
-        return self.sn.query(sql=sql).snf.to_list(n=1) if self._run(run) else sql
+        sql = s(_sql)
+        return self.sn.query(sql=sql).snf.to_list(n=1) if self(run) else sql
 
     def select(
         self,
@@ -645,7 +649,7 @@ select
 from {up(schema)}.{up(table)}
 {limit}
         """
-        return self.sn.query(sql=sql) if self._run(run) else sql
+        return self.sn.query(sql=sql) if self(run) else sql
 
     def truncate(
         self, nm: Optional[str] = None, run: Optional[bool] = None
@@ -679,8 +683,8 @@ from {up(schema)}.{up(table)}
             raise e
         # fmt: on
         _sql = f"truncate table {up(schema)}.{up(name)}"
-        sql = strip(_sql)
-        return self.sn.query(sql=sql) if self._run(run) else sql
+        sql = s(_sql)
+        return self.sn.query(sql=sql) if self(run) else sql
 
     def current(
         self, obj: str, run: Optional[bool] = None
@@ -701,8 +705,8 @@ from {up(schema)}.{up(table)}
 
         """
         _sql = f"select current_{obj}()"
-        sql = strip(_sql)
-        return self.sn.query(sql=sql).snf.to_list(n=1) if self._run(run) else sql
+        sql = s(_sql)
+        return self.sn.query(sql=sql).snf.to_list(n=1) if self(run) else sql
 
     def current_session(self, run: Optional[bool] = None) -> Union[str, pd.DataFrame]:
         """Select the current session."""
@@ -751,8 +755,8 @@ from {up(schema)}.{up(table)}
             raise e
         # fmt: on
         _sql = f"use {obj} {up(name)}"
-        sql = strip(_sql)
-        return self.sn.query(sql=sql) if self._run(run) else sql
+        sql = s(_sql)
+        return self.sn.query(sql=sql) if self(run) else sql
 
     def use_schema(
         self, nm: Optional[str] = None, run: Optional[bool] = None
@@ -882,15 +886,15 @@ from {up(schema)}.{up(table)}
 
         """
         _sql = self.select(nm=nm, run=False, n=1)
-        sql = strip(_sql)
-        return list(self.sn.query(sql, lower=False).columns) if self._run(run) else sql
+        sql = s(_sql)
+        return list(self.sn.query(sql, lower=False).columns) if self(run) else sql
 
     @staticmethod
     def _create(replace: bool = False):
         """Utility to generate 'create'/'create or replace' based on an argument."""
         return "create" if not replace else "create or replace"
 
-    def _run(self, run: Union[bool, None]) -> bool:
+    def _r(self, run: Union[bool, None]) -> bool:
         """Determines whether or not to execute a piece of sql.
 
         Used in all subsequent methods containing a `run` argument.
@@ -944,7 +948,7 @@ from {info_schema_loc}
 {where}
 {order_by}
 """
-        return strip(sql, trailing=False, blanks=True)
+        return s(sql, trailing=False, blanks=True)
 
     @staticmethod
     def order(by: List[Union[int, str]]) -> str:
@@ -1040,11 +1044,12 @@ from {info_schema_loc}
         """Dunder copy method."""
         return type(self)(sn=self.sn, nm=f"{self.schema}.{self.nm}", obj=self.obj)
 
-    def __call__(self, *args, **kwargs) -> SQL:
-        for k, v in kwargs.items():
-            if k in vars(self):
-                setattr(self, k, v)
-        return self
+    def __call__(self, run: bool) -> bool:
+        return self(run)
+        # for k, v in kwargs.items():
+        #     if k in vars(self):
+        #         setattr(self, k, v)
+        # return self
 
     def __str__(self) -> str:
         return f"snowmobile.SQL(creds='{self.sn.cfg.connection.creds}')"

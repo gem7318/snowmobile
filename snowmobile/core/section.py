@@ -68,6 +68,10 @@ from __future__ import annotations
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
+import tabulate
+tabulate.PRESERVE_WHITESPACE = True
+tabulate.WIDE_CHARS_MODE = False
+tabulate.MIN_PADDING = 0
 
 from . import Generic, Configuration, errors
 from .cfg import Markup
@@ -153,9 +157,12 @@ class Item(Name):
         cfg: Configuration,
         results: Optional[pd.DataFrame] = None,
         sql_md: Optional[str] = None,
+        result_wrap: Optional[str] = None,
     ):
+        self.result_wrap = result_wrap or str()
         cfg_md = cfg.script.markup
         self.is_first: bool = bool()
+        self._include: bool = True
 
         self.cfg_md: Markup = cfg_md
         self.index = index
@@ -172,8 +179,9 @@ class Item(Name):
 
         self._is_reserved: bool = False
         if self.is_results:
-            self.value = self.as_results(results=results, cfg_md=cfg_md)
+            self.value = self.as_results(results=results)
             self._is_reserved = True
+            self._include = not results.empty
         elif self.is_sql:
             self.value = sql_md
             self._is_reserved = True
@@ -189,18 +197,22 @@ class Item(Name):
             self.is_first = True
         return self
 
-    @staticmethod
-    def as_results(results: pd.DataFrame, cfg_md: Markup):
-        results_cfg = cfg_md.attrs.reserved["query-results"]
-
-        display_record_limit = (
-            cfg_md.result_limit if cfg_md.result_limit != -1 else results.shape[0]
-        )
-        results_sub = results.head(display_record_limit)
-        if results_cfg.default_format == "markdown":
-            return results_sub.to_markdown(index=False)
-        else:
-            return results_sub.to_html(index=False)
+    def as_results(self, results: pd.DataFrame):
+        results_cfg = self.cfg_md.attrs.reserved["query-results"]
+        results_sub = results.head(results.shape[0])
+        _format = results_cfg.tabulate_format or 'grid'
+        if results.empty:
+            return None
+        if results_cfg.default_format != "markdown":
+            return f"\n{results_sub.to_html(index=False)}\n"
+        _w_s, _w_e = self.result_wrap, self.result_wrap
+        if _w_s:
+            _w_s, _w_e = f"{_w_s}\n", f"\n{_w_e}"
+        _res = results_sub.to_markdown(index=False, tablefmt=_format)
+        return f"\n{_w_s}{_res}{_w_e}\n"
+        # return _res
+        # return f"\n{results_sub.to_markdown(index=False)}\n"
+        # return f"\n```\n{_res}\n```\n"
 
     @property
     def _as_md_parent(self):
@@ -234,6 +246,9 @@ class Item(Name):
             return self._as_md
         else:
             return f"{self._as_md_parent}\n{self._as_md}"
+
+    def __bool__(self):
+        return self._include
 
     def __repr__(self):
         return f"section.Item('{self.nm_adj}')"
@@ -298,15 +313,22 @@ class Section(Generic):
         results: Optional[pd.DataFrame] = None,
         incl_sql_tag: bool = False,
         is_multiline: bool = False,
+        result_wrap: Optional[str] = None,
     ):
         """Instantiation of a ``script.Section`` object."""
         super().__init__()
-
+        self.result_wrap = result_wrap or str()
         self.cfg: Configuration = cfg
         self.is_marker = is_marker or bool()
         self.is_multiline = is_multiline
         self.sql: str = sql
-        self.results = results
+        self.transpose = parsed.get('transpose', False)
+        if self.transpose:
+            _ = parsed.pop('transpose')
+        self.results = results if not self.transpose else results.transpose()
+        if self.transpose and not self.results.empty:
+            self.results.reset_index(inplace=True)
+            self.results.columns = ['field name', 'field value']
         self.index: int = index
         self.raw = raw or str()
         self.incl_sql_tag = incl_sql_tag
@@ -324,6 +346,7 @@ class Section(Generic):
 
         grouped_attrs = self.cfg.attrs.group_parsed_attrs(parsed)
         self.parsed: Dict = self.reorder_attrs(parsed=grouped_attrs, cfg=cfg)
+        # self.items: List[Item] = [i for i in self.parse_contents(cfg=cfg) if i]
         self.items: List[Item] = self.parse_contents(cfg=cfg)
 
     def reorder_attrs(self, parsed: dict, cfg: Configuration) -> Dict:
@@ -351,6 +374,7 @@ class Section(Generic):
                 cfg=cfg,
                 results=self.results,
                 sql_md=self.sql_md,
+                result_wrap=self.result_wrap,
             )
             for i, v in enumerate(flattened, start=1)
         ]
@@ -395,7 +419,7 @@ class Section(Generic):
     @property
     def body(self) -> str:
         """All section content except for header."""
-        return "\n".join(i.md for i in self.items)
+        return "\n".join(i.md for i in self.items if not isinstance(i.value, type(None)))
 
     @property
     def md(self) -> str:
@@ -405,7 +429,8 @@ class Section(Generic):
             Full string of valid markdown for the section.
 
         """
-        return "\n".join([self.header, self.body])
+        markdown = "\n".join([self.header, self.body])
+        return f"\n{markdown}\n"
 
     @staticmethod
     def _exception_invalid_title(raw: str) -> str:

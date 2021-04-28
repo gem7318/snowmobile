@@ -707,6 +707,7 @@ class Script(Generic):
         incl_markers: Optional[bool] = True,
         incl_sql: Optional[bool] = True,
         incl_exp_ctx: Optional[bool] = True,
+        result_wrap: Optional[str] = None,
     ) -> Markup:
         """Returns a :class:`~snowmobile.core.markup.Markup` from the script.
 
@@ -739,6 +740,7 @@ class Script(Generic):
             incl_sql=incl_sql,
             incl_markers=incl_markers,
             incl_exp_ctx=incl_exp_ctx,
+            result_wrap=result_wrap,
         )
 
     @property

@@ -59,6 +59,7 @@ with the below structure::
 """
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
@@ -124,6 +125,7 @@ class Markup(Generic):
         incl_markers: bool = True,
         incl_sql_tag: bool = False,
         incl_exp_ctx: bool = True,
+        result_wrap: Optional[str] = None,
     ):
         super().__init__()
 
@@ -154,6 +156,9 @@ class Markup(Generic):
         # Files `exported` / Directories `created`
         self.exported: List[Path] = list()
         self.created: List[Path] = list()
+        
+        # Query Result Formatting
+        self.result_wrap = result_wrap or str()
 
     @property
     def export_dir(self) -> Path:
@@ -267,7 +272,9 @@ class Markup(Generic):
     def _export(self, path: Path, val: str):
         """Ensure directory scaffolding exists and writes a string to a path (.sql or .md)."""
         self._scaffolding()
-        with open(path, "w") as f:
+        if path.exists():
+            os.remove(path)
+        with open(path, "w", encoding='utf-8') as f:
             f.write(val)
             self.exported.append(path)
             self._stdout.offset_path(

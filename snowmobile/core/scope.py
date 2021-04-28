@@ -7,6 +7,7 @@ is being altered through
 from __future__ import annotations
 
 import re
+import time
 from typing import Dict
 
 from . import Generic
@@ -67,6 +68,7 @@ class Scope(Generic):
         self.check_against_args: Dict = dict()
         self.is_included: bool = bool()
         self.is_excluded: bool = bool()
+        self.evals: Dict[float, Dict] = dict()
 
     def parse_kwargs(self, **kwargs) -> None:
         """Parses all filter arguments looking for those that match its base.
@@ -102,11 +104,11 @@ class Scope(Generic):
 
         """
         escaped = any(
-            re.findall(pattern=re.escape(self.base), string=p)
+            re.findall(pattern=re.escape(self.base.lower()), string=p.lower())
             for p in self.check_against_args[arg]
         )
         unescaped = any(
-            re.findall(string=self.base, pattern=p)
+            re.findall(string=self.base.lower(), pattern=p.lower())
             for p in self.check_against_args[arg]
         )
         return any([escaped, unescaped])
@@ -132,6 +134,7 @@ class Scope(Generic):
             included/excluded based on the context/keyword arguments provided.
 
         """
+        self.evals[time.time()] = kwargs
         self.parse_kwargs(**kwargs)
         self.is_included = self.matches_patterns(arg=self.incl_arg)
         self.is_excluded = self.matches_patterns(arg=self.excl_arg)
