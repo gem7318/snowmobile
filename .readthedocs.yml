@@ -21,9 +21,3 @@ python:
          - snowmobile
          - docs
    system_packages: false
-#     - requirements: docs/requirements.txt
-#     - requirements: requirements/requirements.txt
-#     - method: pip
-#       path: .
-#       extra_requirements:
-#         - snowmobile
