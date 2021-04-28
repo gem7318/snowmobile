@@ -55,12 +55,12 @@ h3[id$="py"] + hr, h3[id$="sql"] + hr {
 ul.md-nav__list>li.md-nav__item:last-child {
     padding-bottom: 0.5em;
 }
-li.md-nav__item>a[href$="py"]>em {
-    color: #f0f8ffcf;
-}
-li.md-nav__item>a[href$="-sql"] {
-    color: #f8f9fa8f;
-}
+/*li.md-nav__item>a[href$="py"]>em {*/
+/*    color: #f0f8ffcf;*/
+/*}*/
+/*li.md-nav__item>a[href$="-sql"] {*/
+/*    color: #f8f9fa8f;*/
+/*}*/
 nav.md-nav.md-nav--secondary a[href$="page-root"] {
     margin-bottom: 1em;
 }
