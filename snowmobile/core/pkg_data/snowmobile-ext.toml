@@ -27,8 +27,9 @@
         [script.markup.attributes.reserved.query-results]
             include-by-default = false
             attribute-name = 'results'
-            default-to = 'results*'
+            default-to = 'results*_***'
             format = 'markdown'
+            tabulate-format = 'grid'
 
         [script.markup.attributes.from-namespace]
             execution_time_txt = 'Execution Time'
