@@ -7,6 +7,7 @@ import re
 import itertools
 from typing import Dict, List, Tuple, Union, Iterable, Optional
 
+import pandas as pd
 import sqlparse
 from pydantic import Field
 
@@ -98,8 +99,11 @@ class Reserved(Base):
     default_format: str = Field(
         default_factory=str, alias="format"
     )
+    tabulate_format: str = Field(
+        default_factory=str, alias="tabulate-format"
+    )
     # fmt: on
-
+    
 
 class Marker(Base):
     """[script.markdown.attributes.markers]"""
@@ -359,9 +363,9 @@ class Markup(Base):
     incl_index_in_sh: bool = Field(
         default_factory=bool, alias='include-statement-index-in-header'
     )
-    result_limit: int = Field(
-        default_factory=int, alias="limit-query-results-to"
-    )
+    # result_limit: int = Field(
+    #     default_factory=int, alias="limit-query-results-to"
+    # )
     attrs: Attributes = Field(
         default_factory=Attributes, alias="attributes"
     )
@@ -723,18 +727,24 @@ class Script(Base):
         """Parses name from a raw set of arguments if not given an explicit tag."""
         by_line = raw.strip("\n").split("\n")
         offset = offset or 0
-        if by_line[offset].startswith("__"):
-            e = errors.InvalidTagsError(
-                msg=f"""
-invalid statement tags provided.
-multi-line statement tags without an explicit `__name` attribute must include
-a name not beginning with '__' on the first line within the open & closing tag;
-first line found is:\n```\n{raw}\n```.
-"""
+        try:
+            if by_line[offset].startswith("__"):
+                e = errors.InvalidTagsError(
+                    msg=f"""
+    invalid statement tags provided.
+    multi-line statement tags without an explicit `__name` attribute must include
+    a name not beginning with '__' on the first line within the open & closing tag;
+    first line found is:\n```\n{raw}\n```.
+    """
+                )
+                if silence:
+                    return str()
+                raise e
+        except IndexError as e:
+            e2 = errors.InvalidTagsError(
+                msg=f"Error encountered while trying to parse the following:\n\t{raw.strip()}"
             )
-            if silence:
-                return str()
-            raise e
+            raise e2 from e
         return self.power_strip(by_line[offset], ['"', "'", " "])
 
     @staticmethod
