@@ -13,7 +13,7 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
 ]
 description-file = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.7.0"
 keywords = "snowflake database,snowflake python"
 requires = [
     'snowflake-connector-python==2.3.7',
@@ -43,7 +43,7 @@ test = [
     'flit-core>=3.0.0',
 ]
 docs = [
-    "python==3.7",
+#    "python==3.7.0",
     "pandas>=1.1.5",
     "pydantic>=1.7.2",
     "appdirs==1.4.4",
