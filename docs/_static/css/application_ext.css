@@ -978,7 +978,8 @@ a.sphinx-bs.sn-api:hover {
     background-color: #1c3c66;
 }
 a.sphinx-bs.sn-usage:hover {
-    background-color: #4c5d6d;
+    /*background-color: #4c5d6d;*/
+    background-color: rgba(66, 97, 140, 0.32);
 }
 .badge.sn-api, .badge.sn-usage {
     padding: 0.2em 0.4em;
