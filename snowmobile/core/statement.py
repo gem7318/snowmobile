@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, Optional, Union, Tuple
 
 import pandas as pd
 import sqlparse
-# from IPython.display import Markdown, display
+from IPython.display import Markdown, display
 from pandas.io.sql import DatabaseError as pdDataBaseError
 from snowflake.connector.errors import DatabaseError, ProgrammingError
 
@@ -256,10 +256,11 @@ class Statement(Name, Generic):
         open_p, close_p = patterns.core.to_open, patterns.core.to_close
         return f"{open_p}{self.nm}{close_p}\n{self.sql};\n"
 
-    # def render(self) -> Statement:
-    #     """Renders the statement's sql as markdown in Notebook/IPython environments."""
-    #     display((Markdown(self.as_section().sql_md)))
-    #     return self
+    # noinspection PydanticTypeChecker,PyTypeChecker
+    def render(self) -> Statement:
+        """Renders the statement's sql as markdown in Notebook/IPython environments."""
+        display((Markdown(self.as_section().sql_md)))
+        return self
 
     @property
     def is_derived(self):
