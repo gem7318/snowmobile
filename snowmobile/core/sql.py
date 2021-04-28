@@ -1045,7 +1045,8 @@ from {info_schema_loc}
         return type(self)(sn=self.sn, nm=f"{self.schema}.{self.nm}", obj=self.obj)
 
     def __call__(self, run: bool) -> bool:
-        return self(run)
+        return self._r(run)
+        # return self(run)
         # for k, v in kwargs.items():
         #     if k in vars(self):
         #         setattr(self, k, v)
