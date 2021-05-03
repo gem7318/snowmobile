@@ -1,6 +1,8 @@
 """
 :class:`SQL` contains utility methods to generate & execute
-common SQL commands.
+common SQL commands; :class:`~snowmobile.core.connection.Snowmobile` inherits
+everything from this object and provides it with the .query() method for
+statement execution.
 
 .. note::
    The :attr:`~SQL.auto_run` attribute defaults to `True`, meaning that the
@@ -22,18 +24,19 @@ common SQL commands.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Callable
 
 import pandas as pd
 
 from . import Generic
+from .configuration import Configuration
 from .utils.parsing import p, up, strip as s
 
 
 class SQL(Generic):
     """SQL class for generation & execution of common sql commands.
 
-    Intended to be interacted with as an attribute of :class:`~snowmobile.Snowmobile`.
+    Intended to be interacted with as a parent of :class:`~snowmobile.Snowmobile`.
 
     .. note::
         *   All arguments except for :attr:`sn` are optional.
@@ -42,8 +45,6 @@ class SQL(Generic):
             when generating a variety of statements around the same object.
 
     Attributes:
-        sn (snowmobile.Snowmobile):
-            :class:`Snowmobile` for sql execution and connection information.
         nm (str):
             Object name to use in generated sql (e.g. 'some_table_name')
         obj (str):
@@ -59,21 +60,26 @@ class SQL(Generic):
 
     def __init__(
         self,
-        sn=None,
+        _query_func: Callable,
+        _cfg: Configuration,
         nm: Optional[str] = None,
+        schema: Optional[str] = None,
         obj: Optional[str] = None,
         auto_run: Optional[bool] = True,
     ):
         """Initializes a :class:`snowmobile.SQL` object."""
         super().__init__()
-        self.sn = sn
-        schema, nm = p(nm=nm)
-        self.nm: str = nm
-        self.schema = schema or sn.cfg.connection.current.schema_name
+        
+        _schema, self.nm = p(nm=nm)
+        
+        self.schema = schema or _schema or _cfg.connection.current.schema_name
+        
         self.obj: str = obj or "table"
         self.auto_run: bool = auto_run
+        
+        self._query = _query_func
 
-    def info_schema_tables(
+    def table_info(
         self,
         nm: Optional[str] = None,
         fields: List[str] = None,
@@ -139,9 +145,9 @@ class SQL(Generic):
         )
         # fmt: on
 
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
-    def info_schema_columns(
+    def column_info(
         self,
         nm: Optional[str] = None,
         fields: Optional[List] = None,
@@ -203,22 +209,28 @@ class SQL(Generic):
             obj="column", fields=fields, restrictions=restrictions, order_by=order_by
         )
 
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
-    # TODO: (rename) 'count' --> 'cnt'
     def count(
             self,
             nm: Optional[str] = None,
+            of: Optional[str] = None,
             dst_of: Optional[str] = None,
             as_perc: Optional[bool] = None,
-            run: Optional[bool] = None
+            run: Optional[bool] = None,
     ):
         """Number of records within a table or view.
 
         Args:
             nm (str):
-                Table name, including schema if creating a stage outside of the
-                current schema.
+                Table name, including schema if querying outside current schema.
+            of (str):
+                Column name (indistinct).
+            dst_of (str):
+                Column name (distinct).
+            as_perc (bool):
+                Option to return distinct count of the `dst_of` column as a
+                percentage of the total depth of the table or view.
             run (bool):
                 Indicates whether to execute generated sql or return as string;
                 default is `True`.
@@ -229,23 +241,46 @@ class SQL(Generic):
                 2.  The generated query as a :class:`str` of sql.
 
         """
+        schema, nm = p(nm)
         try:
+            obj_schema = self._validate(
+                val=(schema or self.schema), nm='obj_schema', attr_nm='schema'
+            )
             obj_name = self._validate(
-                val=(nm or self.nm),
-                nm="obj_name",
-                attr_nm="obj_name",
+                val=(nm or self.nm), nm='obj_name', attr_nm='obj_name'
             )
         except ValueError as e:
             raise e
         
-        _from = f"from {obj_name}"
+        _from = f"from {obj_schema}.{obj_name}"
         sql = f"select count(*) {_from}"
+        if of:
+            sql = f"select count({dst_of}) {_from}"
         if dst_of:
             sql = f"select count(distinct {dst_of}) {_from}"
         if as_perc:
+            if not dst_of:
+                raise ValueError(
+                    "`as_perc=True` provided without specifying `dst_of` column."
+                )
             sql = f"select count(distinct {dst_of}) / count(*) {_from}"
             
-        return self.sn.query(sql=sql).snf.to_list(n=1) if self(run) else sql
+        return self._query(sql=sql).snf.to_list(n=1) if self(run) else sql
+    
+    def is_distinct(self, nm: Optional[str] = None, field: Optional[str] = None) -> bool:
+        """Checks if table `nm` is distinct on column `on_col`
+
+        Args:
+            nm (str):
+                Table name.
+            field (str):
+                Column name.
+                
+        """
+        try:
+            return self.count(nm=nm, dst_of=field, as_perc=True) == 1
+        except ValueError as e:
+            raise e
 
     def table_last_altered(
         self, nm: Optional[str] = None, run: Optional[bool] = None
@@ -267,10 +302,10 @@ class SQL(Generic):
 
         """
         try:
-            sql = self.info_schema_tables(
+            sql = self.table_info(
                 nm=nm, fields=["table_name", "table_schema", "last_altered"]
             )
-            return self.sn.query(sql=sql) if self(run) else sql
+            return self._query(sql=sql) if self(run) else sql
         except AssertionError as e:
             raise e
 
@@ -306,7 +341,7 @@ class SQL(Generic):
         create = self._create(replace=replace)
         _sql = f"{create} stage {nm_stage} file_format = {nm_format};"
         sql = s(_sql)
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
     def drop(
         self,
@@ -353,7 +388,7 @@ class SQL(Generic):
             else f"drop {obj} if exists {up(obj_name)}"
         )
         sql = s(_sql)
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
     def clone(
         self,
@@ -452,7 +487,7 @@ class SQL(Generic):
             f"{create} {obj} {up(to_schema)}.{up(to)} " f"clone {up(schema)}.{up(nm)}"
         )
         sql = s(_sql)
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
     def put_file_from_stage(
         self,
@@ -490,7 +525,7 @@ class SQL(Generic):
         statement = [f"put file://{path.as_posix()} @{nm_stage}"]
         # fmt: off
         defaults = (
-            self.sn.cfg.loading.put.dict(by_alias=False) if not ignore_defaults
+            self.cfg.loading.put.dict(by_alias=False) if not ignore_defaults
             else dict()
         )
         options = {
@@ -503,7 +538,7 @@ class SQL(Generic):
         _sql = "\n".join(statement)
         sql = s(_sql, trailing=False, whitespace=False, blanks=True)
 
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
     def copy_into_table_from_stage(
         self,
@@ -540,7 +575,7 @@ class SQL(Generic):
         """
         statement = [f"copy into {nm} from @{nm_stage}"]
         defaults = (
-            self.sn.cfg.loading.copy_into.dict(by_alias=False)
+            self.cfg.loading.copy_into.dict(by_alias=False)
             if not ignore_defaults
             else dict()
         )
@@ -549,7 +584,7 @@ class SQL(Generic):
             statement.append(f"\t{k} = {v}")
         _sql = "\n".join(statement)
         sql = s(_sql, trailing=False, whitespace=False, blanks=True)
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
     def show_file_formats(self, run: Optional[bool] = None) -> Union[str, pd.DataFrame]:
         """Lists all file formats in the current schema.
@@ -566,7 +601,7 @@ class SQL(Generic):
 
         """
         sql = f"show file formats"
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
     def ddl(
         self,
@@ -603,7 +638,7 @@ class SQL(Generic):
             raise e
         _sql = f"select get_ddl('{obj}', '{up(schema)}.{up(nm)}') as ddl"
         sql = s(_sql)
-        return self.sn.query(sql=sql).snf.to_list(n=1) if self(run) else sql
+        return self._query(sql=sql).snf.to_list(n=1) if self(run) else sql
 
     def select(
         self,
@@ -649,7 +684,7 @@ select
 from {up(schema)}.{up(table)}
 {limit}
         """
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
     def truncate(
         self, nm: Optional[str] = None, run: Optional[bool] = None
@@ -684,7 +719,7 @@ from {up(schema)}.{up(table)}
         # fmt: on
         _sql = f"truncate table {up(schema)}.{up(name)}"
         sql = s(_sql)
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
     def current(
         self, obj: str, run: Optional[bool] = None
@@ -706,7 +741,7 @@ from {up(schema)}.{up(table)}
         """
         _sql = f"select current_{obj}()"
         sql = s(_sql)
-        return self.sn.query(sql=sql).snf.to_list(n=1) if self(run) else sql
+        return self._query(sql=sql).snf.to_list(n=1) if self(run) else sql
 
     def current_session(self, run: Optional[bool] = None) -> Union[str, pd.DataFrame]:
         """Select the current session."""
@@ -756,7 +791,7 @@ from {up(schema)}.{up(table)}
         # fmt: on
         _sql = f"use {obj} {up(name)}"
         sql = s(_sql)
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
     def use_schema(
         self, nm: Optional[str] = None, run: Optional[bool] = None
@@ -861,10 +896,10 @@ from {up(schema)}.{up(table)}
                     :class:`str` of sql.
 
         """
-        sql = self.info_schema_columns(
+        sql = self.column_info(
             nm=nm, fields=["ordinal_position", "column_name"], order_by=[1], run=False
         )
-        return self.sn.query(sql).snf.to_list(col="column_name") if run else sql
+        return self._query(sql).snf.to_list(col="column_name") if run else sql
 
     def _columns_from_sample(
         self, nm: Optional[str] = None, run: Optional[bool] = None
@@ -887,7 +922,7 @@ from {up(schema)}.{up(table)}
         """
         _sql = self.select(nm=nm, run=False, n=1)
         sql = s(_sql)
-        return list(self.sn.query(sql, lower=False).columns) if self(run) else sql
+        return list(self._query(sql, lower=False).columns) if self(run) else sql
 
     @staticmethod
     def _create(replace: bool = False):
@@ -936,7 +971,7 @@ from {up(schema)}.{up(table)}
         `snowmobile.core.sql._map_information_schema.py`.
 
         """
-        info_schema_loc = self.sn.cfg.sql.info_schema_loc(obj=obj)
+        info_schema_loc = self.cfg.sql.info_schema_loc(obj=obj)
         fields = self.fields(fields=fields)
         where = self.where(restrictions=restrictions)
         order_by = self.order(by=order_by)
@@ -1030,30 +1065,17 @@ from {info_schema_loc}
             )
         return val
 
-    def _reset(self):
-        self.schema = self.sn.cfg.connection.current.schema_name
+    def _reset(self) -> SQL:
+        self.schema = self.cfg.connection.current.schema_name
         self.nm = None
         self.obj = "table"
         return self
 
-    def copy(self) -> SQL:
-        """User-facing copy method."""
-        return self.__copy__()
-
-    def __copy__(self) -> SQL:
-        """Dunder copy method."""
-        return type(self)(sn=self.sn, nm=f"{self.schema}.{self.nm}", obj=self.obj)
-
     def __call__(self, run: bool) -> bool:
         return self._r(run)
-        # return self(run)
-        # for k, v in kwargs.items():
-        #     if k in vars(self):
-        #         setattr(self, k, v)
-        # return self
 
     def __str__(self) -> str:
-        return f"snowmobile.SQL(creds='{self.sn.cfg.connection.creds}')"
+        return f"snowmobile.SQL(creds='{self.cfg.connection.creds}')"
 
     def __repr__(self) -> str:
-        return f"snowmobile.SQL(creds='{self.sn.cfg.connection.creds}')"
+        return f"snowmobile.SQL(creds='{self.cfg.connection.creds}')"

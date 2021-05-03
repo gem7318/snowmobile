@@ -35,33 +35,33 @@ try:
         _ = snowmobile.connect().ex(f"create or replace schema {schema}")
 
     sn = snowmobile.connect()
-    assert sn.sql.current('schema').lower() not in schema_nms
+    assert sn.current('schema').lower() not in schema_nms
 
     # ==================
     # - Start Example -
     # ==================
 
     # Clone some tables
-    sn.sql.clone(nm='sample_table', to='other_schema.sample_table')
-    sn.sql.drop(nm='other_schema.sample_table')
-    sn.sql.clone(  # other to current schema
+    sn.clone(nm='sample_table', to='other_schema.sample_table')
+    sn.drop(nm='other_schema.sample_table')
+    sn.clone(  # other to current schema
         nm='other_schema.sample_table',
         to='sample_table',
     )
 
     # Query metadata
-    print(sn.sql.exists('sample_table'))                 #> True
-    print(sn.sql.exists('sample_schema.sample_table2'))  #> True
-    print(sn.sql.exists('gem7318.sample_table3'))                #> True
-    print(sn.sql.current_schema())
+    print(sn.exists('sample_table'))                 #> True
+    print(sn.exists('sample_schema.sample_table2'))  #> True
+    print(sn.exists('gem7318.sample_table3'))                #> True
+    print(sn.current_schema())
 
-    # sn.sql.drop() works the same way
+    # sn.drop() works the same way
     for t in [
         'sample_table',
         'sample_schema.sample_table2',
         # 'sample_table3',
     ]:
-        sn.sql.drop(t)
+        sn.drop(t)
 
     # ==================
     # - End Example -
@@ -72,11 +72,11 @@ except DatabaseError as e:
 
 finally:
     # teardown
-    sn.sql.drop(nm='sample_schema', obj='schema')
+    sn.drop(nm='sample_schema', obj='schema')
 # snowmobile-include
 
 sn = snowmobile.connect()
-sn.sql.current('schema').lower()
+sn.current('schema').lower()
 
 
-print(sn.sql.select(nm='sample_table', run=False))
+print(sn.select(nm='sample_table', run=False))

@@ -1,6 +1,6 @@
 {
   "1": {
-    "method": "info_schema_tables",
+    "method": "table_info",
     "method_kwargs": {
       "nm": "sample_table"
     },
@@ -8,7 +8,7 @@
     "base_attrs": {}
   },
   "2": {
-    "method": "info_schema_columns",
+    "method": "column_info",
     "method_kwargs": {
       "nm": "sample_table"
     },
@@ -24,7 +24,7 @@
     "base_attrs": {}
   },
   "4": {
-    "method": "info_schema_tables",
+    "method": "table_info",
     "method_kwargs": {
       "nm": "__other_schema"
     },
@@ -34,7 +34,7 @@
     }
   },
   "5": {
-    "method": "info_schema_columns",
+    "method": "column_info",
     "method_kwargs": {
       "nm": "__other_schema"
     },

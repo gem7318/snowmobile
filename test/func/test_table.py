@@ -50,7 +50,7 @@ def test_table_core_functionality(sn, df, rnp):
 
     # Ex. 1 -------------------------------------------------------------------
 
-    sn.sql.exists(TESTING_TABLE_NAME)
+    sn.exists(TESTING_TABLE_NAME)
 
     t1 = snowmobile.Table(sn=sn, table=TESTING_TABLE_NAME, df=df, as_is=True)
     assert t1.loaded

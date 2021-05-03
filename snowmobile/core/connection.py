@@ -36,7 +36,7 @@ from . import Configuration
 from . import Generic
 
 
-class Snowmobile(Generic):
+class Snowmobile(sql.SQL):
     """Primary method of statement execution and accessor to parsed snowmobile.toml.
 
     Parameters:
@@ -103,16 +103,17 @@ class Snowmobile(Generic):
         from_config: Optional[str, Path] = None,
         **connect_kwargs,
     ):
-        super().__init__()
 
         # Parsed snowmobile.toml
         self.cfg: Configuration = Configuration(
             creds=creds, config_file_nm=config_file_nm, from_config=from_config
         )
 
+        # snowmobile.core.sql.SQL; inherits SQL and Generic
+        super().__init__(_query_func=self.query, _cfg=self.cfg)
+        
         # Snowflake Attributes; con = `None` until set by Snowmobile.connect()
         self.con: Optional[SnowflakeConnection] = None
-        self.sql: sql.SQL = sql.SQL(sn=self)
 
         # Exception / Context Management
         self.e: ExceptionHandler = ExceptionHandler(within=self).set(ctx_id=-1)
@@ -147,7 +148,7 @@ class Snowmobile(Generic):
                     **kwargs,  # any kwarg over-rides
                 }
             )
-            self.sql = sql.SQL(sn=self)
+            # self.sql = sql.SQL(sn=self)
             print(f"..connected: {str(self)}")
             return self
 

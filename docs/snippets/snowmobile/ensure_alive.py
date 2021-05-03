@@ -13,7 +13,7 @@ print(sn.alive)  #> True
 type(sn.con)     #> snowflake.connector.connection.SnowflakeConnection
 
 # Storing 1st session ID
-session1 = sn.sql.current('session')
+session1 = sn.current('session')
 
 # Killing connection
 sn.disconnect()
@@ -27,7 +27,7 @@ type(sn.con)     #> NoneType
 _ = sn.query("select 1")
 
 # Storing 2nd session ID
-session2 = sn.sql.current('session')
+session2 = sn.current('session')
 
 # Verifying both session IDs are valid
 print(type(session1))  #> str

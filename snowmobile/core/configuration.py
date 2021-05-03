@@ -78,8 +78,8 @@ class Configuration(Generic):
 
     def __init__(
         self,
-        config_file_nm: Optional[str] = None,
         creds: Optional[str] = None,
+        config_file_nm: Optional[str] = None,
         from_config: Optional[Path, str] = None,
         export_dir: Optional[Path, str] = None,
     ):
