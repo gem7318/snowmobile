@@ -282,9 +282,9 @@ class SQL(Generic):
         except ValueError as e:
             raise e
 
-    def table_last_altered(
+    def last_altered(
         self, nm: Optional[str] = None, run: Optional[bool] = None
-    ) -> str:
+    ) -> Union[str, pd.Timestamp]:
         """Last altered timestamp for a table or view.
 
         Args:

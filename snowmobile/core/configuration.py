@@ -82,14 +82,14 @@ class Configuration(Generic):
         config_file_nm: Optional[str] = None,
         from_config: Optional[Path, str] = None,
         export_dir: Optional[Path, str] = None,
-        **kwargs,
+        silence: bool = False,
     ):
         """Instantiates instances of the needed params to locate creds file.
         """
         # fmt: off
         super().__init__()
 
-        self._stdout = self.Stdout(silence=kwargs.get('silence'))
+        self._stdout = self.Stdout(silence=silence)
 
         self.file_nm = config_file_nm or "snowmobile.toml"
 
@@ -187,7 +187,7 @@ class Configuration(Generic):
                 configuration file is intended to come from cache or from
                 a bottom-up traversal of the file system if not yet cached.
         """
-        self._stdout._locating_outcome(is_provided)
+        self._stdout._locating_outcome(is_provided=is_provided, file=self.file_nm)
         if self.location.is_file():
             self._stdout._found(file_path=self.location, is_provided=is_provided)
             return self.location
@@ -331,17 +331,17 @@ class Configuration(Generic):
             self.p("Locating credentials..")
             return self
 
-        def _checking_cache(self):
-            self.p("(1 of 2) Finding snowmobile.toml..")
+        def _checking_cache(self, file: str):
+            self.p(f"(1 of 2) Finding {file}..")
             return self
 
         def _reading_provided(self):
             self.p("(1 of 2) Checking provided path...")
             return self
 
-        def _locating_outcome(self, is_provided: bool):
+        def _locating_outcome(self, is_provided: bool, file: str):
             _ = self._locating()
-            return self._checking_cache() if not is_provided else self._reading_provided()
+            return self._checking_cache(file) if not is_provided else self._reading_provided()
 
         def _cache_found(self, file_path: Path):
             path = self.offset_path(file_path=file_path)

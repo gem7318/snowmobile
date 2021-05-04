@@ -16,7 +16,7 @@
     "base_attrs": {}
   },
   "3": {
-    "method": "table_last_altered",
+    "method": "last_altered",
     "method_kwargs": {
       "nm": "sample_table"
     },
@@ -44,7 +44,7 @@
     }
   },
   "6": {
-    "method": "table_last_altered",
+    "method": "last_altered",
     "method_kwargs": {
       "nm": "__other_schema"
     },
