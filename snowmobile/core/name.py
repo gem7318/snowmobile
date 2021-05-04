@@ -277,6 +277,13 @@ class Name(Generic):
             return self.anchor_pr or self.anchor_ge
         return self.anchor_ge
 
+    def set(self, key, value):
+        """Custom attribute setting."""
+        attrs = vars(self)
+        if f"{key}_pr" in attrs:
+            key = f"{key}_pr"
+        vars(self)[key] = value
+
     def __bool__(self) -> bool:
         return self.is_included
 

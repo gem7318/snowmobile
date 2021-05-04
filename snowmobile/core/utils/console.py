@@ -8,8 +8,17 @@ from typing import Optional, Union
 
 
 class Console:
-    def __init__(self):
-        pass
+    """
+    Base class for console output containers.
+    """
+    
+    def __init__(self, silence: bool = False):
+        self.silence = silence
+
+    def p(self, text: str):
+        """Conditional print"""
+        if not self.silence:
+            print(text)
 
     @staticmethod
     def offset_path(

@@ -82,13 +82,14 @@ class Configuration(Generic):
         config_file_nm: Optional[str] = None,
         from_config: Optional[Path, str] = None,
         export_dir: Optional[Path, str] = None,
+        **kwargs,
     ):
         """Instantiates instances of the needed params to locate creds file.
         """
         # fmt: off
         super().__init__()
 
-        self._stdout = self.Stdout()
+        self._stdout = self.Stdout(silence=kwargs.get('silence'))
 
         self.file_nm = config_file_nm or "snowmobile.toml"
 
@@ -316,26 +317,26 @@ class Configuration(Generic):
     class Stdout(utils.Console):
         """Console output."""
 
-        def __init__(self):
-            super().__init__()
+        def __init__(self, silence: bool = False):
+            super().__init__(silence=silence)
 
         def _exporting(self, file_name: str):
-            print(f"Exporting {file_name}..")
+            self.p(f"Exporting {file_name}..")
 
         def _exported(self, file_path: Path):
             path = self.offset_path(file_path=file_path)
-            print(f"<1 of 1> Exported {path}")
+            self.p(f"<1 of 1> Exported {path}")
 
         def _locating(self):
-            print("Locating credentials..")
+            self.p("Locating credentials..")
             return self
 
         def _checking_cache(self):
-            print("(1 of 2) Finding snowmobile.toml..")
+            self.p("(1 of 2) Finding snowmobile.toml..")
             return self
 
         def _reading_provided(self):
-            print("(1 of 2) Checking provided path...")
+            self.p("(1 of 2) Checking provided path...")
             return self
 
         def _locating_outcome(self, is_provided: bool):
@@ -344,12 +345,12 @@ class Configuration(Generic):
 
         def _cache_found(self, file_path: Path):
             path = self.offset_path(file_path=file_path)
-            print(f"(2 of 2) Cached path found at {path}")
+            self.p(f"(2 of 2) Cached path found at {path}")
             return self
 
         def _provided_found(self, file_path: Path):
             path = self.offset_path(file_path=file_path)
-            print(f"(2 of 2) Reading provided path {path}")
+            self.p(f"(2 of 2) Reading provided path {path}")
             return self
 
         def _found(self, file_path: Path, is_provided: bool):
@@ -360,11 +361,11 @@ class Configuration(Generic):
             )
 
         def _cache_not_found(self):
-            print("(2 of 2) Cached path not found")
+            self.p("(2 of 2) Cached path not found")
             return self
 
         def _traversing_for(self, creds_file_nm: str):
-            print(f"\nLooking for {creds_file_nm} in local file system..")
+            self.p(f"\nLooking for {creds_file_nm} in local file system..")
             return self
 
         def _not_found(self, creds_file_nm: str):
@@ -372,11 +373,11 @@ class Configuration(Generic):
 
         def _file_located(self, file_path: Path):
             path = self.offset_path(file_path=file_path)
-            print(f"(1 of 1) Located '{file_path.name}' at {path}")
+            self.p(f"(1 of 1) Located '{file_path.name}' at {path}")
             return self
 
         def _cannot_find(self, creds_file_nm: str):
-            print(
+            self.p(
                 f"(1 of 1) Could not find config file {creds_file_nm} - "
                 f"please double check the name of your configuration file or "
                 f"value passed in the 'creds_file_nm' argument"

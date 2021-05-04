@@ -33,7 +33,6 @@ from snowmobile.core import ExceptionHandler
 from snowmobile.core.snowframe import SnowFrame
 
 from . import Configuration
-from . import Generic
 
 
 class Snowmobile(sql.SQL):
@@ -101,12 +100,16 @@ class Snowmobile(sql.SQL):
         ensure_alive: bool = True,
         config_file_nm: Optional[str] = None,
         from_config: Optional[str, Path] = None,
+        silence: bool = False,
         **connect_kwargs,
     ):
 
         # Parsed snowmobile.toml
         self.cfg: Configuration = Configuration(
-            creds=creds, config_file_nm=config_file_nm, from_config=from_config
+            creds=creds,
+            config_file_nm=config_file_nm,
+            from_config=from_config,
+            silence=silence,
         )
 
         # snowmobile.core.sql.SQL; inherits SQL and Generic
@@ -148,8 +151,7 @@ class Snowmobile(sql.SQL):
                     **kwargs,  # any kwarg over-rides
                 }
             )
-            # TODO: Add a 'silence' kwarg to shut this up
-            print(f"..connected: {str(self)}")
+            self.cfg._stdout.p(f"..connected: {str(self)}")
             return self
 
         except DatabaseError as e:
