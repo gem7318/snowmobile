@@ -143,7 +143,7 @@ class Configuration(Generic):
 
                 # recursively merge snowmobile.toml and snowmobile-ext.toml -
                 # note that the dict order matters; if d1 and d2 share a key at
-                # the same level, the value from d1 will supsersede that of d2
+                # the same level, the value from d1 will supersede that of d2
                 merged = rmerge_dicts(
                     d1=cfg_raw,
                     d2=snowmobile_ext
@@ -208,6 +208,7 @@ class Configuration(Generic):
             if found.is_file():
                 self.location = found
                 self.cache.save_item(item_name=self.file_nm, item_value=self.location)
+                # TODO: Add a silence method that will shut this up if desired
                 self._stdout._file_located(file_path=self.location)
                 return self.location
 

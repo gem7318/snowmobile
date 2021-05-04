@@ -148,7 +148,7 @@ class Snowmobile(sql.SQL):
                     **kwargs,  # any kwarg over-rides
                 }
             )
-            # self.sql = sql.SQL(sn=self)
+            # TODO: Add a 'silence' kwarg to shut this up
             print(f"..connected: {str(self)}")
             return self
 

@@ -284,7 +284,7 @@ class SQL(Generic):
 
     def table_last_altered(
         self, nm: Optional[str] = None, run: Optional[bool] = None
-    ) -> Union[str, pd.DataFrame]:
+    ) -> str:
         """Last altered timestamp for a table or view.
 
         Args:
@@ -303,9 +303,15 @@ class SQL(Generic):
         """
         try:
             sql = self.table_info(
-                nm=nm, fields=["table_name", "table_schema", "last_altered"]
+                nm=nm,
+                fields=["last_altered"],
+                run=False,
             )
-            return self._query(sql=sql) if self(run) else sql
+            return (
+                self._query(sql=sql, as_scalar=True)
+                if self(run)
+                else sql
+            )
         except AssertionError as e:
             raise e
 
