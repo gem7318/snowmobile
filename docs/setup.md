@@ -27,7 +27,7 @@ credentials.
 :lines: 2-12
 `````
 
-```{admonition} Tip: see [here](https://toml.io/en/) if unfamiliar with *.toml* syntax
+```{admonition} FYI: see [here](https://toml.io/en/) if unfamiliar with *.toml* syntax
 :class: tip, sn-inherit-overflow, sn-clear-title, sn-indent-h-cell-m, sn-dedent-v
 &nbsp;
 ```
