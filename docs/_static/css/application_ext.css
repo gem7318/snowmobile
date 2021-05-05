@@ -55,7 +55,8 @@
 
     --sn-fixture-blue-highlight: #448aff26;
     --sn-code-highlight: #222c38;
-    --sn-fixture-highlight: #171925;
+    /*--sn-fixture-highlight: #171925;*/
+    --sn-fixture-highlight: #0a1f31;
 
     /*--sn-purple: #350b13;*/
     --sn-purple: #072630;
@@ -1259,7 +1260,8 @@ div.admonition label.tabbed-label {
     display: inline;
     overflow: visible;
     white-space: nowrap;
-    background: var(--sn-code-highlight);
+    background: var(--sn-fixture-highlight);
+    margin-right: 0.1rem;
 }
 
 /* 'local fixture' content */
@@ -1267,17 +1269,19 @@ div.admonition label.tabbed-label {
     font-family: 'FontAwesome',serif;
     /*content: " \ \f103\ ";*/
     content: " \ \f102\ ";
-    background: var(--sn-code-highlight);
+    /*background: var(--sn-code-highlight);*/
     position: relative;
     font-size: 100%;
-    top: 0.1em;
-    padding-right: .1rem;
+    /*top: 0.1em;*/
+    /*padding-right: .1rem;*/
+    padding-left: .2rem;
 }
 
 .md-typeset a.sn-local-fixture * {
-    background: var(--sn-code-highlight);
-    font-size: 95%;
+    /*background: var(--sn-code-highlight);*/
+    font-size: 90%;
     color: var(--sn-primary-blue-light);
+    /*padding-right: 0.2rem;*/
 }
 
 
