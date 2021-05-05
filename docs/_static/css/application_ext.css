@@ -949,7 +949,7 @@ hr.sn-bottom-margin-hr-thick {
     border-color: #6a94bf73;
 }
 
-.badge.sn-api {
+.badge.sn-api, .badge.sn-usage {
     /*background-color: #448aff57;*/
     /*background-color: #263a5052;*/
     /*background-image: radial-gradient(#212529,#0b131957);*/
@@ -958,26 +958,26 @@ hr.sn-bottom-margin-hr-thick {
     /*background-image: radial-gradient(#042b50,#2475e0);*/
     background-color: #1c3c66;
 }
-a.sphinx-bs.sn-api:hover {
-    background-color: #276081;
-}
+/*a.sphinx-bs.sn-api:hover {*/
+/*    background-color: #276081;*/
+/*}*/
 .badge.sn-api span {
     /*color: #738fabc2;*/
     color: aliceblue;
 }
-.badge.sn-api span:hover {
-    /*color: aliceblue;*/
-    background-color: rgba(66, 97, 140, 0.32);
-}
+/*.badge.sn-api span:hover {*/
+/*    !*color: aliceblue;*!*/
+/*    background-color: rgba(66, 97, 140, 0.32);*/
+/*}*/
 
-.badge.sn-usage {
-    /*background-color: #010c0c;*/
-    /*background-image: radial-gradient(circle,#12484c,#f8f9fa2b);*/
-    /*background-image: radial-gradient(#3d70a2b3,#365b788a);*/
-    /*background-image: radial-gradient(#042b50,#2475e0);*/
-    background-color: #1c3c66;
-}
-a.sphinx-bs.sn-usage:hover {
+/*.badge.sn-usage {*/
+/*    !*background-color: #010c0c;*!*/
+/*    !*background-image: radial-gradient(circle,#12484c,#f8f9fa2b);*!*/
+/*    !*background-image: radial-gradient(#3d70a2b3,#365b788a);*!*/
+/*    !*background-image: radial-gradient(#042b50,#2475e0);*!*/
+/*    background-color: #1c3c66;*/
+/*}*/
+a.sphinx-bs.sn-usage:hover, a.sphinx-bs.sn-api:hover {
     /*background-color: #4c5d6d;*/
     background-color: rgba(66, 97, 140, 0.32);
 }
@@ -1399,7 +1399,8 @@ div.admonition label.tabbed-label {
     margin: -0.15rem 3.5vw .7rem 1vw;
     border-style: solid;
     border-width: thin;
-    border-color: #055fbf57;
+    /*border-color: #055fbf57;*/
+    border-color: #055fbfd9 !important;
     overflow: hidden;
     max-width: 100vw;
 }
@@ -1425,7 +1426,8 @@ div.admonition label.tabbed-label {
     padding-top: 0.35rem;
     /*color: #4f91ff;*/
     background-color: #004ad01c !important;
-    border-bottom-color: #0047c926;
+    /*border-bottom-color: #0047c926;*/
+    border-bottom-color: #0047c9ad !important;
     color: #64d7ff !important;
 }
 
