@@ -985,8 +985,9 @@ a.sphinx-bs.sn-usage:hover {
     padding: 0.2em 0.4em;
     font-size: 80%;
 }
-.md-typeset .sn-snippet a span.std:hover, .md-typeset .sn-snippet-h a span.std:hover, .md-typeset .sn-snippet-trunc a span.std:hover {
-    color: #3dceff
+.md-typeset .sn-snippet a span.std:hover, .md-typeset .sn-snippet-h a span.std:hover, .md-typeset .sn-snippet-trunc a span.std:hover, .md-typeset .sn-snippet-trunc2 a span.std:hover {
+    color: #4e9296;
+    border-bottom: solid thin #4e9296;
 }
 
 /* -- Jupyter/Notebook adjustments ----------------------------------------- */
@@ -1036,7 +1037,7 @@ div.sn-pre-code ~ .cell.docutils.container, div.sn-pre-code ~ div.notranslate {
 
 .md-typeset .sn-pre-code-s {
     /*margin-top: -*/
-    margin-bottom: -0.7rem;
+    margin-bottom: -0.6rem;
     padding-left: 0.1rem;
     /*padding-top: inherit;*/
 }
@@ -1749,6 +1750,7 @@ div.output.stream.highlight-myst-ansi.notranslate, div.output.text_plain.highlig
 div.output.stream.highlight-myst-ansi.notranslate *, div.output.text_plain.highlight-myst-ansi.notranslate * {
     font-size: 90%;
     line-height: 1.3em;
+    background-color: var(--sn-cell-output-background-dark);
     /*margin-top: -0.2em;*/
     /*margin-bottom: -0.2em;*/
 }
@@ -2783,7 +2785,8 @@ div.sn-download-snippet a::before {
     /*color: #178ce5;*/
     /*color: #1f718a4f;*/
     /*color: rgba(147, 255, 255, 0.47);*/
-    color: var(--sn-green-light);
+    /*color: var(--sn-green-light);*/
+    color: #146f80;
     font-size: 120%;
 }  /* download snippet icon */
 /*div.sn-download-snippet span.pre {*/

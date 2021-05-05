@@ -204,10 +204,9 @@ Its purpose is to provide an entry point that will:
  ```{div} sn-snippet-trunc
  [{fa}`file-code-o` executing.py](../snippets.md#executingpy)
  ```
-
-
-`````{admonition} SnowflakeCursor / DictCursor
-:class: note, toggle, toggle-shown, sn-indent-cell, sn-indent-h-sub-cell-right
+ &nbsp;
+ `````{admonition} SnowflakeCursor / DictCursor
+ :class: note, toggle, toggle-shown, sn-indent-cell, sn-indent-h-sub-cell-right
 
  ````{tabbed} Note
  The accessors `sn.cursor` and `sn.dictcursor` are **properties** of
@@ -230,16 +229,17 @@ Its purpose is to provide an entry point that will:
  [{fa}`file-code-o` connector_cursor_note.py](../snippets.md#connector_cursor_notepy)
  ```
  ````
+ `````
+ &nbsp;
 
-`````
 ``````
 ````````
 
-
 +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+<br>
 
 `````{admonition} Naming Convention
-:class: tip, toggle
+:class: tip, toggle, toggle-shown
 
 ````{tabbed} Tip
 The following convention of variable/attribute name to associated object is
@@ -322,7 +322,7 @@ For example, see the below attributes of {class}`~snowmobile.core.Snowmobile`:
   1. {ref}`[connection.credentials.alias_name]<connection.credentials.creds1>`
   1. Keyword arguments passed to {meth}`snowmobile.connect()`
   
-  <hr class="sn-spacer2">
+  <hr class="sn-spacer-thick">
   <hr class="sn-green-thin">
   
   ```{div} sn-dedent-v-b-h
@@ -336,6 +336,7 @@ For example, see the below attributes of {class}`~snowmobile.core.Snowmobile`:
   -   Superseding any connection parameters configured in [](./snowmobile_toml.md) 
       with keyword arguments passed directly to {meth}`snowmobile.connect()`
       
+  &nbsp;
   ```````
   
  ```````{tabbed} Details
@@ -420,7 +421,9 @@ For example, see the below attributes of {class}`~snowmobile.core.Snowmobile`:
  {attr}`~snowmobile.Snowmobile.cfg` attribute is a
  fully valid {class}`~snowmobile.core.configuration.Configuration` object.
  
- See the tabbed *Examples* for additional information.
+ See the tabbed *Examples* for more info.
+ 
+ &nbsp;
  ```````
  
  ```````{tabbed} Example: Implicit Connection
@@ -486,7 +489,7 @@ For example, see the below attributes of {class}`~snowmobile.core.Snowmobile`:
  ```{literalinclude} ../snippets/snowmobile/specifying_configuration.py
  :language: python
  :lines: 5-11
- :emphasize-lines: 6,6
+ :emphasize-lines: 7,7
  ```
  
  ```{div} sn-snippet
@@ -500,7 +503,9 @@ For example, see the below attributes of {class}`~snowmobile.core.Snowmobile`:
     original [snowmobile.toml](./snowmobile_toml.md) file
  1. Binding a specific configuration with a process for sql-parsing purposes 
  1. Hard coding the configuration source in processes that have access to 
-    limited file systems (e.g. containers or VMs)  
+    limited file systems (e.g. containers or VMs)
+
+ &nbsp;      
  ```````
  
  ```````{tabbed} From File Name
@@ -546,13 +551,11 @@ For example, see the below attributes of {class}`~snowmobile.core.Snowmobile`:
  :emphasize-lines: 12-13
  ``` 
  
- <hr class="sn-spacer2">
+ <hr class="sn-spacer-thick">
  
- ```{div} sn-hanging-p
  Cleanup is done with the following two lines which remove the 
  *snowmobile2.toml* file created during the 
  [{fa}`cog`](specifying_configuration/setup) for this example:
- ```
  ```{literalinclude} ../snippets/snowmobile/specifying_configuration2.py
  :language: python
  :lines: 45-46
@@ -592,7 +595,7 @@ For example, see the below attributes of {class}`~snowmobile.core.Snowmobile`:
  See [this snippet](../snippets.md#ensure_alivepy) for additional details.
  ```
  ```````
-
+ <hr class="sn-spacer-thick2">
 ````````
 
 <hr class="sn-spacer-thick">

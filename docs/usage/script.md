@@ -93,6 +93,7 @@ that can be leveraged for:
  ----
 
   <div class="sn-sub1 sn-dedent-sub">
+  <hr class="sn-sub-h4">
 
  ```{admonition} Missing
   :class: error, sn-inherit-overflow

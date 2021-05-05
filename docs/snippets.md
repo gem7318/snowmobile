@@ -32,15 +32,6 @@ h3[id$="py"] + hr, h3[id$="sql"] + hr {
     border-style: solid;
 }
 
-.sn-download-snippet p a:hover {
-    background-color: #28698b;
-    padding-top: 0.2rem;
-}
-.sn-snippet-git-link p a:hover {
-    background-color: #28698b;
-    padding-top: 0.2rem;
-}
-
 .md-typeset p ~ .highlight-python.notranslate, .md-typeset .highlight-sql.notranslate, .md-typeset .highlight-default, .md-typeset .highlight-toml.notranslate {
     margin-left: unset;
     margin-right: unset;
@@ -55,12 +46,6 @@ h3[id$="py"] + hr, h3[id$="sql"] + hr {
 ul.md-nav__list>li.md-nav__item:last-child {
     padding-bottom: 0.5em;
 }
-/*li.md-nav__item>a[href$="py"]>em {*/
-/*    color: #f0f8ffcf;*/
-/*}*/
-/*li.md-nav__item>a[href$="-sql"] {*/
-/*    color: #f8f9fa8f;*/
-/*}*/
 nav.md-nav.md-nav--secondary a[href$="page-root"] {
     margin-bottom: 1em;
 }
