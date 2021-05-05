@@ -4,7 +4,7 @@ Base class for all :class:`Statement` objects.
 from __future__ import annotations
 
 import time
-from typing import Any, Callable, Dict, Optional, Union, Tuple
+from typing import Any, Callable, Dict, Optional, Union, Tuple, List
 
 import pandas as pd
 import sqlparse
@@ -268,9 +268,9 @@ class Statement(Name, Generic):
         return self.anchor in self.sn.cfg.QA_ANCHORS
 
     @property
-    def lines(self) -> int:
-        """Depth of the statement's sql by number of lines."""
-        return len(self.sql.split("\n"))
+    def lines(self) -> List[str]:
+        """Returns each line within the statement as a list."""
+        return self.sql.split("\n")
 
     def as_section(self, incl_sql_tag: Optional[bool] = None, result_wrap: Optional[str] = None) -> Section:
         """Returns current statement as a :class:`Section` object."""
@@ -451,8 +451,8 @@ class Statement(Name, Generic):
         # ---------------------------
         # fmt: on
 
-        # if render:
-        #     self.render()
+        if render:
+            self.render()
 
         return self
 
@@ -483,6 +483,10 @@ class Statement(Name, Generic):
 <div class="alert-{alert}">
 <center><b>====/ {self.outcome_txt()} /====</b></center>
 </div>""".strip()
+
+    def __len__(self):
+        """Number of lines in the statement."""
+        return len(self.lines)
 
     def __bool__(self):
         """Determined by the value of :attr:`Name.is_included`."""

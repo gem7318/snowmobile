@@ -555,7 +555,7 @@ class Script(Generic):
     @property
     def lines(self) -> int:
         """Number of lines in the script"""
-        return sum(s.lines for s in self.statements.values())
+        return sum(len(s) for s in self.statements.values())
 
     def _id(self, _id: Union[int, str]) -> int:
         """Returns index position of a statement given its index or tag name."""

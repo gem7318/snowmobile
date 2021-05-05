@@ -26,7 +26,7 @@ from an_example_table a;
 @pytest.mark.statement
 def test_statement_number_of_lines(sample_statement_object):
     """Tests the statement.lines property."""
-    assert sample_statement_object.lines == 3
+    assert len(sample_statement_object) == 3
 
 
 @pytest.mark.statement
