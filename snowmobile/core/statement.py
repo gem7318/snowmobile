@@ -407,48 +407,47 @@ class Statement(Name, Generic):
         except (ProgrammingError, pdDataBaseError, DatabaseError) as e:
             self.e.collect(e=e).set(outcome=1)
 
-        finally:  # only post-process when execution did not raise database error
+        finally:  # only when execution did not raise database error
             if self.e.outcome != 1:
                 self.process()
         # fmt: off
-
-        # ---------------------------
+        
         if (
-            self.e.seen(             # db error raised during execution
+            self.e.seen(             # db error raised during execution -------
                 of_type=errors.db_errors, to_raise=True
             )
-            and on_error != "c"      # stop on execution error
+            and on_error != "c"      # stop on execution error ----------------
         ):
             raise self.e.get(
                 of_type=errors.db_errors,
                 to_raise=True,
                 first=True,
             )
-        # ---------------------------
+        
         if (
-            self.e.seen(             # post-processing error occurred
+            self.e.seen(             # post-processing error occurred ---------
                 of_type=errors.StatementPostProcessingError,
                 to_raise=True,
             )
-            and on_exception != "c"  # stop on post-processing exception
+            and on_exception != "c"  # stop on post-processing exception ------
         ):
             raise self.e.get(
                 of_type=errors.StatementPostProcessingError,
                 to_raise=True,
                 first=True,
             )
-        # ---------------------------
+        
         if (
-            self.is_derived        # is child class with `.process()` method
-            and not self.outcome   # outcome of `.process()` did not pass
-            and on_failure != "c"  # stop on failure of `.process()`
+            self.is_derived        # is child class with `.process()` method --
+            and not self.outcome   # outcome of `.process()` did not pass -----
+            and on_failure != "c"  # stop on failure of `.process()` ----------
         ):
             raise self.e.get(
                 of_type=list(self._DERIVED_FAILURE_MAPPING.values()),
                 to_raise=True,
                 first=True,
             )
-        # ---------------------------
+        
         # fmt: on
 
         if render:

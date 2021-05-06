@@ -279,7 +279,7 @@ class Snowmobile(sql.SQL):
             as_df = True
         if as_df + as_cur + as_dcur + as_scalar != 1:
             raise ValueError(
-                "Only one of ('as_df', 'as_cur', 'as_dcur', 'as_scalar')"
+                "Only one of ('as_df', 'as_cur', 'as_dcur', 'as_scalar') "
                 "can evaluate to `True`"
             )
 

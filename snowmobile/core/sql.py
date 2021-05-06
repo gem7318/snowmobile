@@ -78,7 +78,8 @@ class SQL(Generic):
         self.auto_run: bool = auto_run
         
         self._query = _query_func
-
+        self._cfg = _cfg
+        
     def table_info(
         self,
         nm: Optional[str] = None,
@@ -531,8 +532,8 @@ class SQL(Generic):
         statement = [f"put file://{path.as_posix()} @{nm_stage}"]
         # fmt: off
         defaults = (
-            self.cfg.loading.put.dict(by_alias=False) if not ignore_defaults
-            else dict()
+            dict() if ignore_defaults
+            else self._cfg.loading.put.dict(by_alias=False)
         )
         options = {
             **defaults,
@@ -581,7 +582,7 @@ class SQL(Generic):
         """
         statement = [f"copy into {nm} from @{nm_stage}"]
         defaults = (
-            self.cfg.loading.copy_into.dict(by_alias=False)
+            self._cfg.loading.copy_into.dict(by_alias=False)
             if not ignore_defaults
             else dict()
         )
@@ -977,7 +978,7 @@ from {up(schema)}.{up(table)}
         `snowmobile.core.sql._map_information_schema.py`.
 
         """
-        info_schema_loc = self.cfg.sql.info_schema_loc(obj=obj)
+        info_schema_loc = self._cfg.sql.info_schema_loc(obj=obj)
         fields = self.fields(fields=fields)
         where = self.where(restrictions=restrictions)
         order_by = self.order(by=order_by)
@@ -1072,7 +1073,7 @@ from {info_schema_loc}
         return val
 
     def _reset(self) -> SQL:
-        self.schema = self.cfg.connection.current.schema_name
+        self.schema = self._cfg.connection.current.schema_name
         self.nm = None
         self.obj = "table"
         return self
@@ -1081,7 +1082,7 @@ from {info_schema_loc}
         return self._r(run)
 
     def __str__(self) -> str:
-        return f"snowmobile.SQL(creds='{self.cfg.connection.creds}')"
+        return f"snowmobile.SQL(creds='{self._cfg.connection.creds}')"
 
     def __repr__(self) -> str:
-        return f"snowmobile.SQL(creds='{self.cfg.connection.creds}')"
+        return f"snowmobile.SQL(creds='{self._cfg.connection.creds}')"

@@ -708,6 +708,12 @@ h2[id="overview"], h2[id="usage"] {
 .sn-pre-code-s ~ .sn-inline-block-container {
     margin-top: 0.3rem;
 }
+.sn-pre-code.sn-ov-indent ol {
+    padding-top: 0.1rem;
+    padding-left: 0.8rem;
+    padding-bottom: 0.5rem;
+    font-size: 95%;
+}
 
 /* Line breaks / <hr> ------------------------------------------------------ */
 

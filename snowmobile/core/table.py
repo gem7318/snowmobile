@@ -172,56 +172,56 @@ class Table(Generic):
         **kwargs,
     ):
         super().__init__()
-        sn = sn or Snowmobile(**kwargs)
+        self.sn: Snowmobile = sn or Snowmobile(**kwargs)
         # if not sn:
         #     sn = Snowmobile(delay=delay, **kwargs)
 
         # combine kwargs + snowmobile.toml
         # --------------------------------
-        if_exists = sn.cfg.loading.kwarg(
+        if_exists = self.sn.cfg.loading.kwarg(
             arg_nm="if_exists", arg_val=if_exists, arg_typ=str
         )
-        file_format = sn.cfg.loading.kwarg(
+        file_format = self.sn.cfg.loading.kwarg(
             arg_nm="file_format", arg_val=file_format, arg_typ=str
         )
-        incl_tmstmp = sn.cfg.loading.kwarg(
+        incl_tmstmp = self.sn.cfg.loading.kwarg(
             arg_nm="incl_tmstmp", arg_val=incl_tmstmp, arg_typ=bool
         )
         tmstmp_col_nm = (
-            sn.cfg.loading.kwarg(
+            self.sn.cfg.loading.kwarg(
                 arg_nm="tmstmp_col_nm", arg_val=tmstmp_col_nm, arg_typ=str
             )
             or "loaded_tmstmp"
         )
-        reformat_cols = sn.cfg.loading.kwarg(
+        reformat_cols = self.sn.cfg.loading.kwarg(
             arg_nm="reformat_cols", arg_val=reformat_cols, arg_typ=bool
         )
-        validate_format = sn.cfg.loading.kwarg(
+        validate_format = self.sn.cfg.loading.kwarg(
             arg_nm="validate_format", arg_val=validate_format, arg_typ=bool
         )
-        validate_table = sn.cfg.loading.kwarg(
+        validate_table = self.sn.cfg.loading.kwarg(
             arg_nm="validate_table", arg_val=validate_table, arg_typ=bool
         )
-        upper_case_cols = sn.cfg.loading.kwarg(
+        upper_case_cols = self.sn.cfg.loading.kwarg(
             arg_nm="upper_case_cols", arg_val=upper_case_cols, arg_typ=bool
         )
-        lower_case_table = sn.cfg.loading.kwarg(
+        lower_case_table = self.sn.cfg.loading.kwarg(
             arg_nm="lower_case_table", arg_val=lower_case_table, arg_typ=bool
         )
-        keep_local = sn.cfg.loading.kwarg(
+        keep_local = self.sn.cfg.loading.kwarg(
             arg_nm="keep_local", arg_val=keep_local, arg_typ=bool
         )
-        on_error = sn.cfg.loading.kwarg(
+        on_error = self.sn.cfg.loading.kwarg(
             arg_nm="on_error", arg_val=on_error, arg_typ=str
         )
-        check_dupes = sn.cfg.loading.kwarg(
+        check_dupes = self.sn.cfg.loading.kwarg(
             arg_nm="check_dupes", arg_val=check_dupes, arg_typ=bool
         )
-        copy = sn.cfg.loading.kwarg(arg_nm="load_copy", arg_val=load_copy, arg_typ=bool)
+        copy = self.sn.cfg.loading.kwarg(arg_nm="load_copy", arg_val=load_copy, arg_typ=bool)
 
         # sql generation and execution
         # ----------------------------
-        self.sql: SQL = SQL(sn=sn, nm=table)
+        self.sql: SQL = SQL(nm=table, _cfg=self.sn.cfg, _query_func=self.sn.query)
 
         # flow control
         # ------------
@@ -237,13 +237,13 @@ class Table(Generic):
         self._exists: bool = bool()
         self._col_diff: Dict[int, bool] = dict()
 
-        # argument specs + snowmobile.toml
+        # argument specs + self.snowmobile.toml
         # --------------------------------
         self.path_ddl = Path(str(path_ddl)) if path_ddl else DDL_DEFAULT_PATH
         self.path_output = path_output or Path.cwd() / f"{table}.csv"
         self.keep_local = keep_local
         self.on_error = on_error
-        self.file_format = file_format
+        self.file_format = file_format or str()
         self.if_exists = if_exists
         self.validate_table = validate_table
 
@@ -267,7 +267,7 @@ class Table(Generic):
                 if not self.path_ddl.exists():
                     raise FileNotFoundError(f"`{self.path_ddl}` does not exist.")
                 
-                ddl = Script(sn=self.sql.sn, path=self.path_ddl)
+                ddl = Script(sn=self.sn, path=self.path_ddl)
                 st_name = f"create-file format~{self.file_format}"
                 args = {  # only used if exception is thrown below
                     "nm": st_name,
@@ -313,8 +313,7 @@ class Table(Generic):
             self._exists = self.sql.exists()
         return self._exists
 
-    @property
-    def col_diff(self) -> Dict[int, Tuple[str, str]]:
+    def col_diff(self, mismatched: bool = False) -> Dict[int, Tuple[str, str]]:
         """Returns diff detail of local DataFrame to in-warehouse table."""
 
         def fetch(idx: int, from_list: List) -> str:
@@ -332,15 +331,22 @@ class Table(Generic):
         cols_df = list(self.df.columns)
 
         self._col_diff = {
-            i: (fetch(i, cols_t), fetch(i, cols_df))
+            i + 1: (fetch(i, cols_t), fetch(i, cols_df))
             for i in range(max(len(cols_t), len(cols_df)))
         }
-        return self._col_diff
+        return (
+            self._col_diff if not mismatched
+            else
+            {
+                k: v for k, v in self._col_diff.items()
+                if v[0] != v[1]
+            }
+        )
 
     @property
     def cols_match(self) -> bool:
         """Indicates if columns match between DataFrame and table."""
-        return all(d[0] == d[1] for d in self.col_diff.values())
+        return all(d[0] == d[1] for d in self.col_diff().values())
 
     def load_statements(self, from_script: Path):
         """Generates exhaustive list of the statements to execute for a given
@@ -352,7 +358,7 @@ class Table(Generic):
 
     def to_local(self, quote_all: bool = True):
         """Export to local file via configuration in ``snowmobile.toml``."""
-        export_options = self.sql.sn.cfg.loading.export_options[self.file_format]
+        export_options = self.sn.cfg.loading.export_options[self.file_format]
         if quote_all:
             export_options["quoting"] = csv.QUOTE_ALL
         self.df.to_csv(self.path_output, **export_options)
@@ -390,7 +396,7 @@ class Table(Generic):
             self._upload_validation_end = time.time()
             return
 
-        self._col_diff = self.col_diff
+        self._col_diff = self.col_diff()
         if if_exists == "fail":
             self.msg = (
                 f"`{self.name}` already exists and if_exists='fail' was "
@@ -503,7 +509,7 @@ class Table(Generic):
             )
             self._load_start = time.time()
             for i, s in enumerate(load_statements, start=1):
-                self.db_responses[s] = self.sql.sn.query(sql=s)  # store db responses
+                self.db_responses[s] = self.sn.query(s).snf.to_list(n=1)  # store db responses
                 self._stdout_progress(i, s, load_statements, if_exists, verbose)
             self.loaded = True
 
@@ -553,14 +559,14 @@ class Table(Generic):
         # TODO: Add 'ddl' keyword argument for the option to just pass in
         #   DDL directly as opposed to from a script.
         elif self.requires_sql == "ddl":
-            return Script(path=from_script, sn=self.sql.sn).s(_id=self.name).sql
+            return Script(path=from_script, sn=self.sn).s(_id=self.name).sql
         else:
             return self.sql.truncate(nm=self.name, run=False)
 
     def _stdout_starting(self, verbose: bool):
         """Starting message."""
         if verbose:
-            schema = self.sql.sn.con.schema.lower()
+            schema = self.sn.con.schema.lower()
             print(f"Loading into '{schema}.{self.name}`..")
 
     @staticmethod
