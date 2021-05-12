@@ -65,6 +65,8 @@ Header-levels and formatting of tagged information is configured in the
 """
 from __future__ import annotations
 
+import re
+
 from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
@@ -413,8 +415,9 @@ class Section(Generic):
             sql = f"{sql};"
         if self.is_marker and not self.incl_sql_tag:
             return str()
-        char = "\n"
-        return f"```sql\n{sql.strip(char)}\n```"
+        char = '\n'
+        repl = '\t'
+        return f"```sql\n{re.sub(repl, '  ', sql.strip(char))}\n```"
 
     @property
     def body(self) -> str:

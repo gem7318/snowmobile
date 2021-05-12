@@ -20,11 +20,13 @@
                 # ====/ marker-attributes /====
 
         [script.markup.attributes.reserved.rendered-sql]
+            # The literal sql for a given statement.
             include-by-default = true
             attribute-name = 'sql'
-            default-to = 'SQL***'  # 'SQL*_**'
+            default-to = 'SQL***'
 
         [script.markup.attributes.reserved.query-results]
+            # The literal results returned by a given statement.
             include-by-default = false
             attribute-name = 'results'
             default-to = 'results*_***'
@@ -58,6 +60,7 @@
                 'outcome_txt',
                 'execution_time_txt',
                 'description',
+                'p',
                 'sql',
                 'results'
             ]
