@@ -194,6 +194,26 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ````
 <br>
 
+### *overview-base.sql*
+---
+
+````{div} sn-link-group, sn-snippet-only
+```{div} sn-download-snippet 
+{download}`Download<./snippets/script/overview-base.sql>`
+```
+```{div} sn-snippet-git-link 
+<a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/script/overview-base.sql"><span>text</span></a>
+```
+````
+````{div} sn-indent-h-cell
+```{literalinclude} /snippets/script/overview-base.sql
+:language: sql
+:lines: 1-72
+:lineno-start: 1
+```
+````
+<br>
+
 ### *overview-statement-intro.py*
 ---
 

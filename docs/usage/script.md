@@ -138,18 +138,14 @@ that can be leveraged for:
  ```{div} sn-caret-list, sn-blue-list
  - Setup / DDL commands
  - Processing / DML commands
- - Descriptive / contextual statements
- - Simple QA checks
  - Tear-down / drop commands 
- - Statement-level context 
- - Script-level information
+ - Descriptive statements
+ - Statement or script metadata
  ```
 
- The zen of the class is to enable unambiguously denoting text and code
- that serve a purpose within a sql script; in particular, implemented in a way 
- that is easily identifiable/human-readable, can be post-processed 
- programmatically, and allows for other content to exist within the file that 
- is ignored by {xref}`snowmobile`.
+ The zen of the class is to enable clearly denoting all components of a sql
+ script that serve a purpose in a way that is human-readable and parsable by 
+ {xref}`snowmobile`.
 
  ```{admonition} Note
  :class: note, sn-indent-h-cell-left-m, sn-indent-h-cell-right-m
@@ -299,7 +295,7 @@ that can be leveraged for:
  ````{tabbed} intro.sql
  ```{literalinclude} ../snippets/script/.snowmobile/intro/intro.sql
  :language: sql
- :lines: 1-18
+ :lines: 1-17
  ```
  ```` 
  
