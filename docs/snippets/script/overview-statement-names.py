@@ -18,7 +18,7 @@ sn = snowmobile.connect(delay=True)
 script = snowmobile.Script(path=path, sn=sn)
 script.dtl()
 
-# Storestatements1 and 4 for inspection
+# Store statements 1 and 4 for inspection
 s1, s4 = script(1), script(4)
 
 print(s1.nm)      #> create table~s1
