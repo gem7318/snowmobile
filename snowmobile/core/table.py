@@ -27,7 +27,9 @@ import pandas as pd
 from pandas.io.sql import DatabaseError as pdDataBaseError
 from snowflake.connector.errors import DatabaseError, ProgrammingError
 
-from . import Generic, SQL, Snowmobile, Script, errors, ExceptionHandler
+from . import Generic, SQL
+from .connection import Snowmobile
+from . import Script, errors, ExceptionHandler
 from .paths import DDL_DEFAULT_PATH
 
 
@@ -259,7 +261,7 @@ class Table(Generic):
         if validate_format:
             
             format_exists_in_schema = self.file_format.lower() in [
-                c.lower() for c in self.sql.show_file_formats().snf.to_list("name")
+                c.lower() for c in self.sql.show('file formats', names=True)
             ]
             
             if not format_exists_in_schema:  # read from source file otherwise
@@ -271,7 +273,7 @@ class Table(Generic):
                 st_name = f"create-file format~{self.file_format}"
                 args = {  # only used if exception is thrown below
                     "nm": st_name,
-                    "statements": list(ddl.contents(by_index=False)),
+                    "st": list(ddl.keys(by_index=False)),
                 }
                 
                 try:
@@ -349,7 +351,7 @@ class Table(Generic):
         return all(d[0] == d[1] for d in self.col_diff().values())
 
     def load_statements(self, from_script: Path):
-        """Generates exhaustive list of the statements to execute for a given
+        """Generates exhaustive list of the st to execute for a given
         instance of loading a DataFrame."""
         load_statements = self._load_sql
         if self.requires_sql:
@@ -531,7 +533,7 @@ class Table(Generic):
 
     @property
     def _load_sql(self) -> List[str]:
-        """Generates sql for create stage/put/copy statements."""
+        """Generates sql for create stage/put/copy st."""
         # fmt: off
         return [
             self.sql.create_stage(
@@ -559,7 +561,7 @@ class Table(Generic):
         # TODO: Add 'ddl' keyword argument for the option to just pass in
         #   DDL directly as opposed to from a script.
         elif self.requires_sql == "ddl":
-            return Script(path=from_script, sn=self.sn).s(_id=self.name).sql
+            return Script(path=from_script, sn=self.sn).s(_id=self.name).sql()
         else:
             return self.sql.truncate(nm=self.name, run=False)
 

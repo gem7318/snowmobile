@@ -47,7 +47,7 @@ def test_combined_marker_and_statement_indices(sn_delayed):
         (6, Marker, "trailing_marker"),
     ]
 
-    script_contents_under_test = script.contents(by_index=True, markers=True)
+    script_contents_under_test = script.dict(by_index=True, markers=True)
 
     for expected, (i, c) in zip(
         script_contents_expected, script_contents_under_test.items()

@@ -9,7 +9,7 @@ This script stores the test cases for `snowmobile.Markup`.
 __name: create-temp table~sample_table
 __bullets***:
 - **Notes**
-	- This is just a sample table for the other test statements to run on.
+	- This is just a sample table for the other test st to run on.
 -*/
 create or replace temp table sample_table as
 	select 1 as dummy_dim, 1 as dummy_exclude, 1 as dummy_col

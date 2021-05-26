@@ -1,7 +1,7 @@
 
 /*-
 __script__
-__description*: Script houses test cases for QA statements.
+__description*: Script houses test cases for QA st.
 -*/
 
 /*-set param~schema_name-*/

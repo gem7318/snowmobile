@@ -2261,6 +2261,10 @@ dl.py dd dl.field-list.simple {
     padding-top: 0.2rem;
     padding-bottom: 0.2rem;
 } /* adjusting classes table */
+table.longtable.docutils tr > td:first-of-type > p > code {
+    background-color: #040d17;
+    color: #6c757d82;
+} /* changing font on non-linked classes */
 
 dl.py.class {
     box-shadow: 0 0 0 0.05em #25798238;

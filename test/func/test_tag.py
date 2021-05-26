@@ -17,11 +17,13 @@ def _setup_for_test_tag_from_stripped_line():
         s.incl_idx_in_desc = False
 
     # generate test cases
-    test_cases = [(s.nm_ge, s.nm_pr) for s in script.statements.values()]
+    test_cases = [
+        (s.nm(generated=True), s.nm(provided=True)) for s in script.st.values()
+    ]
 
     # generate IDs test cases/console output
     # ids = [
-    #     f"FirstLine='{s.first_line}',Name='{s.nm}'" for s in script.statements.values()
+    #     f"FirstLine='{s.first_line}',Name='{s.nm}'" for s in script.st.values()
     # ]
     ids = [
         f"nm_ge='{t[1]}', nm_pr='{t[0]}'"
@@ -37,7 +39,7 @@ ids, test_cases = _setup_for_test_tag_from_stripped_line()
 @pytest.mark.names
 @pytest.mark.parametrize("tags", test_cases, ids=ids)
 def test_tag_from_stripped_line(sn, tags):
-    """Testing tag generation from sql statements in no_tags.sql."""
+    """Testing tag generation from sql st in no_tags.sql."""
     tag_generated, tag_expected = tags
     assert tag_generated == tag_expected
 

@@ -2,7 +2,7 @@
 
 
 - **Notes**
-	- This is just a sample table for the other test statements to run on.
+	- This is just a sample table for the other test st to run on.
 * Execution-Information
 	* **Last Outcome**: _completed_
 

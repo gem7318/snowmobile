@@ -4,7 +4,7 @@
 __overview-base-sn.sql__
 __authored-by: some person
 __authored-on: some date
-__p*_***: This is a contrived example of how a script can be marked up and parsed by Snowmobile.
+__context*_***: This is a contrived example of how a script can be marked up and parsed by Snowmobile.
 -*/
 
 /*-create table sample_table~DDL-*/

@@ -3,6 +3,8 @@
 # DO NOT DELETE UNLESS ALTERNATE EXTENSION FILE IS SPECIFED IN SNOWMOBILE.TOML
 # =============================================================================
 
+# todo: + 'tabs-to-spaces' and 'tab-size' for reserved attributes.sql
+
 # -- Configuration options for snowmobile.script() ----------------------------
 [script]
 
@@ -24,6 +26,11 @@
             include-by-default = true
             attribute-name = 'sql'
             default-to = 'SQL***'
+            # TODO: Make each of these a dictionary of derived classes like QA for Script
+            #   with the .process() method being all the operations that have access to
+            #   the tagged values from the script and the arguments in this block
+            # tabs-to-spaces = true
+            # tab-size = 2
 
         [script.markup.attributes.reserved.query-results]
             # The literal results returned by a given statement.
@@ -34,11 +41,16 @@
             tabulate-format = 'grid'
 
         [script.markup.attributes.from-namespace]
+            # TODO: period separated values for nested vals to vars(obj)[k]
+            #   :: execution.time.str to check if str in obj.callables or obj.attrs
+            #   :: * only applying if the bool(val) that's returned is True
             execution_time_txt = 'Execution Time'
             outcome_txt = 'Last Outcome'
 
         [script.markup.attributes.groups]
             "Execution-Information**" = [
+                # todo
+                #   :: 'Execution Time', 'Last Outcome', etc
                 'execution_time_txt',
                 'outcome_txt'
             ]
@@ -78,7 +90,7 @@
         'absolute-tolerance', 'relative-tolerance'
     ]
     bool = [
-        'results', 'sql'
+        'results', 'sql', 'transpose'
     ]
 
 # -- Named object, generic anchors, and keyword-exceptions for sql parsing ----
@@ -87,7 +99,7 @@
     desc-is-simple = true
 
     named-objects = [
-        # 'grant' statements
+        # 'grant' st
         "select",
         "all",
         "drop",

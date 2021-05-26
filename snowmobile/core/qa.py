@@ -32,13 +32,13 @@ from typing import Any, Dict, List, Set
 
 import pandas as pd
 
-from . import Snowmobile  # isort: skip
+from .connection import Snowmobile  # isort: skip
 from . import Statement  # isort: skip
 from . import errors  # isort: skip
 
 
 class QA(Statement):
-    """Base class for QA statements."""
+    """Base class for QA st."""
 
     MSG = "object-specific exception message goes here."
 
@@ -61,8 +61,8 @@ class QA(Statement):
             self._outcome = -2
             self.e.set(outcome=-2)
             self.e.collect(
-                e=self._DERIVED_FAILURE_MAPPING[self.anchor](
-                    nm=self.nm,
+                e=self.DERIVED_FAILURE_MAPPING[self.anchor()](
+                    nm=self.nm(),
                     msg=self.MSG,
                     idx=self.index,
                     to_raise=True,
@@ -189,24 +189,24 @@ class Diff(QA):
 
         """
         qa_cfg = self.sn.cfg.script.qa
-
+        attrs_parsed = self.attrs()
         self.partition_on: str = (
-            self.attrs_parsed.get("partition-on", qa_cfg.partition_on)
+            attrs_parsed.get("partition-on", qa_cfg.partition_on)
         )
         self.end_index_at: str = (
-            self.attrs_parsed.get("end-index-at", qa_cfg.end_index_at)
+            attrs_parsed.get("end-index-at", qa_cfg.end_index_at)
         )
         self.compare_patterns: List = (
-            self.attrs_parsed.get("compare-patterns", qa_cfg.compare_patterns)
+            attrs_parsed.get("compare-patterns", qa_cfg.compare_patterns)
         )
         self.ignore_patterns: List = (
-            self.attrs_parsed.get("ignore-patterns", qa_cfg.ignore_patterns)
+            attrs_parsed.get("ignore-patterns", qa_cfg.ignore_patterns)
         )
-        self.relative_tolerance = self.attrs_parsed.get(
+        self.relative_tolerance = attrs_parsed.get(
             "relative-tolerance", qa_cfg.tolerance.relative
         )
         self.absolute_tolerance = (
-            self.attrs_parsed.get("absolute-tolerance", qa_cfg.tolerance.absolute)
+            attrs_parsed.get("absolute-tolerance", qa_cfg.tolerance.absolute)
             if not self.relative_tolerance
             else 0
         )

@@ -34,7 +34,7 @@ class SQL(Base):
     )
     # fmt: on
 
-    def info_schema_loc(self, obj: str) -> str:
+    def info_schema_loc(self, obj: str, stem: bool = False) -> str:
         """Returns information schema table for object if other than making plural.
 
         i.e.:
@@ -42,9 +42,10 @@ class SQL(Base):
             *   'schema' --> 'schemata'
 
         """
-        obj = obj.strip("s")
+        obj = obj.rstrip("s")
         default = f"{obj}s"  # 'table' -> 'tables' / 'column' -> 'columns'
-        return f"information_schema.{self.info_schema_exceptions.get(obj, default)}"
+        _loc = f"information_schema.{self.info_schema_exceptions.get(obj, default)}"
+        return _loc if not stem else _loc.split('.')[-1]
 
     def objects_within(self, first_line: str):
         """Searches the first line of sql for matches to named objects."""

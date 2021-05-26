@@ -11,10 +11,10 @@ statement or marker within the script.
 
     Instead, ``m`` will generate and export the following two files:
 
-    -   A sql file stripped of all untagged comments, limited to statements
+    -   A sql file stripped of all untagged comments, limited to st
         within the context of ``script`` at the time ``m`` was created
     -   A markdown representation of the code and markup associated with the
-        same set of statements
+        same set of st
 
     By default, these files are exported to a ``.snowmobile`` directory
     alongside the sql file that was read by the ``script``; the directory name
@@ -40,7 +40,7 @@ with the below structure::
 
         ## (1) create-table~dummy_name [contents get 'h2' level headers]
 
-        - **Key1**: *Value1*      [identical formatting for statements/markers]
+        - **Key1**: *Value1*      [identical formatting for st/markers]
 
         **Description**           [statement descriptions get one of these too]
 
@@ -63,7 +63,9 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
 
-from . import Generic, Configuration, Snowmobile, Diff, Empty, Section, Statement
+from . import Generic, Configuration
+from .connection import Snowmobile
+from . import Diff, Empty, Section, Statement
 from .paths import DIR_PKG_DATA
 from .cfg import Marker
 from .utils import Console
@@ -78,7 +80,7 @@ class Markup(Generic):
         path (Path):
             A full path to the sql file that script was instantiated from.
         contents (Dict[int, Union[Statement, Marker]]):
-            A dictionary of the script's contents (statements and markers) by
+            A dictionary of the script's contents (st and markers) by
             index position.
         nm (Optional[str]):
             Alternate file name to use; defaults to ``path.name``.
@@ -95,7 +97,7 @@ class Markup(Generic):
             ``path`` is a full :class:`~pathlib.Path` to the sql file that the
             ``script`` was created from.
         incl_sql (bool):
-            Include statements in export.
+            Include st in export.
         incl_markers (bool):
             Include markers in export.
         incl_sql_tag (bool):

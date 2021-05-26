@@ -18,9 +18,7 @@ where
 
 /*-3-*/
 select
-	table_name
-	,table_schema
-	,last_altered
+	last_altered
 from information_schema.tables
 where
 	lower(table_name) = 'sample_table'
@@ -44,9 +42,7 @@ where
 
 /*-6-*/
 select
-	table_name
-	,table_schema
-	,last_altered
+	last_altered
 from information_schema.tables
 where
 	lower(table_name) = 'sample_table'

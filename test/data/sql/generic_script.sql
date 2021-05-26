@@ -10,7 +10,7 @@
 /*-
 __script__
 __name: Illustration of how `snowmobile.Script` parses a sql file and handles different
-types of statements / QA checks.
+types of st / QA checks.
 __author: Grant Murray
 __authored-date: 2020-08-31
 __description:
@@ -94,7 +94,7 @@ from snowmobile.dummy_table_1 a;
 --  :Note: In the case the latter, validations that fail will *not* break the script
 --    and execution will continue; however, if the table that is provided to them cannot
 --    be validated given the parameters, it *will* raise an exception and fail.
---    If you want to skip them entirely or only run certain types of statements, see
+--    If you want to skip them entirely or only run certain types of st, see
 --    the 'scopes` argument of `snowmobile.Script()`.
 
 -- Statement types:

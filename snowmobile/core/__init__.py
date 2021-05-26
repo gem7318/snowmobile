@@ -8,7 +8,7 @@ from .base import Generic
 from .exception_handler import ExceptionHandler
 from .configuration import Configuration
 from.connection import Snowmobile
-from.connection import Snowmobile as connect
+from .connection import Snowmobile as connect
 from .section import Section
 from .scope import Scope
 from .name import Name
@@ -36,7 +36,8 @@ __all__ = [
     # core object model
     "Generic",
     "Configuration",
-    "Snowmobile", "connect",
+    "Snowmobile",
+    "connect",
     "Table",
     "Script",
     "SQL",

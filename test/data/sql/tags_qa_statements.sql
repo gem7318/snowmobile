@@ -1,7 +1,7 @@
 
 /*-
 __script__
-__description*: This script houses test cases for QA statements.
+__description*: This script houses test cases for QA st.
 -*/
 
 /*-create-temp table~sample_table-*/

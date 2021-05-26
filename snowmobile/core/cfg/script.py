@@ -109,7 +109,7 @@ class Marker(Base):
     """[script.markdown.attributes.markers]"""
 
     # fmt: off
-    nm: str = Field(
+    name: str = Field(
         default_factory=str, alias="name"
     )
     group: str = Field(
@@ -165,24 +165,28 @@ class Marker(Base):
 
     def set_name(self, name: str, overwrite: bool = False) -> Marker:
         """Sets the name attribute."""
-        if self.nm and not overwrite:
+        if self.name and not overwrite:
             return self
-        self.nm = name.replace("_", "")
+        self.name = name.replace("_", "")
         return self
 
     def as_args(self):
         """Returns a dictionary of arguments for :class:`Section`."""
         if self.attrs.get("name"):
-            self.nm = self.attrs.pop("name")
+            self.name = self.attrs.pop("name")
         if self.attrs.get("marker-name"):
             _ = self.attrs.pop("marker-name")
-        return {"h_contents": self.nm, "parsed": self.attrs, "is_marker": True}
+        return {"h_contents": self.nm(), "parsed": self.attrs, "is_marker": True}
+    
+    def nm(self):
+        """Marker name."""
+        return self.name
 
     def __str__(self):
-        return f"Marker('{self.nm}')"
+        return f"Marker('{self.nm()}')"
 
     def __repr__(self):
-        return f"Marker('{self.nm}')"
+        return f"Marker('{self.nm()}')"
 
 
 class Attributes(Base):
@@ -508,8 +512,6 @@ class Script(Base):
         """Parses an argument into its target data type based on its `arg_key`
         and the ``script.name-to-type-xref`` defined in **snowmobile.toml**."""
         arg_key, _, _ = arg_key.partition("*")
-        # _open, _close = self.patterns.core.to_open, self.patterns.core.to_close
-        # arg_value = arg_value.strip(f"{_open}\n").strip(f'\n{_close}')
         if arg_key in self.types.as_list:
             return self.arg_to_list(arg_as_str=arg_value)
         elif arg_key in self.types.as_float:
@@ -687,9 +689,9 @@ class Script(Base):
             *   :meth:`split_sub_blocks()` traverses that space and identifies
                 all spans of text wrapped in `open` (``/*-``) and `close`
                 (``-*/``) tags, storing their index positions relative to the
-                other statements & markers.
+                other st & markers.
             *   These are stored as :class:`snowmobile.core.Script` attributes
-                as statements are parsed and so that they can be exported in
+                as st are parsed and so that they can be exported in
                 the appropriate order to a markdown file.
 
         Args:
@@ -805,7 +807,7 @@ class Script(Base):
         Will return ``sql`` with no modification if it's already a
         :mod:`sqlparse.sql` object.
 
-        Needed to accommodate dynamic addition of statements as strings to
+        Needed to accommodate dynamic addition of st as strings to
         an existing :class:`~snowmobile.Script` object from
         from raw strings as opposed to a :class:`sqlparse.sql.Statement`
         objects as is done when reading a sql file.

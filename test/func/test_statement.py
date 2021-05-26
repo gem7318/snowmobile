@@ -66,7 +66,7 @@ def test_calling_run_with_results_on_invalid_sql_raises_database_error(
 
     # given
     an_invalid_sql_statement = "select * from *"
-    sample_statement_object.set_sql(sql=an_invalid_sql_statement)
+    sample_statement_object.sql(set_as=an_invalid_sql_statement)
 
     # then
     with pytest.raises(DatabaseError):

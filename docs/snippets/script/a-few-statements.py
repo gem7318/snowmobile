@@ -1,12 +1,12 @@
 """
-Inspect the parsing of a sql file containing two bare statements.
-../docs/snippets/script/a-few-statements.py
+Inspect the parsing of a sql file containing two bare st.
+../docs/snippets/script/a-few-st.py
 """
 
 # Setup -----------------------------------------------------------------------
 from pathlib import Path
 paths = {p.name: p for p in Path.cwd().glob('**/*.sql')}
-path = paths['a-few-statements.sql']
+path = paths['a-few-st.sql']
 
 import snowmobile
 
@@ -18,7 +18,7 @@ script = snowmobile.Script(path=path, sn=sn)
 script.dtl()
 """
 >>>
-a-few-statements.sql
+a-few-st.sql
 ====================
 1: Statement('create table~s1')
 2: Statement('select data~s2')

@@ -384,6 +384,11 @@ class InvalidTagsError(Error):
     pass
 
 
+class SnowflakeObjectNotFound(Error):
+    """Error to be raised when a schema object is not found by snowmobile.core.sql."""
+    pass
+
+
 db_errors = (sfDatabaseError, ProgrammingError, pdDataBaseError)
 
 snowmobile_errors = (
@@ -402,4 +407,5 @@ snowmobile_errors = (
     ExistingTableError,
     ColumnMismatchError,
     FileFormatNameError,
+    SnowflakeObjectNotFound,
 )

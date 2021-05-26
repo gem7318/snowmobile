@@ -70,10 +70,10 @@ class Configuration(Generic):
     """
 
     # -- Statement components to be considered for scope.
-    SCOPE_ATTRIBUTES = ["kw", "obj", "desc", "anchor", "nm"]
-    SCOPE_TYPES = ["incl", "excl"]
+    _SCOPE_ATTRIBUTES = ["kw", "obj", "desc", "anchor", "nm"]
+    _SCOPE_TYPES = ["incl", "excl"]
 
-    # -- Anchors to associate with QA statements.
+    # -- Anchors to associate with QA st.
     QA_ANCHORS = {"qa-diff", "qa-empty"}
 
     def __init__(
@@ -268,8 +268,8 @@ class Configuration(Generic):
         # TODO: Stick somewhere that makes sense
         return {
             f"{typ}_{attr}": set()
-            for typ in self.SCOPE_TYPES
-            for attr in self.SCOPE_ATTRIBUTES
+            for typ in self._SCOPE_TYPES
+            for attr in self._SCOPE_ATTRIBUTES
         }
 
     def scopes_from_kwargs(self, only_populated: bool = False, **kwargs) -> Dict:
@@ -290,10 +290,10 @@ class Configuration(Generic):
         """Generates list of keyword arguments to instantiate all scopes for a tag."""
         return [
             {
-                "base": self.attrs_from_obj(obj=t, within=self.SCOPE_ATTRIBUTES)[k],
+                "base": self.methods_from_obj(obj=t, within=self._SCOPE_ATTRIBUTES)[k](),
                 "arg": k
             }
-            for k in self.SCOPE_ATTRIBUTES
+            for k in self._SCOPE_ATTRIBUTES
         ]
 
     def json(self, by_alias: bool = False, **kwargs):

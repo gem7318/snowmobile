@@ -62,7 +62,7 @@ overview.sql
 #     s.dtl()
 
 # -- Block 2 --
-# Store a few statements, accessed by index position
+# Store a few st, accessed by index position
 s_first, s_last = script(1), script(-1)
 
 # first sql keyword

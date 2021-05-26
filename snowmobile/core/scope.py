@@ -1,6 +1,6 @@
 """
 Defines the Scope for a given statement; invoked internally as the
-scope/context of statements being considered by a :class:`snowmobile.Script`
+scope/context of st being considered by a :class:`snowmobile.Script`
 is being altered through
 :meth:`script.filter()<snowmobile.core.script.Script.filter()>`
 """
@@ -21,7 +21,7 @@ class Scope(Generic):
     Attributes:
         base (str):
             The left-most word within a statement tag. For **generic**
-            statements this will be the `keyword` and for **QA** statements
+            st this will be the `keyword` and for **QA** st
             this will be the literal word ``qa``.
         component (str):
             The component within a given tag that is being evaluated; this will

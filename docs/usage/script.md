@@ -21,7 +21,7 @@ that can be leveraged for:
 ```{div} sn-indent-h-cell-left-m, sn-block-list
 >Documentation and standardization of sql
 > 
->Access to individual statements within a script
+>Access to individual st within a script
 > 
 >Lightweight control flow and QA
 > 
@@ -65,9 +65,9 @@ that can be leveraged for:
 - [](script/model-intro)
   - [](script/model-intro/core-objects)
   - [Sections & Markup](script/model-intro/sections-markup)
-- [](#statements)
-  - [Quick Intro](script/statements/quick-intro)
-  - [Statement Names](script/statements/statement-names)
+- [](#st)
+  - [Quick Intro](script/st/quick-intro)
+  - [Statement Names](script/st/statement-names)
 - [](#markup)
   - [](#tags)
    - [Single-Line](#single-line-tags)
@@ -112,7 +112,7 @@ that can be leveraged for:
   <hr class="sn-sub-h4">
 
  When [](#script) parses a string of sql, it identifies and stores 
- [statements](#statements), [tags](#tags), and [markers](#markers):
+ [st](#statements), [tags](#tags), and [markers](#markers):
 
  ````{div} sn-def, sn-dedent-v-t-container-neg, sn-linear-gradient-background, sn-thin-left-border-g
  
@@ -139,7 +139,7 @@ that can be leveraged for:
  - Setup / DDL commands
  - Processing / DML commands
  - Tear-down / drop commands 
- - Descriptive statements
+ - Descriptive st
  - Statement or script metadata
  ```
 
@@ -310,7 +310,7 @@ that can be leveraged for:
 
 <div class="sn-section-parent">
 
- (script/statements/quick-intro)=
+ (script/st/quick-intro)=
  ### Statements
  ---
 
@@ -335,17 +335,17 @@ that can be leveraged for:
  ````
  ```{div} sn-indent-h-cell-text
  Where `path` ({class}`pathlib.Path` or {class}`str`) is a full path to 
- [overview.sql](script/statements/quick-intro).
+ [overview.sql](script/st/quick-intro).
  ```
  
  <div class="sn-indent-h-cell-even">
  <hr class="sn-blue">
  
- The 7 generic sql statements within 
- [overview.sql](script/statements/quick-intro) are arbitrary and chosen based only 
+ The 7 generic sql st within 
+ [overview.sql](script/st/quick-intro) are arbitrary and chosen based only 
  on the loose criteria of:
  ```{div} sn-bold-list
- 1.  Includes the minimum variety of [Statements](#statements) and [](#markup) 
+ 1.  Includes the minimum variety of [Statements](#st) and [](#markup) 
      to demonstrate the fundamentals of how [](#script) parses sql
  1.  Is executable from top to bottom without requiring external setup
  ```
@@ -380,9 +380,9 @@ that can be leveraged for:
  identified and instantiated as its own
  {class}`~snowmobile.core.statement.Statement`.
   
- An overview of the statements within a script's context can be sent to the 
+ An overview of the st within a script's context can be sent to the 
  console with {meth}`script.dtl()<snowmobile.Script.dtl()>`; in the case
- of [{fa}`fixture script`](script/statements/quick-intro), this looks like:
+ of [{fa}`fixture script`](script/st/quick-intro), this looks like:
  ```
  ```{literalinclude} ../snippets/script/overview-statement-intro.py
  :language: python
@@ -398,8 +398,8 @@ that can be leveraged for:
  <hr class="sn-grey-dotted sn-top-pad-hr-thick">
   
  ```{div} sn-pre-code-s
- Accessing the first and last statements of 
- [{fa}`fixture script`](script/statements/quick-intro)
+ Accessing the first and last st of 
+ [{fa}`fixture script`](script/st/quick-intro)
  and inspecting a few of their attributes can be done with:
  ``` 
  ```{literalinclude} ../snippets/script/overview-statement-intro.py
@@ -411,7 +411,7 @@ that can be leveraged for:
  A {class}`~snowmobile.core.Statement` can be interacted with from its parent
  [](#script) or stored and interacted with independently; for 
  example, here are two ways that the first statement in 
- [overview.sql](script/statements/quick-intro) can be executed: 
+ [overview.sql](script/st/quick-intro) can be executed: 
  ```
  ```{literalinclude} ../snippets/script/overview-statement-intro.py
  :language: python
@@ -424,7 +424,7 @@ that can be leveraged for:
  attributes that can be used to alter the scope of a 
  [](#script).
 
- For example, the following snippet filters out `drop` and `select` statements 
+ For example, the following snippet filters out `drop` and `select` st 
  based on their {attr}`~snowmobile.core.name.Name.kw` attribute
  and returns a modified [{fa}`fixture script`](script/statements/quick-intro), `s`, 
  that can be operated on within that context:
@@ -442,7 +442,7 @@ that can be leveraged for:
  [{fa}`file-code-o` overview-statement-intro.py](../snippets.md#overview-statement-intropy)
  ```
  
- (script/statements/statement-names)= 
+ (script/st/statement-names)= 
  The following section outlines how these components are constructed.
 
 
@@ -476,7 +476,7 @@ that can be leveraged for:
  which its final value is sourced.
 
  (script/note1)=
- *Generated* attributes are populated for all statements, whereas only those
+ *Generated* attributes are populated for all st, whereas only those
  with a name specified in a [tag](#tags) have populated *provided* attributes;
  consequently, a *provided* value takes precedent over its *generated* counterpart. 
  
@@ -500,8 +500,8 @@ that can be leveraged for:
  `````{admonition} **s1** & **s4**
  :class: toggle, toggle-shown, sn-fixture, sn-fixture-local, sn-block, sn-increase-margin-v-container, sn-code-pad
  
- The below statements, `s1` and `s4`, from 
- [{fa}`fixture script`](script/statements/quick-intro) are used throughout the 
+ The below st, `s1` and `s4`, from 
+ [{fa}`fixture script`](script/st/quick-intro) are used throughout the 
  remaining examples in [this section](#statement-names). 
  ```{literalinclude} ../snippets/script/overview-statement-names.py
  :language: python
@@ -564,8 +564,8 @@ that can be leveraged for:
  
  In determining the {attr}`~snowmobile.core.name.Name.nm` 
  for <a class="sn-local-fixture" href="./script.html#script-statement-nm">
-  <span>s1</span> </a> specifically, [{fa}`fixture script`](script/statements/quick-intro) 
- is considering the following two lines of [overview.sql](script/statements/quick-intro):
+  <span>s1</span> </a> specifically, [{fa}`fixture script`](script/st/quick-intro) 
+ is considering the following two lines of [overview.sql](script/st/quick-intro):
   
  ```{literalinclude} ../snippets/script/overview.sql
  :language: sql
@@ -663,7 +663,7 @@ that can be leveraged for:
         "with" = "select"
  ```
  The default included above is the reason that the
- {attr}`~snowmobile.core.name.Name.kw` for both the following statements
+ {attr}`~snowmobile.core.name.Name.kw` for both the following st
  is `select` as opposed to `select` and `with` respectively:
  ```{literalinclude} ../snippets/script/keyword_exceptions.sql
  :language: sql
@@ -703,7 +703,7 @@ that can be leveraged for:
  
  ```{code-block} toml
     named-objects = [
-        # 'grant' statements
+        # 'grant' st
         "select",
         "all",
         "drop",
@@ -727,7 +727,7 @@ that can be leveraged for:
  :class: note, toggle, toggle-shown, sn-rm-t-m-code, sn-increase-margin-v-container
 
  The above order is as such so that table qualifiers for the following three 
- (types of) statements are reflected in the
+ (types of) st are reflected in the
  {attr}`~snowmobile.core.name.Name.obj` for each.
  
  <hr class="sn-spacer-thick">
@@ -846,7 +846,7 @@ that can be leveraged for:
  modifying the attribute's value on an instance of 
  <a class="fixture-sn" href="../index.html#fixture-sn"></a>.
 
- In the case of [{fa}`fixture script`](script/statements/quick-intro), this looks
+ In the case of [{fa}`fixture script`](script/st/quick-intro), this looks
  like: 
  ```{literalinclude} ../snippets/script/overview-statement-names.py
  :language: python
@@ -934,15 +934,15 @@ that can be leveraged for:
  ```{div} sn-hanging-p
  Using markup within a script enables:
  ```
- - Defining accessors for individual statements
- - Adding descriptive information to individual statements or to the script itself
+ - Defining accessors for individual st
+ - Adding descriptive information to individual st or to the script itself
  - Finer-grained control of the script's execution
  - Generating documentation and cleansed sql files from the working version of a script
 
  ```{div} sn-dedent-v-b-h
  {xref}`snowmobile` introduces two sql-compliant forms of adding markup to a sql file:
  ```
- 1. [Tags](#tags) enable constructing collections of attributes amidst sql statements, including
+ 1. [Tags](#tags) enable constructing collections of attributes amidst sql st, including
  those directly associated with a particular statement
  2. [Markers](#markers) are a collection of attributes that are **not** associated with a
  particular statement
@@ -975,7 +975,7 @@ that can be leveraged for:
 
 `````{tabbed} +
 
- Consider the sql file, *tags_single-line.sql*, containing two statements, the first and second of which have valid and invalid
+ Consider the sql file, *tags_single-line.sql*, containing two st, the first and second of which have valid and invalid
  single-line tags respectively:
  ````{div} sn-inline-flex-container
  ```{literalinclude} ../snippets/script/tags_single-line.sql
@@ -989,7 +989,7 @@ that can be leveraged for:
  # Instantiate a Script from sql file
  script = snowmobile.Script(path=path, sn=sn)
 
- # Store individual statements for inspection
+ # Store individual st for inspection
  s1, s2 = script(1), script(2)
 
  print(s1)        #> Statement('I am a tag')

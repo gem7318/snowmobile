@@ -1,7 +1,6 @@
-/*: ---------------------------------------------------------------------------
-  * This file was stripped of all comments and exported by snowmobile.
-  * For more information see: https://snowmobile.readthedocs.io/en/latest
---------------------------------------------------------------------------- :*/
+/*: -----------------------------------------------------------------------
+    ** This file was stripped of all comments and exported by Snowmobile **
+    ----------------------------------------------------------------------- :*/
 
 /*-
 __script__
