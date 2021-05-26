@@ -5,7 +5,7 @@ This script stores the test cases for `snowmobile.Markup`.
 ## (1) create-temp table~sample_table
 
 - **Notes**
-	- This is just a sample table for the other test st to run on.
+	- This is just a sample table for the other teststatementsto run on.
 * Last-Execution
 	* **outcome**: _completed_
 	* **time**: _1s_

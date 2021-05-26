@@ -21,7 +21,7 @@ that can be leveraged for:
 ```{div} sn-indent-h-cell-left-m, sn-block-list
 >Documentation and standardization of sql
 > 
->Access to individual st within a script
+>Access to individualstatementswithin a script
 > 
 >Lightweight control flow and QA
 > 
@@ -139,8 +139,7 @@ that can be leveraged for:
  - Setup / DDL commands
  - Processing / DML commands
  - Tear-down / drop commands 
- - Descriptive st
- - Statement or script metadata
+ - Descriptivestatements - Statement or script metadata
  ```
 
  The zen of the class is to enable clearly denoting all components of a sql
@@ -341,7 +340,7 @@ that can be leveraged for:
  <div class="sn-indent-h-cell-even">
  <hr class="sn-blue">
  
- The 7 generic sql st within 
+ The 7 generic sqlstatementswithin 
  [overview.sql](script/st/quick-intro) are arbitrary and chosen based only 
  on the loose criteria of:
  ```{div} sn-bold-list
@@ -380,7 +379,7 @@ that can be leveraged for:
  identified and instantiated as its own
  {class}`~snowmobile.core.statement.Statement`.
   
- An overview of the st within a script's context can be sent to the 
+ An overview of thestatementswithin a script's context can be sent to the 
  console with {meth}`script.dtl()<snowmobile.Script.dtl()>`; in the case
  of [{fa}`fixture script`](script/st/quick-intro), this looks like:
  ```
@@ -398,7 +397,7 @@ that can be leveraged for:
  <hr class="sn-grey-dotted sn-top-pad-hr-thick">
   
  ```{div} sn-pre-code-s
- Accessing the first and last st of 
+ Accessing the first and laststatementsof 
  [{fa}`fixture script`](script/st/quick-intro)
  and inspecting a few of their attributes can be done with:
  ``` 
@@ -424,7 +423,7 @@ that can be leveraged for:
  attributes that can be used to alter the scope of a 
  [](#script).
 
- For example, the following snippet filters out `drop` and `select` st 
+ For example, the following snippet filters out `drop` and `select`statements
  based on their {attr}`~snowmobile.core.name.Name.kw` attribute
  and returns a modified [{fa}`fixture script`](script/statements/quick-intro), `s`, 
  that can be operated on within that context:
@@ -663,8 +662,7 @@ that can be leveraged for:
         "with" = "select"
  ```
  The default included above is the reason that the
- {attr}`~snowmobile.core.name.Name.kw` for both the following st
- is `select` as opposed to `select` and `with` respectively:
+ {attr}`~snowmobile.core.name.Name.kw` for both the followingstatements is `select` as opposed to `select` and `with` respectively:
  ```{literalinclude} ../snippets/script/keyword_exceptions.sql
  :language: sql
  :lines: 3-10
@@ -703,8 +701,7 @@ that can be leveraged for:
  
  ```{code-block} toml
     named-objects = [
-        # 'grant' st
-        "select",
+        # 'grant'statements        "select",
         "all",
         "drop",
 
@@ -727,7 +724,7 @@ that can be leveraged for:
  :class: note, toggle, toggle-shown, sn-rm-t-m-code, sn-increase-margin-v-container
 
  The above order is as such so that table qualifiers for the following three 
- (types of) st are reflected in the
+ (types of)statementsare reflected in the
  {attr}`~snowmobile.core.name.Name.obj` for each.
  
  <hr class="sn-spacer-thick">
@@ -934,8 +931,7 @@ that can be leveraged for:
  ```{div} sn-hanging-p
  Using markup within a script enables:
  ```
- - Defining accessors for individual st
- - Adding descriptive information to individual st or to the script itself
+ - Defining accessors for individualstatements - Adding descriptive information to individualstatementsor to the script itself
  - Finer-grained control of the script's execution
  - Generating documentation and cleansed sql files from the working version of a script
 
@@ -989,7 +985,7 @@ that can be leveraged for:
  # Instantiate a Script from sql file
  script = snowmobile.Script(path=path, sn=sn)
 
- # Store individual st for inspection
+ # Store individualstatementsfor inspection
  s1, s2 = script(1), script(2)
 
  print(s1)        #> Statement('I am a tag')

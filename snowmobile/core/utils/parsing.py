@@ -70,18 +70,6 @@ def strip(
     return "\n".join(splitter)
 
 
-# -- arg_to_list test cases
-# input_to_expected = [
-#     (
-#         """['.*_ignore', "ignore.*",'dummy pattern']""",
-#         ['.*_ignore', 'ignore.*', 'dummy pattern']
-#     ),
-# ]
-# for item in input_to_expected:
-#     input, expected = item
-#     assert arg_to_list(input) == expected
-
-
 def dict_flatten(
     attrs: dict,
     delim: Optional[str] = None,

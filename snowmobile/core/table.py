@@ -33,7 +33,6 @@ from . import Script, errors, ExceptionHandler
 from .paths import DDL_DEFAULT_PATH
 
 
-# TODO: (rename) 'table' --> 'nm'
 class Table(Generic):
     """Represents a DataFrame and a Table to be loaded into.
 
@@ -173,6 +172,7 @@ class Table(Generic):
         load_copy: Optional[bool] = None,
         **kwargs,
     ):
+        # TODO: (rename) 'table' --> 'nm'
         super().__init__()
         self.sn: Snowmobile = sn or Snowmobile(**kwargs)
         # if not sn:

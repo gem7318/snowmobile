@@ -7,7 +7,7 @@ This script stores the test cases for `snowmobile.Markup`.
 
 
 - **Notes**
-	- This is just a sample table for the other test st to run on.
+	- This is just a sample table for the other teststatementsto run on.
 * Execution-Information
 	* **Last Outcome**: _completed_
 
