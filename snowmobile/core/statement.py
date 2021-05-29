@@ -14,89 +14,8 @@ from snowflake.connector.errors import DatabaseError, ProgrammingError
 
 from . import ExceptionHandler, Section, Name, errors, cfg
 from . import Generic  # isort: skip
+from .tag import Attrs
 from .connection import Snowmobile
-
-
-class Attrs(dict):
-    """Extended dictionary for attribute storage."""
-    
-    def __init__(
-        self,
-        sn: Optional[Snowmobile] = None,
-        raw: Optional[str] = None,
-        args: Optional[str] = None,
-        **connection_kwargs,
-    ):
-        
-        super().__init__(**(args or dict()))
-        
-        #: snowmobile.Snowmobile: Snowmobile object.
-        self.sn = sn or Snowmobile(**connection_kwargs)
-        
-        #: str: raw values found within a tag.
-        self._raw = raw or str()
-        
-    def _attrs_raw(self, tag: bool = False) -> str:
-        """Raw attributes as found in script."""
-        if not tag or not self._raw:
-            return self._raw
-        _open = self.sn.cfg.script.patterns.core.to_open
-        _close = self.sn.cfg.script.patterns.core.to_close
-        return f"{_open}{self._raw}{_close}"
-
-    @property
-    def _attrs_total(self):
-        """Parses namespace for attributes specified in **snowmobile.toml**.
-
-        Searches attributes for those matching the keys specified in
-        ``script.markdown.attributes.aliases`` within **snowmobile.toml**
-        and adds to the existing attributes stored in :attr:`attrs_parsed`
-        before returning.
-
-        Returns (dict):
-            Combined dictionary of statement attributes from those explicitly
-            provided within the script and from object's namespace if specified
-            in **snowmobile.toml**.
-
-        """
-        current_namespace = {
-            **self.sn.cfg.attrs_from_obj(
-                obj=self, within=list(self.sn.cfg.attrs.from_namespace)
-            ),
-            **self.sn.cfg.methods_from_obj(
-                obj=self, within=list(self.sn.cfg.attrs.from_namespace)
-            ),
-        }
-        namespace_overlap_with_config = set(current_namespace).intersection(
-            self.sn.cfg.attrs.from_namespace  # snowmobile.toml
-        )
-        attrs = {k: v for k, v in self.items()}  # parsed from .sql
-        for k in namespace_overlap_with_config:
-            attr = current_namespace[k]
-            attr_value = attr() if isinstance(attr, Callable) else attr
-            if attr_value:
-                attrs[k] = attr_value
-        return attrs
-
-    def attrs(
-        self, raw: bool = False, total: bool = False, tag: bool = False,
-    ) -> Union[str, Dict, Attrs]:
-        """Explicit accessor for self."""
-        if raw:
-            return self._attrs_raw(tag=tag)
-        if total:
-            return self._attrs_total
-        return {k: v for k, v in self.items()}
-
-    @property
-    def is_tagged(self) -> bool:
-        """Contains multiline tag."""
-        return bool(self._raw)
-        
-    @property
-    def is_multiline(self) -> bool:
-        """Contains multiline tag."""
-        return '\n' in self._raw
 
 
 class Statement(Attrs, Name, Generic):
@@ -145,13 +64,13 @@ class Statement(Attrs, Name, Generic):
             Plain text description of execution time if executed; returned in
             seconds if execution time is less than 60 seconds, minutes otherwise.
         attrs_raw (str):
-            A raw string of the tag/attributes associated with the statement.
+            A raw string of the wrap/attributes associated with the statement.
         attrs_parsed (dict):
-            A parsed dictionary of the tag/attributes associated with the statement.
+            A parsed dictionary of the wrap/attributes associated with the statement.
         is_tagged (bool):
             Indicates whether or not the statement is tagged by the user.
         is_multiline (bool):
-            Indicates whether or not a statement tag is a multiline tag; will
+            Indicates whether or not a statement wrap is a multiline wrap; will
             be `False` by default if :attr:`is_tagged` is `False`.
         first_keyword (sqlparse.sql.Token):
             The first keyword within the statement as a :class:`sqlparse.sql.Token`.
@@ -217,30 +136,48 @@ class Statement(Attrs, Name, Generic):
 
         Attrs.__init__(self, sn=sn, raw=attrs_raw)
         self._sql = sn.cfg.script.isolate_sql(s=self.statement)
-        parsed, self._nm = self.parse()
+        parsed, self._nm_intl = self.parse()
         self.update(parsed)
         
         Name.__init__(
-            self, index=index, sql=self.sql(), nm_pr=self._nm, configuration=self.sn.cfg
+            self,
+            index=index,
+            sql=self.sql(),
+            nm_pr=self._nm_intl,
+            configuration=self.sn.cfg,
         )
 
         self.e = e or ExceptionHandler(within=self)
 
-    def sql(self, set_as: Optional[str] = None) -> Union[str, Statement]:
+    def sql(
+        self, set_as: Optional[str] = None, tag: bool = False,
+    ) -> Union[str, Statement]:
         """Raw sql from statement, including result limit if enabled."""
         if set_as:
             self._sql = set_as
             return self
+        if tag:
+            _attrs = self.tag(raw=False, namespace=True)
+            if _attrs:
+                _tag = self.sn.cfg.script.tag_from_attrs(
+                    attrs=_attrs,
+                    nm=_attrs.get('name', self.nm()),
+                    wrap=False,
+                )
+            else:
+                _tag = self.nm()
+            tag = self.sn.cfg.script.wrap(_tag)
+            return f"{tag}\n{self._sql}"
         if (
             self.sn.cfg.script.result_limit in [-1, 0]
             or self._sql.split('\n')[-1].strip().startswith('limit')
-            or not self._nm.lower().strip().startswith('select')
+            or not self._sql.split('\n')[0].strip().lower().startswith('select')
         ):
             return self._sql
         return f"{self._sql}\nlimit {self.sn.cfg.script.result_limit}"
 
     def parse(self) -> Tuple[Dict, str]:
-        """Parses a statement tag into a valid dictionary.
+        """Parses a statement wrap into a valid dictionary.
 
         Uses the values specified in **snowmobile.toml** to parse a
         raw string of statement arguments into a valid dictionary.
@@ -249,30 +186,30 @@ class Statement(Attrs, Name, Generic):
             *   If :attr:`is_multiline` is `True` and `name` is not included
                 within the arguments, an assertion error will be thrown.
             *   If :attr:`is_multiline` is `False`, the raw string within
-                the tag will be treated as the name.
-            *   The :attr:`tag` attribute is set once parsing is completed
+                the wrap will be treated as the name.
+            *   The :attr:`wrap` attribute is set once parsing is completed
                 and name has been validated.
 
         Returns (dict):
-            Parsed tag arguments as a dictionary.
+            Parsed wrap arguments as a dictionary.
 
         """
         if not self.is_tagged:
             return dict(), str()
 
         if self.is_multiline:
-            attrs_parsed = self.sn.cfg.script.parse_str(block=self.attrs(raw=True))
+            attrs_parsed = self.sn.cfg.script.parse_str(block=self.tag(raw=True))
             if "name" in attrs_parsed:
                 name = attrs_parsed.pop("name")
             else:
                 try:
-                    name = self.sn.cfg.script.parse_name(raw=self.attrs(raw=True))
+                    name = self.sn.cfg.script.parse_name(raw=self.tag(raw=True))
                 except errors.InvalidTagsError as e:
                     raise e
 
             return attrs_parsed, name
 
-        return dict(), self.attrs(raw=True)
+        return dict(), self.tag(raw=True)
 
     def start(self):
         """Sets :attr:`start_time` attribute."""
@@ -281,7 +218,7 @@ class Statement(Attrs, Name, Generic):
     def end(self):
         """Updates execution time attributes.
 
-        In total, sets:
+        In namespace, sets:
             *   :attr:`end_time`
             *   :attr:`execution_time`
             *   :attr:`execution_time_txt`
@@ -297,12 +234,12 @@ class Statement(Attrs, Name, Generic):
         )
 
     def trim(self) -> str:
-        """Statement as a string including only the sql and a single-line tag name.
+        """Statement as a string including only the sql and a single-line wrap name.
 
         note:
-            The tag name used here will be the user-provided tag from the
-            original script or a generated :attr:`Name.nm` if a tag was not
-            provided for a given statement.
+            The wrap name used here will be the user-pr wrap from the
+            original script or a ge :attr:`Name.nm` if a wrap was not
+            pr for a given statement.
 
         """
         patterns = self.sn.cfg.script.patterns
@@ -327,7 +264,7 @@ class Statement(Attrs, Name, Generic):
 
     def as_section(self, incl_sql_tag: Optional[bool] = None, result_wrap: Optional[str] = None) -> Section:
         """Returns current statement as a :class:`Section` object."""
-        attrs = self.attrs(total=True)
+        attrs = self.tag(namespace=True)
         results = attrs.get('results')
         if results and results.empty:
             _ = attrs.pop('results')
@@ -335,8 +272,8 @@ class Statement(Attrs, Name, Generic):
         return Section(
             index=self.index,
             h_contents=self.nm(),
-            parsed=self.attrs(total=True),
-            raw=self.attrs(raw=True),
+            parsed=self.tag(namespace=True),
+            raw=self.tag(raw=True),
             sql=self.sql(),
             cfg=self.sn.cfg,
             results=self.results,
@@ -384,9 +321,9 @@ class Statement(Attrs, Name, Generic):
         """Resets attributes on the statement object to reflect as if read from source.
 
         In its current form, includes:
-            *   Resetting the statement/tag's index to their original values.
+            *   Resetting the statement/wrap's index to their original values.
             *   Resetting the :attr:`is_included` attribute of the statement's
-                :attr:`tag` to `True`.
+                :attr:`wrap` to `True`.
             *   Populating :attr:`error_last` with errors from current context.
             *   Caching current context's timestamp and resetting back to `None`.
 
@@ -509,10 +446,10 @@ class Statement(Attrs, Name, Generic):
 
     @staticmethod
     def _validate_parsed(attrs_parsed: Dict):
-        """Returns args to verify 'name' attribute is present in a multiline tag."""
+        """Returns args to verify 'name' attribute is present in a multiline wrap."""
         condition, msg = (
             attrs_parsed.get("name"),
-            f"Required attribute 'name' not found in multi-line tag's "
+            f"Required attribute 'name' not found in multi-line wrap's "
             f"arguments;\n attributes found are: {','.join(list(attrs_parsed))}",
         )
         return condition, msg

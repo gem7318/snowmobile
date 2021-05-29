@@ -43,13 +43,13 @@ class Configuration(Generic):
             checks for a cached file location and can be useful for container-based
             processes with restricted access to the local file system.
         export_dir(Optional[Path]):
-            Path to save a template `snowmobile.toml` file to; if provided,
+            Path to save a template `snowmobile.toml` file to; if pr,
             the file will be exported within the __init__ method and nothing
             else will be instantiated.
 
     Attributes:
         file_nm (str):
-            Name of configuration file provided; defaults to `snowmobile.toml`.
+            Name of configuration file pr; defaults to `snowmobile.toml`.
         cache (Cache):
             :class:`~snowmobile.core.cache.Cache` object for tracking the
             location of `snowmobile.toml` across of
@@ -124,8 +124,8 @@ class Configuration(Generic):
                 with open(path_to_config, "r") as r:
                     cfg_raw = toml.load(r)
 
-                # set 'provided-creds' value if alias is passed explicitly
-                cfg_raw['connection']['provided-creds'] = creds.lower() if creds else ""
+                # set 'pr-creds' value if alias is passed explicitly
+                cfg_raw['connection']['pr-creds'] = creds.lower() if creds else ""
 
                 # check for specified 'external-sources', else set to defaults
                 ext_sources = cfg_raw["external-sources"]
@@ -227,7 +227,7 @@ class Configuration(Generic):
             attrs (dict):
                 Dictionary containing attributes.
             to_none (bool):
-                Set all of the object's attributes batching a key in `attrs`
+                Set all of the object's attributes batching a key in `wrap`
                 to `None`; defaults ot `False`.
 
         Returns (Any):
@@ -277,7 +277,7 @@ class Configuration(Generic):
 
         Returns dictionary of all combinations of 'arg' ("kw", "obj", "desc",
         "anchor" and "nm"), including empty sets for any 'arg' not included
-        in the keyword arguments provided.
+        in the keyword arguments pr.
 
         """
         scopes = {}
@@ -287,7 +287,7 @@ class Configuration(Generic):
         return {k: v for k, v in scopes.items() if v} if only_populated else scopes
 
     def scopes_from_tag(self, t: Any):
-        """Generates list of keyword arguments to instantiate all scopes for a tag."""
+        """Generates list of keyword arguments to instantiate all scopes for a wrap."""
         return [
             {
                 "base": self.methods_from_obj(obj=t, within=self._SCOPE_ATTRIBUTES)[k](),
@@ -336,7 +336,7 @@ class Configuration(Generic):
             return self
 
         def _reading_provided(self):
-            self.p("(1 of 2) Checking provided path...")
+            self.p("(1 of 2) Checking pr path...")
             return self
 
         def _locating_outcome(self, is_provided: bool, file: str):
@@ -350,7 +350,7 @@ class Configuration(Generic):
 
         def _provided_found(self, file_path: Path):
             path = self.offset_path(file_path=file_path)
-            self.p(f"(2 of 2) Reading provided path {path}")
+            self.p(f"(2 of 2) Reading pr path {path}")
             return self
 
         def _found(self, file_path: Path, is_provided: bool):

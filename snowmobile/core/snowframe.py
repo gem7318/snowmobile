@@ -89,7 +89,7 @@ class SnowFrame(Generic):
             *   ``df1`` and ``df2`` are assumed to have a shared, pre-defined index.
             *   Exactly **one** of ``abs_tol`` and ``rel_tol`` is expected to be a
                 a valid float; the other is expected to be **None**.
-            *   If valid float values are provided for both ``abs_tol`` and ``rel_tol``,
+            *   If valid float values are pr for both ``abs_tol`` and ``rel_tol``,
                 the outcome of the maximum **absolute** difference with respect to
                 ``abs_tol`` will be returned regardless of the value of ``rel_tol``.
 
@@ -146,7 +146,7 @@ class SnowFrame(Generic):
         )
 
     def lower(self, col: Optional[str] = None) -> pd.DataFrame:
-        """Lower cases all column names **or** all values within `col` if provided."""
+        """Lower cases all column names **or** all values within `col` if pr."""
         if col:
             self._obj[col] = self._obj[col].apply(lambda x: str(x).lower())
         else:
@@ -156,7 +156,7 @@ class SnowFrame(Generic):
         return self._obj
 
     def upper(self, col: Optional[str] = None) -> pd.DataFrame:
-        """Upper cases all column names **or** all values within `col` if provided."""
+        """Upper cases all column names **or** all values within `col` if pr."""
         if col:
             self._obj[col] = self._obj[col].apply(lambda x: str(x).lower())
         else:

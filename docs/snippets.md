@@ -90,10 +90,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/configuration/inspect_configuration.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/configuration/inspect_configuration.py"><span>text</span></a>
 ```
 ````
@@ -114,10 +114,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/overview/sample_table.sql>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/overview/sample_table.sql"><span>text</span></a>
 ```
 ````
@@ -138,10 +138,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/script/intro.sql>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/script/intro.sql"><span>text</span></a>
 ```
 ````
@@ -154,14 +154,37 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ````
 <br>
 
+<br>
+
+## Intro
+
+#### *intro1.sql*
+
+````{div} sn-link-group, sn-snippet-only
+```{div} sn-download-snippet
+{download}`Download<./snippets/script/intro/intro1.sql>`
+```
+```{div} sn-snippet-git-link
+<a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/script/intro/intro1.sql"><span>text</span></a>
+```
+````
+````{div} sn-indent-h-cell
+```{literalinclude} /snippets/script/intro/intro1.sql
+:language: sql
+:lines: 1-10
+:lineno-start: 1
+```
+````
+<br>
+
 ### *keyword_exceptions.sql*
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/script/keyword_exceptions.sql>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/script/keyword_exceptions.sql"><span>text</span></a>
 ```
 ````
@@ -178,10 +201,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/script/markup.sql>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/script/markup.sql"><span>text</span></a>
 ```
 ````
@@ -198,10 +221,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/script/overview-base-sn.sql>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/script/overview-base-sn.sql"><span>text</span></a>
 ```
 ````
@@ -218,10 +241,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/script/overview-base.sql>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/script/overview-base.sql"><span>text</span></a>
 ```
 ````
@@ -238,10 +261,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/script/overview-statement-intro.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/script/overview-statement-intro.py"><span>text</span></a>
 ```
 ````
@@ -258,10 +281,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/script/overview.sql>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/script/overview.sql"><span>text</span></a>
 ```
 ````
@@ -278,10 +301,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/script/tags_multi-line.sql>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/script/tags_multi-line.sql"><span>text</span></a>
 ```
 ````
@@ -298,10 +321,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/script/tags_single-line.sql>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/script/tags_single-line.sql"><span>text</span></a>
 ```
 ````
@@ -322,10 +345,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/snowmobile/connecting.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/snowmobile/connecting.py"><span>text</span></a>
 ```
 ````
@@ -342,10 +365,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/snowmobile/connector_cursor_note.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/snowmobile/connector_cursor_note.py"><span>text</span></a>
 ```
 ````
@@ -362,10 +385,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/snowmobile/connector_delayed1.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/snowmobile/connector_delayed1.py"><span>text</span></a>
 ```
 ````
@@ -382,10 +405,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/snowmobile/connector_delayed2.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/snowmobile/connector_delayed2.py"><span>text</span></a>
 ```
 ````
@@ -402,10 +425,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/snowmobile/ensure_alive.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/snowmobile/ensure_alive.py"><span>text</span></a>
 ```
 ````
@@ -422,10 +445,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/snowmobile/executing.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/snowmobile/executing.py"><span>text</span></a>
 ```
 ````
@@ -442,10 +465,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/snowmobile/inspect_connector.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/snowmobile/inspect_connector.py"><span>text</span></a>
 ```
 ````
@@ -462,10 +485,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/snowmobile/specifying_configuration.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/snowmobile/specifying_configuration.py"><span>text</span></a>
 ```
 ````
@@ -482,10 +505,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/snowmobile/specifying_configuration2.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/snowmobile/specifying_configuration2.py"><span>text</span></a>
 ```
 ````
@@ -502,10 +525,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/snowmobile/verify_default_alias_change.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/snowmobile/verify_default_alias_change.py"><span>text</span></a>
 ```
 ````
@@ -526,10 +549,10 @@ nav.md-nav.md-nav--secondary a[href$="page-root"] {
 ---
 
 ````{div} sn-link-group, sn-snippet-only
-```{div} sn-download-snippet 
+```{div} sn-download-snippet
 {download}`Download<./snippets/sql/sql_cross_schema.py>`
 ```
-```{div} sn-snippet-git-link 
+```{div} sn-snippet-git-link
 <a class="reference external" href="https://github.com/GEM7318/Snowmobile/tree/0.2.0/docs/snippets/sql/sql_cross_schema.py"><span>text</span></a>
 ```
 ````

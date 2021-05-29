@@ -30,7 +30,7 @@ class SQL(Base):
         default=True, alias="desc-is-simple"
     )
     pr_over_ge: bool = Field(
-        default=True, alias="provided-over-generated"
+        default=True, alias="pr-over-ge"
     )
     # fmt: on
 

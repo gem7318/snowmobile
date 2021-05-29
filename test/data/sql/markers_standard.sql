@@ -33,7 +33,7 @@ __description: second marker
 
 /*-
 __marker3__
-__description: third marker in total, second consecutive marker between two
+__description: third marker in namespace, second consecutive marker between two
 st.
 -*/
 

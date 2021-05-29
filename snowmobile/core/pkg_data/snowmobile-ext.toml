@@ -42,7 +42,7 @@
 
         [script.markup.attributes.from-namespace]
             # TODO: period separated values for nested vals to vars(obj)[k]
-            #   :: execution.time.str to check if str in obj.callables or obj.attrs
+            #   :: execution.time.str to check if str in obj.callables or obj.wrap
             #   :: * only applying if the bool(val) that's returned is True
             execution_time_txt = 'Execution Time'
             outcome_txt = 'Last Outcome'

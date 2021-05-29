@@ -18,7 +18,7 @@ def test_marker_number_standard(sn_delayed):
 
 @pytest.mark.markers
 def test_marker_number_duplicates(sn_delayed):
-    """Test that two distinct markers were identified amongst 3 total in
+    """Test that two distinct markers were identified amongst 3 namespace in
     `markers_duplicates.sql`."""
     # given
     script = snowmobile.Script(path=FILES["markers_duplicates.sql"], sn=sn_delayed)
@@ -38,7 +38,7 @@ def test_combined_marker_and_statement_indices(sn_delayed):
 
     script = snowmobile.Script(path=FILES["markers_standard.sql"], sn=sn_delayed)
     script_contents_expected: List[Tuple[int, Any[Marker, Statement], str]] = [
-        # (index, BaseClass, 'tag.nm')
+        # (index, BaseClass, 'wrap.nm')
         (1, Marker, "markers_standard.sql"),
         (2, Statement, "create table~sample_table"),
         (3, Marker, "marker2"),

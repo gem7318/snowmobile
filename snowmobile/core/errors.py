@@ -67,7 +67,7 @@ class Error(Exception):
         """Formats a dictionary of arguments into an aligned/indented error msg.
 
         Placed below primary msg such that a primary msg of 'This is a __ error.'
-        combined with the returned value from this method provided with
+        combined with the returned value from this method pr with
         kwargs={'argument-description1': 'argument-value', 'arg2-desc': 'arg2-value'}
         would produce the following error message:
         
@@ -279,7 +279,7 @@ class SnowFrameInternalError(InternalError):
 
 
 class StatementNotFoundError(Error):
-    """Invalid statement name or index has been provided."""
+    """Invalid statement name or index has been pr."""
 
     def __init__(
         self,
@@ -298,7 +298,7 @@ class StatementNotFoundError(Error):
         str_args = self.format_error_args(
             _filter=True,
             **{
-                "name-provided": f"'{self.nm}'",
+                "name-pr": f"'{self.nm}'",
                 "msg": self.msg,
                 "errno": self.errno,
                 "names-found": statements,
@@ -335,9 +335,9 @@ class DuplicateTagError(Error):
             **{"name": f"'{self.nm}'", "msg": self.msg, "errno": self.errno},
         ).strip("\n")
         return f"""
-indistinct statement names found within {self.nm}; tag names must be unique if
+indistinct statement names found within {self.nm}; wrap names must be unique if
 running `script.contents(by_index=False)`.
-see contents of `script.duplicates` for the exact tag names causing the issue.
+see contents of `script.duplicates` for the exact wrap names causing the issue.
 """
 
 
@@ -375,12 +375,12 @@ class ColumnMismatchError(Error):
 
 
 class FileFormatNameError(StatementNotFoundError):
-    """The name of the provided file format is invalid."""
+    """The name of the pr file format is invalid."""
     pass
 
 
 class InvalidTagsError(Error):
-    """Error to be raised when a given statement tag is not valid."""
+    """Error to be raised when a given statement wrap is not valid."""
     pass
 
 

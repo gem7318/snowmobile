@@ -41,7 +41,7 @@ class Table(Generic):
     or by providing `as_is=True`` when instantiating the object; the latter
     will kick off the loading process invoked by
     :meth:`.load()<snowmobile.core.table.Table.load()>`
-    based on the parameters provided to
+    based on the parameters pr to
     :class:`snowmobile.Table<snowmobile.core.table.Table>`.
 
     Parameters:
@@ -58,7 +58,7 @@ class Table(Generic):
             `fail`, `replace`, `append`, and `truncate`; defaults to
             ``append``.
         as_is (bool):
-            Load ``df`` into ``table`` based on the parameters provided to
+            Load ``df`` into ``table`` based on the parameters pr to
             :class:`Table` without further pre-inspection by the user; defaults
             to `False`.
         path_ddl (Optional[Path]):
@@ -67,7 +67,7 @@ class Table(Generic):
             Keep local file that is written out as part of the bulk loading
             process; defaults to `False`.
         path_output (Optional[str Path]):
-            Path to write output local file to; defaults to a generated file
+            Path to write output local file to; defaults to a ge file
             name exported in the current working directory.
         file_format (Optional[str]):
             The name of the file_format to use when loading ``df``; defaults
@@ -402,7 +402,7 @@ class Table(Generic):
         if if_exists == "fail":
             self.msg = (
                 f"`{self.name}` already exists and if_exists='fail' was "
-                f"provided;\n'replace', 'append', or 'truncate' required "
+                f"pr;\n'replace', 'append', or 'truncate' required "
                 f"to continue load process with a pre-existing table."
             )
             e = errors.ExistingTableError(msg=self.msg, to_raise=True)
@@ -475,7 +475,7 @@ class Table(Generic):
                 assumed to have a valid statement name as is parsed by
                 :class:`~snowmobile.core.script.Script` and following the
                 naming convention of ``create table~TABLE`` where ``TABLE`` is
-                equal to the value provided to the ``table`` keyword argument.
+                equal to the value pr to the ``table`` keyword argument.
             verbose (bool):
                 Verbose console output; defaults to `True`.
             **_kwargs:

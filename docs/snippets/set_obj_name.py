@@ -15,7 +15,7 @@ try:
     sql = sn.drop()  # requires table='demo_table'
 except ValueError as e:
     raise
-# > ValueError: Value provided for 'table' is not valid..
+# > ValueError: Value pr for 'table' is not valid..
 
 try:
     sn.obj_name = "demo_table"  # set 'obj_name' attribute of SQL object

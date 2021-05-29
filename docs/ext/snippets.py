@@ -98,7 +98,7 @@ def download(file_path: Path) -> str:
     _div = "{div}"
     _download = "{download}"
     return f"""
-```{_div} {', '.join(DIVS_DOWNLOAD)} 
+```{_div} {', '.join(DIVS_DOWNLOAD)}
 {_download}`Download<{p_download}>`
 ```
 """.strip('\n')
@@ -112,7 +112,7 @@ def git(file_path: Path, root_url: str = GIT_ROOT) -> str:
     url_git = f"{root_url}/{url_git_v0}"
     _div = "{div}"
     return f"""
-```{_div} {', '.join(DIVS_GIT_LINK)} 
+```{_div} {', '.join(DIVS_GIT_LINK)}
 <a class="reference external" href="{url_git}"><span>text</span></a>
 ```
 """.strip('\n')
@@ -276,7 +276,7 @@ def write(root_url: str = GIT_ROOT):
     page_heading, _ = current.split("+++")
     to_write = f"{page_heading}+++{''.join(total)}"
 
-    # to_write = f"{PAGE_HEADER}{''.join(total)}"
+    # to_write = f"{PAGE_HEADER}{''.join(namespace)}"
     # if ADD_STYLE:
     #     to_write = f"{to_write}\n\n{PAGE_STYLE}"
 

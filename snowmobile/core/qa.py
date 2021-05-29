@@ -4,8 +4,8 @@ Derived :class:`~snowmobile.core.statement.Statement` classes.
 These objects derive from :class:`snowmobile.core.statement.Statement`
 and override its :meth:`~snowmobile.core.statement.Statement.process()`
 method to perform additional post-processing of the statement's results
-in conjunction with any parameters provided within the statement's
-:ref:`tags <tag>`.
+in conjunction with any parameters pr within the statement's
+:ref:`tags <wrap>`.
 
 ``s.process()`` modifies a statement's
 :attr:`~snowmobile.core.statement.Statement.outcome` attribute
@@ -189,7 +189,7 @@ class Diff(QA):
 
         """
         qa_cfg = self.sn.cfg.script.qa
-        attrs_parsed = self.attrs()
+        attrs_parsed = self.tag()
         self.partition_on: str = (
             attrs_parsed.get("partition-on", qa_cfg.partition_on)
         )
@@ -220,7 +220,7 @@ class Diff(QA):
             self.e.collect(
                 e=errors.StatementPostProcessingError(
                     msg=(
-                        f"Arguments provided don't result in any index columns "
+                        f"Arguments pr don't result in any index columns "
                         f"on which to join DataFrame's partitions."
                     ),
                     to_raise=True,
@@ -240,7 +240,7 @@ class Diff(QA):
         if not self.compare_cols:
             self.e.collect(
                 e=errors.StatementPostProcessingError(
-                    msg=f"Arguments provided don't result in any comparison columns."
+                    msg=f"Arguments pr don't result in any comparison columns."
                 ),
                 to_raise=True,
             ).set(outcome=-1)

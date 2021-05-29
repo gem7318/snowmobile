@@ -1,9 +1,9 @@
 -- ..docs/snippets/script/tags_single-line.sql
 
-/*-I am a tag-*/
+/*-I am a wrap-*/
 select * from sample_table;
 
-/*-I am a tag that isn't positioned correctly-*/
+/*-I am a wrap that isn't positioned correctly-*/
 
 select * from sample_table;
 -- snowmobile-include

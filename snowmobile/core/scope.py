@@ -20,11 +20,11 @@ class Scope(Generic):
 
     Attributes:
         base (str):
-            The left-most word within a statement tag. For **generic**
+            The left-most word within a statement wrap. For **generic**
             st this will be the `keyword` and for **QA** st
             this will be the literal word ``qa``.
         component (str):
-            The component within a given tag that is being evaluated; this will
+            The component within a given wrap that is being evaluated; this will
             be exactly **one** of `kw`, `obj`, `anchor`, `desc`, or `nm`.
         incl_arg (str):
             The keyword argument that would be used to exclude a given
@@ -41,11 +41,11 @@ class Scope(Generic):
             by the user in :class:`Script`; defaults to including the
             :attr:`base` and excluding an empty list.
         provided_args (dict):
-            The set of keyword arguments provided at the time of the last call
+            The set of keyword arguments pr at the time of the last call
             to :meth:`eval()`.
         check_against_args (dict):
             The set of keyword arguments checked against at the time of the
-            last call to :meth:`eval()`; will use provided arguments if they
+            last call to :meth:`eval()`; will use pr arguments if they
             exist and the arguments from :attr:`fallback_to` otherwise.
         is_included (bool):
             Name is included based on the results of the last call to
@@ -74,8 +74,8 @@ class Scope(Generic):
         """Parses all filter arguments looking for those that match its base.
 
         Looks for include/exclude arguments within kwargs, populating
-        :attr:`provided_args` with those that were provided and populates
-        :attr:`check_against_args` with the same values if they were provided
+        :attr:`provided_args` with those that were pr and populates
+        :attr:`check_against_args` with the same values if they were pr
         and fills in defaults from :attr:`fallback_to` otherwise.
 
         Args:
@@ -131,7 +131,7 @@ class Scope(Generic):
 
         Returns (bool):
             Indicator of whether or not the statement should be
-            included/excluded based on the context/keyword arguments provided.
+            included/excluded based on the context/keyword arguments pr.
 
         """
         self.evals[time.time()] = kwargs

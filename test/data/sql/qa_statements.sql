@@ -206,7 +206,7 @@ union
 	from simple_union;
 
 
-/* statement without a tag */
+/* statement without a wrap */
 select * from snowmobile_testing.sample_table st;
 
 /*-drop-schema~snowmobile_testing-*/

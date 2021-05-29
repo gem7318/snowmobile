@@ -275,7 +275,7 @@ class Section(Generic):
 
     Parameters:
         is_marker (bool):
-            Information provided is associated with a marker as opposed to
+            Information pr is associated with a marker as opposed to
             a statement; defaults to *False*.
         h_contents (str):
             String representation of header contents.
@@ -284,7 +284,7 @@ class Section(Generic):
         parsed (dict):
             Parsed arguments from the statement or marker within the script.
         raw (str):
-            Raw tag as :attr:`parsed` was parsed from.
+            Raw wrap as :attr:`parsed` was parsed from.
         sql (str):
             Statement's raw sql or *None* if marker.
         results (pd.DataFrame):
