@@ -9,11 +9,6 @@
     <span>snowmobile.core.script</span>
 </a>
 
-```{admonition} Warning: This page is incomplete.
- :class: error, sn-inherit-overflow
- &nbsp;
-```
-
 ```{div} sn-dedent-v-b-h
 {class}`snowmobile.Script` parses a raw sql file into a composition of objects 
 that can be leveraged for:
@@ -30,29 +25,6 @@ that can be leveraged for:
 
 <hr class="sn-spacer-thick">
 <hr class="sn-grey">
-<hr class="sn-spacer-thick">
-
-````{admonition} Simplest Execution Mechanism
-:class: tip, toggle, sn-code-pad
-
- ```{div} sn-unset-code-margins
- [](#script) is useful for operating on deep, analytic sql that is otherwise 
- difficult to manage; *the {xref}`execute_stream() method` 
- from the {xref}`snowflake.connector2` is the most straight-forward way to
- execute a raw sql file,* the API for which can be accessed from an instance of 
- <a class="fixture-sn" href="../index.html#fixture-sn"></a> with: 
- ```
- ```{code-block} python
- :emphasize-lines: 4,4
- from codecs import open
- 
- with open(sqlfile, 'r', encoding='utf-8') as f:
-    for cur in sn.con.execute_stream(f):
-        for ret in cur:
-            print(ret)
- ```
-
-````
 
 <hr class="sn-spacer-thick">
 
@@ -76,6 +48,31 @@ that can be leveraged for:
   - [](#markers)
   - [](#patterns)
 ```
+
+<hr class="sn-spacer-thick">
+
+````{admonition} :: if you're just wanting to run some sql
+:class: note, toggle, sn-code-pad, toggle-shown
+
+ ```{div} sn-unset-code-margins
+ *The {xref}`execute_stream() method` 
+ from the {xref}`snowflake.connector2` is the most straight-forward way to
+ execute a raw sql file,* the API for which can be accessed from an instance of 
+ <a class="fixture-sn" href="../index.html#fixture-sn"></a> with: 
+ ```
+ ```{code-block} python
+ import snowmobile
+ 
+ from codecs import open
+ 
+ sn = snowmobile.connect()
+ with open(sqlfile, 'r', encoding='utf-8') as f:
+    for cur in sn.con.execute_stream(f):
+        for ret in cur:
+            print(ret)
+ ```
+
+````
 
 <hr class="sn-spacer-thick2">
 
@@ -219,13 +216,14 @@ that can be leveraged for:
 
  ```{admonition} Note
  :class: note, sn-indent-h-cell-left-m, sn-indent-h-cell-right-m
- The zen of this design is to enable <u>clearly</u> annotating all aspects
- of a sql script that serve a purpose in a way that is: \
- **(1)** human-readable / writable, and \
- **(2)** parsable by {xref}`snowmobile`
+ The simple zen is to enable the consistent, <u>clear</u> annotation of
+ sql in a way that is: \
+ **(1)** easily human-readable / writable \
+ **(2)** syntactically (& idiomatically) compliant \
+ **(3)** identifiable and parsable by {xref}`snowmobile`
  
  **To that end, [snowmobile.Script](#script) intentionally 
- ignores <u>all</u> comments that are not part of a [tag](#tags)**. 
+ ignores <u>all</u> all comments that are not part of a [tag](#tags)**. 
  ```
 
  </div>
