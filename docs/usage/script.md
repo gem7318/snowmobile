@@ -51,7 +51,7 @@ that can be leveraged for:
 
 <hr class="sn-spacer-thick">
 
-````{admonition} :: if you're just wanting to run some sql
+````{admonition} Fyi: if you're just wanting to run some sql
 :class: note, toggle, sn-code-pad, toggle-shown
 
  ```{div} sn-unset-code-margins
@@ -223,7 +223,7 @@ that can be leveraged for:
  **(3)** identifiable and parsable by {xref}`snowmobile`
  
  **To that end, [snowmobile.Script](#script) intentionally 
- ignores <u>all</u> all comments that are not part of a [tag](#tags)**. 
+ ignores <u>all</u> comments that are not part of a [tag](#tags)**. 
  ```
 
  </div>
