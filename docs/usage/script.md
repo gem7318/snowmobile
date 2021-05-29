@@ -137,9 +137,9 @@ that can be leveraged for:
  <hr class="sn-grey-dotted">
 
  ```{div} sn-pre-code-s
- Each command is instantiated and stored as its own statement 
- ({class}`snowmobile.core.Statement<snowmobile.core.statement.Statement>`)
- according to its position in the original script; 
+ Each command is instantiated as its own
+ {class}`Statement<snowmobile.core.statement.Statement>` and stored according
+ to its positive in the original script;
  {meth}`script.dtl()<snowmobile.Script.dtl()>` is used to send a summary
  of the contents parsed by **script** to the console:
  ```
