@@ -139,7 +139,7 @@ that can be leveraged for:
  ```{div} sn-pre-code-s
  Each command is instantiated as its own
  {class}`Statement<snowmobile.core.statement.Statement>` and stored according
- to its positive in the original script;
+ to its position in the original script;
  {meth}`script.dtl()<snowmobile.Script.dtl()>` is used to send a summary
  of the contents parsed by **script** to the console:
  ```
@@ -158,7 +158,7 @@ that can be leveraged for:
 
  `````{admonition} FYI
  :class: note, sn-indent-h-cell-left-m, sn-indent-h-cell-right-m, sn-inline-block-container, sn-clear-title
- {meth}`script.dtl()<snowmobile.Script.dtl()>` is generating this \
+ {meth}`script.dtl()<snowmobile.Script.dtl()>` is generating its \
  output with something like: 
  ```{literalinclude} ../snippets/script/intro/intro1.py
  :language: python
@@ -176,7 +176,6 @@ that can be leveraged for:
 
  ```{div} sn-pre-code-s
  Because these are bare sql statements..
- Storing and inspecting the 3rd statement, for example, can be done with:
  ```
  ```{literalinclude} ../snippets/script/intro/intro1.py
  :language: python
