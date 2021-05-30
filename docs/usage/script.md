@@ -51,14 +51,13 @@ that can be leveraged for:
 
 <hr class="sn-spacer-thick">
 
-````{admonition} Fyi: if you're just wanting to run some sql
-:class: note, toggle, sn-code-pad, toggle-shown
+````{admonition} Note: If you're just wanting to run some sql
+:class: note, toggle, sn-code-pad, sn-clear-title, sn-subtle-background-blue
 
  ```{div} sn-unset-code-margins
- *The {xref}`execute_stream() method` 
- from the {xref}`snowflake.connector2` is the most straight-forward way to
- execute a raw sql file,* the API for which can be accessed from an instance of 
- <a class="fixture-sn" href="../index.html#fixture-sn"></a> with: 
+ *The most straight-forward way to execute a local sql file is
+ through the {xref}`SnowflakeConnection.execute_stream()` method*,
+ the API for which can be accessed from an instance of <a class="fixture-sn" href="../index.html#fixture-sn"></a> with: 
  ```
  ```{code-block} python
  import snowmobile
@@ -80,19 +79,11 @@ that can be leveraged for:
  <div class="sn-section-parent">
 
  (script/model)=
- ### Model
+ ### Model Intro
  ---
 
  <div class="sn-section-connector">&nbsp;</div>
- <div class="sn-section">
- <hr class="sn-spacer-thick">
-
- (script/model/crash-course)=
- #### Crash Course
- ----
-
-  <div class="sn-sub1 sn-dedent-sub">
-  <hr class="sn-sub-h4">
+ <div class="sn-section toggle toggle-shown">
 
  <hr class="sn-spacer-thick2">
 
@@ -113,33 +104,38 @@ that can be leveraged for:
  ```
  `````
 
- <hr class="sn-spacer-thin">
- <hr class="sn-spacer-thin">
- <hr class="sn-grey-dotted">
+ <hr class="sn-spacer-thick">
 
- ```{div} sn-pre-code-s
- [snowmobile.Script](#script) identifies sql and metadata associated with
- individual statements in a sql file; assuming *path* is a full path to
+ (script/model/crash-course)=
+ #### Crash Course
+ ----
+
+  <div class="sn-sub1 sn-dedent-sub">
+  <hr class="sn-sub-h4">
+
+<br>
+
+
+ ##### Creating a Script
+ ``````{tabbed} snowmobile.Script(path=path)
+ :class-content: sn-light-shadow
+ :class-label: sn-tabbed-stack
+
+ [snowmobile.Script](#script) identifies sql and metadata in a sql file; 
+ assuming *path* is a full path to
  <a class="sn-local-fixture" href="./script.html#script-model-crash-course">
   <span>intro1.sql</span>
  </a>, **script** can be created with:
- ```
  ```{literalinclude} ../snippets/script/intro/intro1.py
  :language: python
  :lines: 18-20
  ```
 
- <hr class="sn-spacer-thin">
- <hr class="sn-spacer-thin">
- <hr class="sn-grey-dotted">
-
- ```{div} sn-pre-code-s
  Each command is instantiated as its own
  {class}`Statement<snowmobile.core.statement.Statement>` and stored according
  to its position in the original script;
  {meth}`script.dtl()<snowmobile.Script.dtl()>` is used to send a summary
  of the contents parsed by **script** to the console:
- ```
  ```{literalinclude} ../snippets/script/intro/intro1.py
  :language: python
  :lines: 23-23
@@ -151,12 +147,13 @@ that can be leveraged for:
  ```
  ````
 
-<hr class="sn-spacer-thin">
-
  `````{admonition} FYI
- :class: note, sn-indent-h-cell-left-m, sn-indent-h-cell-right-m, sn-inline-block-container, sn-clear-title
+ :class: note, sn-inline-block-container, sn-clear-title, sn-free-margin, sn-subtle-background-black
  {meth}`script.dtl()<snowmobile.Script.dtl()>` is generating its \
- output with something like: 
+ output with something like:
+ 
+ <hr class="sn-spacer-ultra-thin">
+ 
  ```{literalinclude} ../snippets/script/intro/intro1.py
  :language: python
  :lines: 34-35
@@ -167,9 +164,21 @@ that can be leveraged for:
  :lines: 38-40
  ```
  ````
+ <hr class="sn-spacer-thick">
  `````
+ ``````
+ ``````{tabbed} Instantiating from raw sql
+ :class-content: sn-light-shadow
+ :class-label: sn-tabbed-stack
+ ```{admonition} Missing Content
+ :class: error
+ &nbsp;
+ ```
+ ``````
+ 
+ <hr class="sn-spacer-thick">
 
- <hr class="sn-grey-dotted">
+
 
  ```{div} sn-pre-code-s
  Because these are bare sql statements..
@@ -390,7 +399,6 @@ that can be leveraged for:
 
  <div class="sn-section-connector">&nbsp;</div>
  <div class="sn-section toggle toggle-shown">
-
 
 <hr class="sn-spacer-thick2">
 

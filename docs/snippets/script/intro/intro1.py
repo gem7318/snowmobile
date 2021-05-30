@@ -181,3 +181,7 @@ with script.filter(excl_kw='select') as sf:
 print('\n\n'.join(detail))
 
 script(1).nm()
+
+
+sn = snowmobile.connect()
+sn.con
