@@ -1,90 +1,45 @@
 
 /* colors -------------------------------------------------------------------*/
 :root {
-    /* standard black; font color */
     --sn-black: #000000de;
-
-    /* dark green */
     --sn-green-dark: #0c838f59;
-    /* standard green */
-    /*--sn-green: #11838e;*/
     --sn-green: rgba(138, 255, 255, 0.85);
-    /* light green (admonition title background) */
-    /*--sn-green-light: #72edf936;*/
     --sn-green-light: #019aaab5;
     --sn-green-container-background: #10323a85;
-    /* light green for borders (admonition border) */
-    /*--sn-green-light-border: #11838e2e;*/
     --sn-green-light-border: #16daec2e;
-
-    /* dark blue */
     --sn-blue: #4f91ff;
-    /* light blue (admonition title background) */
     --sn-blue-light: #448aff1c;
-    /* light blue for borders (admonition border) */
     --sn-blue-light-border: #448aff26;
-
-    /* primary light blue */
     --sn-primary-blue-light: #3dceff !important;
-    /* primary dark header color */
     --sn-primary-header-color: #ffff;
     --sn-primary-blue: #2196f3p;
 
-/*    ---------------------------------------------------------------------- */
-    /* background color */
-    /*--sn-background-dark: #131516;*/
-    /*--sn-background-dark: #0f1a25;*/
-
-    /*--sn-background-dark: #02080e;*/
     --sn-background-dark: #040d17;
-
-    /*--sn-cell-input-background-dark: #24282a;*/
-    /*--sn-cell-input-background-dark: #0a1219cf;*/
-    /*--sn-cell-input-background-dark: #000000;*/
     --sn-cell-input-background-dark: #0e1a27;
-
-    /*--sn-cell-output-background-dark: #191c1d;*/
     --sn-cell-output-background-dark: #0e1a2759;
     --sn-cell-output-border-grey: #f0f8ff05;
 
-    /* white text color */
+
     --sn-plain-white: rgba(255, 255, 255, 0.87);
     --sn-code-white: #f3ebe1;
-
-    /*--sn-primary-blue-light: #39b7e9;*/
 
     --sn-fixture-blue-highlight: #448aff26;
     --sn-code-highlight: #222c38;
     --sn-fixture-highlight: #171925;
 
-    /*--sn-purple: #350b13;*/
     --sn-purple: #072630;
 
-    --sn-default-header: linear-gradient(80deg,#051d1fe8,#254780f2 15%, #297690 55%,#135056 75%,#0d0f1d 98%);
-    /*--sn-default-header: linear-gradient(80deg,#11838e00,#254780f2 15%,#39b7e9 35%,#0d3f44 65%,#13050a 98%);*/
-
-    /*--sn-focused-header: linear-gradient(80deg,#051d1fe8,#254780f2 15%, #297690 45%,#135056 65%,#0d0f1d 98%);*/
-    /*--sn-focused-header: #072630;*/
-    --sn-focused-header: linear-gradient(to bottom,#15335117,#0f2430);
-
-    /*--sn-focused-header: linear-gradient(80deg,#11838e00,#254780f2 15%,#39b7e9 35%,#0d3f44 65%,#13050a 98%);*/
-
-    /*--sn-focused-header: linear-gradient(80deg,#11838e00,#254780f2 15%,#0a3242 35%,#020f10 65%,#321525 90%);*/
-
-    --sn-default-nav: linear-gradient(110deg,#14294f 5%,#144b61,#144558 40%,#0d4348 55%,#083338 90%);
-
-    --sn-default-nav-popout: linear-gradient(175deg,#000 1%,#14294f 10%,#153c4c,#175771 40%,#0b393e 55%,#040101 95%);
-    /*--sn-default-nav-popout: linear-gradient(to bottom,#051d1fe8,#254780f2 15%, #297690 55%,#135056 75%,#0d0f1d 98%);*/
-
     --sn-dark-header: linear-gradient(80deg,#1b0608,#254780f2 15%,#235f77 35%,#367d84 65%,#13050a 98%);
+    --sn-default-header: linear-gradient(80deg,#051d1fe8,#254780f2 15%, #297690 55%,#135056 75%,#0d0f1d 98%);
+    --sn-focused-header: linear-gradient(to bottom,#15335117,#0f2430);
+    --sn-default-nav: linear-gradient(110deg,#14294f 5%,#144b61,#144558 40%,#0d4348 55%,#083338 90%);
+    --sn-default-nav-popout: linear-gradient(175deg,#000 1%,#14294f 10%,#153c4c,#175771 40%,#0b393e 55%,#040101 95%);
 
     --sn-descending-background-dark: linear-gradient(to bottom,#93a1b9,#254780f2 4%,#000000f2 5%,#091519 40%,#020b0c 85%);
     --sn-focused-background-dark: #030c15;
 
     --sn-snippet-link: #508c8cd9;
-
     --sn-section-shadow: 0 0 0.5em 0.05em #f8f9fa33;
-
 }
 
 .md-container {
@@ -291,6 +246,44 @@ nav.md-tabs {
 .md-typeset dd {
     margin: 0 0 0.2rem 1.1rem;
 }
+
+dl.py.attribute > dt > code ~ em.property > span.pre {
+    display: none;
+}
+dl.py.attribute > dt > code > span.pre {
+    background-color: #18191a;
+    padding-left: 0.2em;
+    padding-right: 0.2em;
+    padding-bottom: 0.1em;
+    font-weight: 800;
+}
+dl.py.attribute p {
+    padding-right: 0.5rem;
+}
+dl.py.attribute > dt ~ dd > p {
+    font-style: italic;
+    margin-left: -1rem;
+}
+
+
+dl.py.attribute {
+/*     border-left: solid thin #536dfe; */
+/*    background: linear-gradient(to bottom right,#233d54 30%,#0d1721 55%);*/
+    background: linear-gradient(to right,#02080b 10%,#0d1721 80%);
+    /*background: #060b10;*/
+    /*background: linear-gradient(to bottom right,#233d5400 30%,#0d1721 55%);*/
+    margin-right: 1.5rem;
+    padding-left: 0.5rem;
+    /*margin-bottom: -0.2rem;*/
+    /*border-radius: 3%;*/
+    margin-left: 1rem;
+/*     margin-top: -0.5rem; */
+}
+
+dl.py.attribute * {
+    line-height: 0.85rem;
+}
+
 
 /* Reducing line height of ::tabbed directive */
 div.tabbed-set.docutils {
@@ -2225,6 +2218,9 @@ dl.py {
 }
 
 /*.md-typeset dl.py.class * {*/
+dl.py.attribute * {
+    line-height: 1rem;
+}
 .md-typeset dl.py * {
     font-size: .7rem;
     line-height: 1.2rem;
@@ -2256,19 +2252,31 @@ dl.py ul.simple {
 /*    margin-top: 0.5em;*/
 /*}*/
 
-
-dl.py.attribute dd.field-odd {
-/*dl.py dd.field-odd {*/
-    display: block;
-    margin-top: -1.85rem;
-    padding-left: 1.2rem;
-}
-
 /*dl.py.attribute, dl.py.method {*/
 dl.py, dl.py.method {
     padding-top: .35em;
     padding-bottom: .35em;
 }
+
+dl.py.class  dl.py.method {
+    margin-top: 1rem;
+    margin-bottom: 0.3rem;
+    padding-left: 0.5rem;
+    margin-right: 0.5rem;
+    padding-right: 0.5rem;
+    /*background-color: #060b10;*/
+    background: linear-gradient(to right,#02080b 20%,#0d1721 95%);
+    border-left: solid thin #536dfe;
+/*     background: linear-gradient(to right,#1a2d3d 10%,#0d1721); */
+}
+
+dl.py.attribute dd.field-odd {
+    display: block;
+    margin-top: -1.9rem;
+    padding-left: 1.1rem;
+    margin-bottom: -0.4rem;
+}
+
 
 /*dl.py.attribute dd dl.field-list.simple {*/
 dl.py dd dl.field-list.simple {

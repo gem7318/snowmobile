@@ -713,7 +713,7 @@ class Script(Base):
         return has_sql and not s.value.isspace()
 
     @staticmethod
-    def isolate_sql(s: sqlparse.sql.Statement) -> str:
+    def strip_comments(s: sqlparse.sql.Statement) -> str:
         """Isolates just the sql within a :class:`sqlparse.sql.Statement` object."""
         s_sql = s.token_first(skip_cm=True)
         if not s_sql:

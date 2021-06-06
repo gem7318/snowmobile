@@ -16,24 +16,30 @@ class Attrs(dict):
         sn: Optional[Snowmobile] = None,
         raw: Optional[str] = None,
         args: Optional[str] = None,
+        index: Optional[int] = None,
         **connection_kwargs,
     ):
         
         super().__init__(**(args or dict()))
         
-        #: snowmobile.Snowmobile: Snowmobile object.
-        self.sn = sn or Snowmobile(**connection_kwargs)
+        self.sn: Snowmobile = sn or Snowmobile(
+            **{**connection_kwargs, **{'delay': True}}
+        )
+        """Optional[snowmobile.Snowmobile]: Connection / configuration."""
         
-        #: str: raw values found within a wrap.
-        self._raw = raw or str()
+        self.index: int = index
+        """int: Index position within the script."""
         
+        self._raw: str = raw or str()
+        """str: Tag contents as a raw string."""
+    
     def _attrs_raw(self, wrap: bool = False) -> str:
-        """Raw attributes as found in script."""
+        """Prep tag contents based on input."""
         if not wrap or not self._raw:
             return self._raw
         _open, _close = self.sn.cfg.script.tag()
         return f"{_open}{self._raw}{_close}"
-
+    
     @property
     def _attrs_total(self):
         """Parses namespace for attributes specified in **snowmobile.toml**.
@@ -67,7 +73,7 @@ class Attrs(dict):
             if attr_value:
                 attrs[k] = attr_value
         return attrs
-
+    
     def tag(
         self,
         raw: bool = False,
@@ -80,12 +86,12 @@ class Attrs(dict):
         if namespace:
             return self._attrs_total
         return {k: v for k, v in self.items()}
-
+    
     @property
     def is_tagged(self) -> bool:
-        """Contains multiline wrap."""
+        """Statement has a prepended tag."""
         return bool(self._raw)
-        
+    
     @property
     def is_multiline(self) -> bool:
         """Contains multiline wrap."""

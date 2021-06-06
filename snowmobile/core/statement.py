@@ -8,7 +8,9 @@ from typing import Any, Callable, Dict, Optional, Union, Tuple, List
 
 import pandas as pd
 import sqlparse
-from IPython.display import Markdown, display
+
+from pydantic import BaseModel, Field
+
 from pandas.io.sql import DatabaseError as pdDataBaseError
 from snowflake.connector.errors import DatabaseError, ProgrammingError
 
@@ -16,6 +18,33 @@ from . import ExceptionHandler, Section, Name, errors, cfg
 from . import Generic  # isort: skip
 from .tag import Attrs
 from .connection import Snowmobile
+
+
+class Time(BaseModel):
+    """
+    Container for execution time info.
+    """
+    
+    #: int: Unix timestamp statement is started
+    started: int = Field(default_factory=int)
+    
+    #: int: Unix timestamp statement is completed
+    ended: int = Field(default_factory=int)
+    
+    def __init__(self, **data):
+        super().__init__(**data)
+    
+    def __int__(self):
+        """Execution time in seconds."""
+        return int(self.ended - self.started)
+    
+    def __str__(self):
+        """Execution time as a string for console output."""
+        return (
+            f"{int(self)}s"
+            if int(self) < 60
+            else f"{int(int(self) / 60)}m"
+        )
 
 
 class Statement(Attrs, Name, Generic):
@@ -32,10 +61,6 @@ class Statement(Attrs, Name, Generic):
         index (int):
             The context-specific index position of a statement within a script;
             can be `None`.
-        _index (int):
-            The original index position of a statement as read from the source;
-            This is used to restore the index position of a given statement
-            before exiting a specified context within :class:`snowmobile.Script`.
         patterns (config.Pattern):
             :class:`config.Pattern` object for more succinct access to
             values specified in **snowmobile.toml**.
@@ -63,21 +88,10 @@ class Statement(Attrs, Name, Generic):
         execution_time_txt (str):
             Plain text description of execution time if executed; returned in
             seconds if execution time is less than 60 seconds, minutes otherwise.
-        attrs_raw (str):
-            A raw string of the wrap/attributes associated with the statement.
-        attrs_parsed (dict):
-            A parsed dictionary of the wrap/attributes associated with the statement.
-        is_tagged (bool):
-            Indicates whether or not the statement is tagged by the user.
-        is_multiline (bool):
-            Indicates whether or not a statement wrap is a multiline wrap; will
-            be `False` by default if :attr:`is_tagged` is `False`.
         first_keyword (sqlparse.sql.Token):
             The first keyword within the statement as a :class:`sqlparse.sql.Token`.
         sql (str):
             The sql associated with the statement as a raw string.
-        tag (Name):
-            Statement's :class:`~snowmobile.core.name.Name`.
 
     """
 
@@ -129,13 +143,16 @@ class Statement(Attrs, Name, Generic):
         self.patterns: cfg.Pattern = sn.cfg.script.patterns
         self.results: pd.DataFrame = pd.DataFrame()
 
+        #: Time: Execution time info
+        self.time: Time = Time()
+        
         self.start_time: int = int()
         self.end_time: int = int()
         self.execution_time: int = int()
         self.execution_time_txt: str = str()
 
         Attrs.__init__(self, sn=sn, raw=attrs_raw)
-        self._sql = sn.cfg.script.isolate_sql(s=self.statement)
+        self._sql = sn.cfg.script.strip_comments(s=self.statement)
         parsed, self._nm_intl = self.parse()
         self.update(parsed)
         
@@ -177,10 +194,10 @@ class Statement(Attrs, Name, Generic):
         return f"{self._sql}\nlimit {self.sn.cfg.script.result_limit}"
 
     def parse(self) -> Tuple[Dict, str]:
-        """Parses a statement wrap into a valid dictionary.
+        """Parses tag contents into a valid dictionary.
 
         Uses the values specified in **snowmobile.toml** to parse a
-        raw string of statement arguments into a valid dictionary.
+        raw string of statement attributes into a valid dictionary.
 
         note:
             *   If :attr:`is_multiline` is `True` and `name` is not included
@@ -224,8 +241,8 @@ class Statement(Attrs, Name, Generic):
             *   :attr:`execution_time_txt`
 
         """
+        self.time.ended = self.end_time = time.time()
         self._outcome, self.outcome, self.executed = 2, True, True
-        self.end_time = time.time()
         self.execution_time = int(self.end_time - self.start_time)
         self.execution_time_txt = (
             f"{self.execution_time}s"
@@ -242,15 +259,8 @@ class Statement(Attrs, Name, Generic):
             pr for a given statement.
 
         """
-        patterns = self.sn.cfg.script.patterns
-        open_p, close_p = patterns.core.to_open, patterns.core.to_close
-        return f"{open_p}{self.nm()}{close_p}\n{self.sql()};\n"
-
-    # noinspection PydanticTypeChecker,PyTypeChecker
-    def render(self) -> Statement:
-        """Renders the statement's sql as markdown in Notebook/IPython environments."""
-        display((Markdown(self.as_section().sql_md)))
-        return self
+        _open, _close = self.sn.cfg.script.tag()
+        return f"{_open}{self.nm()}{_close}\n{self.sql()};\n"
 
     @property
     def is_derived(self):
@@ -390,6 +400,7 @@ class Statement(Attrs, Name, Generic):
         try:
             if self:
                 self.start()
+                self.time.started = time.time()
                 self.results = self.sn.query(self.sql(), as_df=as_df, lower=lower)
                 self.end()
                 self.e.set(outcome=2)

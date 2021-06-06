@@ -601,13 +601,12 @@ from {_loc}
             
             if df.empty:
                 raise SnowflakeObjectNotFound(
-                    msg=(
-                        f"""
-                        Object not found; double check that the schema object
-                        exists and that the below sql is querying the intended
-                        object:\n\n{sql}
-                        """
-                    )
+                    msg=(f"""
+Object not found; \ndouble check that the schema object
+exists and that the below sql is querying the intended
+object:\n\n{sql}
+"""
+                         )
                 )
             
             comment = df.snf.to_list('comment', n=1)

@@ -18,7 +18,7 @@ script = snowmobile.Script(path=path, sn=sn)
 script.dtl()
 """
 >>>
-a-few-st.sql
+a-few-statements.sql
 ====================
 1: Statement('create table~s1')
 2: Statement('select data~s2')
