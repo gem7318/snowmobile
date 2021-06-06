@@ -261,7 +261,7 @@ dl.py.attribute p {
     padding-right: 0.5rem;
 }
 dl.py.attribute > dt ~ dd > p {
-    font-style: italic;
+    /*font-style: italic;*/
     margin-left: -1rem;
 }
 

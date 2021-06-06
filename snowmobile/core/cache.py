@@ -42,15 +42,20 @@ class Cache(Generic):
         app_dirs = AppDirs(appname=application, appauthor=author, version=version)
 
         self.file_nm = f"{application}_cache.json"
+        """str: Configuration file name; defaults to `snowmobile_cache.json`."""
 
         self.cache_dir = Path(app_dirs.user_cache_dir)
+        """pathlib.Path: Cache directory."""
 
         if not self.cache_dir.exists():
             self.cache_dir.mkdir(mode=0o777, parents=True, exist_ok=False)
 
         self.location = self.cache_dir / self.file_nm
+        """pathlib.Path: Full path to `snowmobile_cache.json`."""
 
         self.contents: Dict = dict()
+        """Dict: Cached contents."""
+        
         if self.location.exists():
             with open(self.location, "r") as r:
                 self.contents = json.load(r)

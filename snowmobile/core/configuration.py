@@ -27,46 +27,8 @@ from .cache import Cache
 
 
 class Configuration(Generic):
-    """User-facing access point for a fully parsed `snowmobile.toml` file.
-
-
-    Args:
-        config_file_nm (Optional[str]):
-            Name of configuration file to use; defaults to `snowmobile.toml`.
-        creds (Optional[str]):
-            Alias for the set of credentials to authenticate with; default
-            behavior will fall back to the `connection.default-creds`
-            specified in `snowmobile.toml`, `or the first set of credentials
-            stored if this configuration option is left blank`.
-        from_config (Optional[str, Path]):
-            A full path to a specific configuration file to use; bypasses any
-            checks for a cached file location and can be useful for container-based
-            processes with restricted access to the local file system.
-        export_dir(Optional[Path]):
-            Path to save a template `snowmobile.toml` file to; if pr,
-            the file will be exported within the __init__ method and nothing
-            else will be instantiated.
-
-    Attributes:
-        file_nm (str):
-            Name of configuration file pr; defaults to `snowmobile.toml`.
-        cache (Cache):
-            :class:`~snowmobile.core.cache.Cache` object for tracking the
-            location of `snowmobile.toml` across of
-            :class:`~snowmobile.Snowmobile`
-        location (Path):
-            Path to configuration file used to instantiate the instance with.
-        connection (snowmobile.core.cfg.Connection):
-            **[connection]**
-        loading (snowmobile.core.cfg.Loading):
-            **[loading]**
-        script (snowmobile.core.cfg.Script):
-            **[script]**
-        sql (snowmobile.core.cfg.SQL):
-            **[sql]**
-        ext_sources (snowmobile.core.cfg.Locations):
-            **[ext-sources]**
-
+    """
+    A parsed `snowmobile.toml` file.
     """
 
     # -- Statement components to be considered for scope.
@@ -84,20 +46,60 @@ class Configuration(Generic):
         export_dir: Optional[Path, str] = None,
         silence: bool = False,
     ):
-        """Instantiates instances of the needed params to locate creds file.
+        """*All keyword arguments optional.*
+        
+        Args:
+            config_file_nm (Optional[str]):
+                Name of configuration file to use; defaults to `snowmobile.toml`.
+            creds (Optional[str]):
+                Alias for the set of credentials to authenticate with; default
+                behavior will fall back to the `connection.default-creds`
+                specified in `snowmobile.toml`, `or the first set of credentials
+                stored if this configuration option is left blank`.
+            from_config (Optional[str, Path]):
+                A full path to a specific configuration file to use; bypasses
+                any checks for a cached file location and can be useful for
+                container-based processes with restricted access to the local
+                file system.
+            export_dir(Optional[Path]):
+                Path to save a template `snowmobile.toml` file to; if pr,
+                the file will be exported within the __init__ method and nothing
+                else will be instantiated.
+                
         """
         # fmt: off
         super().__init__()
 
         self._stdout = self.Stdout(silence=silence)
+        """Stdout: Console output."""
 
         self.file_nm = config_file_nm or "snowmobile.toml"
+        """str: Configuration file name; defaults to 'snowmobile.toml'."""
 
         self.cache = Cache()
+        """snowmobile.core.cache.Cache: Persistent cache; caches :attr:`location`."""
+        
+        self.location = Path()
+        """pathlib.Path: Full path to configuration file."""
+        
+        self.connection: Optional[cfg.Connection] = None
+        """snowmobile.core.cfg.Connection: **[connection]** from snowmobile.toml."""
+        
+        self.loading: Optional[cfg.Loading] = None
+        """snowmobile.core.cfg.Loading: **[loading]** from snowmobile.toml."""
+        
+        self.script: Optional[cfg.Script] = None
+        """snowmobile.core.cfg.Script: **[script]** from snowmobile.toml."""
+        
+        self.sql: Optional[cfg.SQL] = None
+        """snowmobile.core.cfg.SQL: **[sql]** from snowmobile-ext.toml."""
+        
+        self.ext_sources: Optional[cfg.Location] = None
+        """snowmobile.core.cfg.Location: **[external-sources]** from snowmobile.toml."""
 
         # for snowmobile_template.toml export only
         if export_dir:
-            self._stdout._exporting(file_name=self.file_nm)
+            self._stdout.exporting(file_name=self.file_nm)
             export_dir = export_dir or Path.cwd()
             export_path = export_dir / self.file_nm
             template_path = paths.DIR_PKG_DATA / "snowmobile-template.toml"
@@ -124,7 +126,7 @@ class Configuration(Generic):
                 with open(path_to_config, "r") as r:
                     cfg_raw = toml.load(r)
 
-                # set 'pr-creds' value if alias is passed explicitly
+                # set 'provided-creds' value if alias is passed explicitly
                 cfg_raw['connection']['pr-creds'] = creds.lower() if creds else ""
 
                 # check for specified 'external-sources', else set to defaults
@@ -320,7 +322,7 @@ class Configuration(Generic):
         def __init__(self, silence: bool = False):
             super().__init__(silence=silence)
 
-        def _exporting(self, file_name: str):
+        def exporting(self, file_name: str):
             self.p(f"Exporting {file_name}..")
 
         def _exported(self, file_path: Path):

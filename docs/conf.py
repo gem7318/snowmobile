@@ -185,7 +185,7 @@ autoapi_ignore = [
     "**_runner/*",
     "**/.snowmobile/*",
 ]
-autoapi_python_class_content = "class"  # 'both' if __init__ as well
+autoapi_python_class_content = "both"  # 'both' if __init__ as well
 autoapi_member_order = "bysource"  # or 'groupwise'
 # note::
 # - 'bysource' means 'by docstring order' for attributes and 'by actual source'

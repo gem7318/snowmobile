@@ -47,10 +47,18 @@ class Column(Generic):
         src: Optional[str] = None,
     ):
         super().__init__()
+        
         self.original = original
+        """str: Original column name."""
+        
         self.src = src or "original"
+        """str: Source of column; 'df' if from source DataFrame, 'snowmobile' otherwise."""
+        
         self.current = current or self.original
+        """str: Current column name."""
+        
         self.prior = prior or self.current
+        """str: Prior (version of) column name."""
 
     @contextmanager
     def update(self):

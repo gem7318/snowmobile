@@ -38,7 +38,9 @@ class SQL(Base):
         """Returns information schema table for object if other than making plural.
 
         i.e.:
-            *   'table' --> 'tables'
+            *   'tables'  -> 'tables'
+            *   'table'  --> 'tables'
+            *   'schemas' -> 'schemata'
             *   'schema' --> 'schemata'
 
         """
