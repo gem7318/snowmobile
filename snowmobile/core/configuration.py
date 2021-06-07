@@ -1,13 +1,18 @@
 """
-snowmobile.core.Configuration is a parsed snowmobile.toml file.
+snowmobile.core.Configuration is a parsed snowmobile.toml file; class handles:
 
-Class handles:
-    *   Locating `snowmobile.toml`, from cached location or from file system
-        traversal
-    *   Checking **[ext-sources]** for specified external configurations
-    *   Instantiating the individual root sections modules in
-        :mod:`snowmobile.core.cfg`; each is set as an attribute on
-        :class:`~snowmobile.core.configuration.Configuration`.
+1.  Locating `snowmobile.toml`, from:
+
+    a.  A cached location specific to the version of :xref:`snowmobile`
+        and the file name (defaults to `snowmobile.toml`)
+    b.  Finding a file based on its name from traversing the file system,
+        used when initially finding snowmobile.toml or when a bespoke
+        configuration file name has been provided
+        
+2.  Checking **[ext-sources]** for specified external configurations
+3.  Instantiating each section in snowmobile.toml from the (Pydantic)
+    models defined in :mod:`snowmobile.core.cfg`; root sections are set as
+    individual attributes on :class:`~snowmobile.core.configuration.Configuration`
 
 """
 from __future__ import annotations
@@ -154,6 +159,7 @@ class Configuration(Generic):
                 )
 
                 # set root classes as configuration attributes
+                # merged = self._find_and_merge_configurations()
                 self.connection = cfg.Connection(**merged.get('connection', {}))
                 self.loading = cfg.Loading(**merged.get('loading', {}))
                 self.script = cfg.Script(**merged.get('script', {}))
@@ -164,6 +170,9 @@ class Configuration(Generic):
                 raise IOError(e)
 
             # fmt: on
+            
+    def _find_and_merge_configurations(self, **kwargs):
+        pass
 
     @property
     def markdown(self) -> cfg.Markup:

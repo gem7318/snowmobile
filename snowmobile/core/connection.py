@@ -77,10 +77,6 @@ class Snowmobile(sql.SQL):
             :xref:`SnowflakeConnection` object; this attribute is populated
             when a connection is established and can be `None` if the
             :class:`Snowmobile` object was instantiated with `delay=True`.
-        sql (snowmobile.core.sql.SQL):
-            A :class:`snowmobile.SQL` object with the current connection
-            embedded; stores command sql commands as utility methods and is
-            heavily leveraged in `snowmobile`'s internals.
         ensure_alive (bool):
             Establish a new connection if a method requiring a connection
             against the database is called while :attr:`alive` is `False`;
