@@ -1,12 +1,13 @@
 """
-Module handles:
+snowmobile.core.Configuration is a parsed snowmobile.toml file.
 
--   Locating `snowmobile.toml`, from cached location or from file system
-    traversal
--   Checking **[ext-sources]** for specified external configurations
--   Instantiating the parent-level modules from :mod:`snowmobile.core.cfg`
-    as attributes on the :class:`~snowmobile.core.configuration.Configuration`
-    class
+Class handles:
+    *   Locating `snowmobile.toml`, from cached location or from file system
+        traversal
+    *   Checking **[ext-sources]** for specified external configurations
+    *   Instantiating the individual root sections modules in
+        :mod:`snowmobile.core.cfg`; each is set as an attribute on
+        :class:`~snowmobile.core.configuration.Configuration`.
 
 """
 from __future__ import annotations
