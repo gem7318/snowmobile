@@ -3,7 +3,7 @@
 :xref:`snowmobile`'s object model and a given instance is often shared across
 multiple objects at once.
 
-It is the primary method of executing st against the warehouse and
+It is the primary method of executing statement against the warehouse and
 it stores the fully parsed & validated ``snowmobile.toml`` file it was
 instantiated with as its :attr:`~snowmobile.core.connection.Snowmobile.cfg`
 attribute.
@@ -82,7 +82,7 @@ class Snowmobile(sql.SQL):
             against the database is called while :attr:`alive` is `False`;
             defaults to `True`.
         e (ExceptionHandler):
-            A :class:`ExceptionHandler<snowmobile.core.ExceptionHandler`
+            A :class:`ExceptionHandler<snowmobile.core.exception_handler.ExceptionHandler`
             class for orchestrating exceptions across objects; kept as a
             public attribute on the class as examining its contents can be
             helpful in debugging database errors.

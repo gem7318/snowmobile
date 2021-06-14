@@ -58,7 +58,7 @@ Header-levels and formatting of tagged information is configured in the
 
         ## (2) update-table~dummy_name2
         ----
-        [structure repeats for all st in the script]
+        [structure repeats for all statements in the script]
 
         ```
 

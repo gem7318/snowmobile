@@ -1,18 +1,52 @@
 """
-:class:`~snowmobile.Table` is a data loading solution that re-implements
-the :xref:`bulk loading from a local file system` to load a
-:class:`~pandas.DataFrame`, ``df``, into a table, the primary features of which are:
+:class:`snowmobile.Table` is a canned implementation of
+the :xref:`bulk loading from a local file system` standard and is intended to
+provide a predictable, no-nonsense method of loading an :xref:`DataFrame`,
+``df``, into a ``table`` (:class:`str`).
 
--   Generating and executing DDL if the table does not yet exist
--   Generating and executing DDL for the *file format* being used if doesn't
-    exist in current schema prior to starting load; supports different file
-    formats pulled from a DDL script that :class:`~snowmobile.Table` locates
-    when the object is instantiated
--   Dimensional compatibility checks between ``df`` and the table being loaded
-    into
--   Standardizing of column names in ``df`` pre-load, including de-duplication
-    of column names
--   `if_exists` in `replace`, `truncate`, `append`, `fail`
+------
+
+.. note::
+   
+   **Effort behind it is primarily focused on:**
+   
+   #.   Generating and executing generic DDL for ``df`` if the table doesn't yet
+        exist
+   
+   #.   Executing DDL for the **file format** being used `if it doesn't yet exist
+        in the current schema`; optionally supports locating and executing DDL for
+        file formats stored in an external SQL file, the location of which can be
+        specified in ``snowmobile.toml``
+       
+        * In the case of the latter, :class:`snowmobile.Table` will create a
+          :class:`~snowmobile.core.script.Script` from the
+          configured path and execute the (file format DDL) statement whose
+          tagged name maps to the value provided in the ``file_format`` argument
+          of :class:`snowmobile.Table()<snowmobile.core.table.Table>`
+        * Occurs prior to attempting the load of ``df``, and an error will be
+          thrown during the creation of the :class:`Table` if the
+          :class:`~snowmobile.core.script.Script` it creates does not contain a
+          statement whose name matches  the specified format or if another
+          error is raised as the file is parsed
+        * Load times can be sped up and the process described above bypassed by
+          providing ``validate_format=False``
+          to :class:`snowmobile.Table()<snowmobile.Table>`
+   
+   #.   Dimensional compatibility checks between ``df`` and the table being loaded
+        into
+       
+        * Load times can be sped up by providing ``validate_table=False`` to
+          :class:`snowmobile.Table()<snowmobile.Table>`
+   
+   #.   Processing column names of ``df`` to a generic database standard prior to
+        loading, including de-duplication of field names when applicable
+   
+   #.   Argument or configuration based handling of action to take if table being
+        loaded into already exists (respectively) via the ``if_exists`` argument to
+        :class:`snowmobile.Table()<snowmobile.Table>` or its associated section in
+        ``snowmobile.toml``; valid values are **replace**, **truncate**, **append**,
+        **fail**
+
 
 """
 from __future__ import annotations
@@ -34,15 +68,15 @@ from .paths import DDL_DEFAULT_PATH
 
 
 class Table(Generic):
-    """Represents a DataFrame and a Table to be loaded into.
+    """Constructed with a :class:`DataFrame` and a table name to load into.
 
     The ``df`` and ``table``'s compatibility can be inspected prior to
     calling the :meth:`Table.load()<snowmobile.table.Table.load()>` method
     or by providing `as_is=True`` when instantiating the object; the latter
     will kick off the loading process invoked by
     :meth:`.load()<snowmobile.core.table.Table.load()>`
-    based on the parameters pr to
-    :class:`snowmobile.Table<snowmobile.core.table.Table>`.
+    based on the parameters provided to
+    :class:`snowmobile.Table()<snowmobile.core.table.Table>`.
 
     Parameters:
         df (DataFrame):
@@ -51,8 +85,8 @@ class Table(Generic):
             The table name to load ``df`` into.
         sn (Optional[Snowmobile]):
             An instance of :class:`~snowmobile.Snowmobile`; can be used to
-            load a table on a specific connection/session or from
-            a configuration/``snowmobile.toml`` file.
+            load a table on a specific connection or from a specific
+            ``snowmobile.toml`` file.
         if_exists (Optional[str]):
             Action to take if ``table`` already exists - options are
             `fail`, `replace`, `append`, and `truncate`; defaults to
@@ -84,12 +118,12 @@ class Table(Generic):
             Reformat applicable columns of ``df`` to be DB-compliant; defaults
             to `True`.
 
-            Reformatting primarily includes:
+            Reformatting primarily entails:
                 -   Replacing spaces and special characters with underscores
                 -   De-duping consecutive special characters
                 -   De-duping repeated column names; adds an ``_i`` suffix to
-                    duplicate fields where ``i`` is the nth duplicate for the
-                    field
+                    duplicate fields where ``i`` is the nth duplicate name for
+                    a field
 
         validate_format (Optional[bool]):
             Validate the :xref:`file format` being used prior to kicking off
@@ -174,9 +208,7 @@ class Table(Generic):
     ):
         # TODO: (rename) 'table' --> 'nm'
         super().__init__()
-        self.sn: Snowmobile = sn or Snowmobile(**kwargs)
-        # if not sn:
-        #     sn = Snowmobile(delay=delay, **kwargs)
+        self.sn: Snowmobile = sn or Snowmobile(delay=True, **kwargs)
 
         # combine kwargs + snowmobile.toml
         # --------------------------------
@@ -307,9 +339,83 @@ class Table(Generic):
 
         if as_is:
             self.load()
+            
+
+    def load(
+        self,
+        if_exists: Optional[str] = None,
+        from_script: Path = None,
+        verbose: bool = True,
+        **kwargs,
+    ) -> Table:
+        """Loads ``df`` into ``table``.
+
+        Args:
+            if_exists (Optional[str]):
+                Determines behavior to take if the table being loaded into
+                already exists; defaults to **append**; options are **replace**,
+                **append**, **truncate**, and **fail**
+            from_script (Optional[Union[Path, str]]):
+                Path to sql file containing custom DDL for ``table``; DDL is
+                assumed to have a valid statement name as is parsed by
+                :class:`~snowmobile.core.script.Script` and following the
+                naming convention of ``create table~TABLE`` where ``TABLE`` is
+                equal to the value provided to the ``table`` keyword argument
+            verbose (bool):
+                Verbose console output; defaults to **True**
+
+        Returns (Table):
+            The :class:`Table` after attempting load of ``df`` into
+            ``table``; a successful load can be verified by inspecting
+            :attr:`loaded`
+
+        """
+        if_exists = if_exists or self.if_exists
+        if if_exists not in ("fail", "replace", "append", "truncate"):
+            raise ValueError(
+                f"Value passed to `if_exists` is not a valid argument;\n"
+                f"Accepted values are: 'fail', 'replace', 'append', and 'truncate'"
+            )
+
+        # check for table existence; validate if so, all respecting `if_exists`
+        if self.validate_table:
+            self.validate(if_exists=if_exists)
+            if self.e.seen(to_raise=True):
+                if self.on_error != 'c':
+                    raise self.e.get(to_raise=True, last=True)
+                else:
+                    return self
+
+        try:
+            self._stdout_starting(verbose)
+            self.to_local()  # save to local file
+            load_statements = self.load_statements(  # includes DDL if self.exists=False
+                from_script=from_script
+            )
+            self._load_start = time.time()
+            for i, s in enumerate(load_statements, start=1):
+                self.db_responses[s] = self.sn.query(s).snf.to_list(n=1)  # store db responses
+                self._stdout_progress(i, s, load_statements, if_exists, verbose)
+            self.loaded = True
+
+        except (ProgrammingError, pdDataBaseError, DatabaseError) as e:
+            self.loaded = False
+            self.e.collect(e=e)
+            if self.on_error != 'c':
+                raise e
+
+        finally:
+            self._load_end = time.time()
+            self.sql.drop(nm=f"{self.name}_stage", obj="stage")  # drop stage
+            if not self.keep_local:
+                os.remove(str(self.path_output))
+            self.df = self.df.snf.original  # revert to original form
+            self._stdout_time(verbose=(not kwargs.get("silence") and self.loaded))
+
+        return self
 
     @property
-    def exists(self):
+    def exists(self) -> bool:
         """Indicates if the target table exists."""
         if not self._exists:
             self._exists = self.sql.exists()
@@ -350,15 +456,15 @@ class Table(Generic):
         """Indicates if columns match between DataFrame and table."""
         return all(d[0] == d[1] for d in self.col_diff().values())
 
-    def load_statements(self, from_script: Path):
-        """Generates exhaustive list of the st to execute for a given
+    def load_statements(self, from_script: Path) -> List[str]:
+        """Generates exhaustive list of the statements to execute for a given
         instance of loading a DataFrame."""
         load_statements = self._load_sql
         if self.requires_sql:
             load_statements.insert(0, self._load_prep_sql(from_script=from_script))
         return load_statements
 
-    def to_local(self, quote_all: bool = True):
+    def to_local(self, quote_all: bool = True) -> None:
         """Export to local file via configuration in ``snowmobile.toml``."""
         export_options = self.sn.cfg.loading.export_options[self.file_format]
         if quote_all:
@@ -376,7 +482,7 @@ class Table(Generic):
         return int(self._upload_validation_end - self._upload_validation_start)
 
     @property
-    def tm_total(self):
+    def tm_total(self) -> int:
         """Total seconds elapsed for load."""
         return self.tm_load + self.tm_validate_load
 
@@ -455,81 +561,6 @@ class Table(Generic):
             self.e.collect(e)
 
         self._upload_validation_end = time.time()
-
-    def load(
-        self,
-        if_exists: Optional[str] = None,
-        from_script: Path = None,
-        verbose: bool = True,
-        **_kwargs,
-    ) -> Table:
-        """Loads ``df`` into ``table``.
-
-        Args:
-            if_exists (Optional[str]):
-                Over-ride pre-existing *if_exists* value - options are
-                `replace`, `append`, `truncate`, and `fail`; defaults to
-                `append`.
-            from_script (Optional[Union[Path, str]]):
-                Path to sql file containing custom DDL for ``table``; DDL is
-                assumed to have a valid statement name as is parsed by
-                :class:`~snowmobile.core.script.Script` and following the
-                naming convention of ``create table~TABLE`` where ``TABLE`` is
-                equal to the value pr to the ``table`` keyword argument.
-            verbose (bool):
-                Verbose console output; defaults to `True`.
-            **_kwargs:
-                Configuration kwargs; API-ignored arguments.
-
-        Returns (Table):
-            The updated object prior to attempting load of ``df`` into
-            ``table``; a successful load can be verified by inspecting the
-            ``loaded`` attribute.
-
-        """
-        if_exists = if_exists or self.if_exists
-        if if_exists not in ("fail", "replace", "append", "truncate"):
-            raise ValueError(
-                f"Value passed to `if_exists` is not a valid argument;\n"
-                f"Accepted values are: 'fail', 'replace', 'append', and 'truncate'"
-            )
-
-        # check for table existence; validate if so, all respecting `if_exists`
-        if self.validate_table:
-            self.validate(if_exists=if_exists)
-            if self.e.seen(to_raise=True):
-                if self.on_error != 'c':
-                    raise self.e.get(to_raise=True, last=True)
-                else:
-                    return self
-
-        try:
-            self._stdout_starting(verbose)
-            self.to_local()  # save to local file
-            load_statements = self.load_statements(  # includes DDL if self.exists=False
-                from_script=from_script
-            )
-            self._load_start = time.time()
-            for i, s in enumerate(load_statements, start=1):
-                self.db_responses[s] = self.sn.query(s).snf.to_list(n=1)  # store db responses
-                self._stdout_progress(i, s, load_statements, if_exists, verbose)
-            self.loaded = True
-
-        except (ProgrammingError, pdDataBaseError, DatabaseError) as e:
-            self.loaded = False
-            self.e.collect(e=e)
-            if self.on_error != 'c':
-                raise e
-
-        finally:
-            self._load_end = time.time()
-            self.sql.drop(nm=f"{self.name}_stage", obj="stage")  # drop stage
-            if not self.keep_local:
-                os.remove(str(self.path_output))
-            self.df = self.df.snf.original  # revert to original form
-            self._stdout_time(verbose=(not _kwargs.get("silence") and self.loaded))
-
-        return self
 
     @property
     def _load_sql(self) -> List[str]:

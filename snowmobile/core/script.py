@@ -52,7 +52,7 @@ class Script(Generic):
             A raw string of valid sql code as opposed to reading from a
             ``path``.
         as_generic (bool):
-            Instantiate all st as generic st; skips all checks
+            Instantiate all statements as generic st; skips all checks
             for a mapping of a statement anchor to a derived statement class
             to instantiate in the place of a generic
             :class:`~snowmobile.core.statement.Statement`.
@@ -71,7 +71,7 @@ class Script(Generic):
         patterns (snowmobile.core.cfg.script.Pattern):
             Configured patterns from :ref:`snowmobile.toml`.
         as_generic (bool):
-            Instantiate all st as generic st; skips all checks
+            Instantiate all statements as generic st; skips all checks
             for a mapping of a statement anchor to a derived statement class
             to instantiate in the place of a generic
             :class:`~snowmobile.core.statement.Statement`.
@@ -239,7 +239,7 @@ class Script(Generic):
             index (int):
                 Index position of the statement within the script; defaults
                 to ``n + 1`` if index is not pr where ``n`` is the number
-                of st within the script at the time ``parse_one()``
+                of statements within the script at the time ``parse_one()``
                 is called.
             nm (Optional[str]):
                 Optionally pr the name of the statement being added; the
@@ -323,7 +323,7 @@ class Script(Generic):
         )
 
     def _parse_statements(self, stream: Optional[str] = None) -> None:
-        """Instantiates statement objects for all st in source sql."""
+        """Instantiates statement objects for all statements in source sql."""
         if not stream:
             self._statements_all.clear()
         parsed = self._stream(stream=stream)
@@ -340,7 +340,7 @@ class Script(Generic):
         }
 
     def _parse(self):
-        """Parses st and markers within :attr:`source`."""
+        """Parses statements and markers within :attr:`source`."""
         try:
             self._parse_statements()
             self._parse_markers()
@@ -375,7 +375,7 @@ class Script(Generic):
         return {k: scope.get(k, template[k]) for k in template}
 
     def _update_scope_statements(self, scope_to_set: Dict) -> None:
-        """Applies a set of scope arguments to all st within the script.
+        """Applies a set of scope arguments to all statements within the script.
 
         Args:
             scope_to_set (dict):
@@ -553,8 +553,8 @@ class Script(Generic):
             # then reset context
             self.reset(
                 index=True,       # restore statement indices
-                scope=True,       # reset included/excluded status of all st
-                ctx_id=True,      # cache context tmstmp for both script and st
+                scope=True,       # reset included/excluded status of all statements
+                ctx_id=True,      # cache context tmstmp for both script and statements
                 in_context=True,  # release 'in context manager' indicator (to False)
                 _filter=True,     # release 'impose filter' indicator (to  False)
             )
@@ -571,7 +571,7 @@ class Script(Generic):
 
     @property
     def depth(self) -> int:
-        """Count of st in the script."""
+        """Count of statements in the script."""
         if not self._statements_all:
             return 0
         return self._depth()
@@ -599,14 +599,14 @@ class Script(Generic):
 
     @property
     def excluded(self):
-        """All st by index position excluded from the current context."""
+        """All statements by index position excluded from the current context."""
         return {
             i: s for i, s in self._statements_all.items() if i not in self.st
         }
 
     @property
     def executed(self) -> Dict[int, Statement]:
-        """Executed st by index position included in the current context."""
+        """Executed statements by index position included in the current context."""
         return {i: s for i, s in self.st.items() if s.executed}
 
     def reset(
@@ -617,7 +617,7 @@ class Script(Generic):
         scope: bool = False,
         _filter: bool = False,
     ) -> Script:
-        """Resets indices and scope on all st to their state as read from source.
+        """Resets indices and scope on all statements to their state as read from source.
 
         Invoked before exiting :meth:`filter()` context manger to reverse
         the revised indices set by :meth:`index_to()` and inclusion/
@@ -677,7 +677,7 @@ class Script(Generic):
         title: bool = True,
         r: bool = False,
     ) -> Union[str, None]:
-        """Prints summary of st within the current scope to console."""
+        """Prints summary of statements within the current scope to console."""
         dtl = self.st if not full else self._adjusted_contents
         depth = self._depth(full=full)
         if excluded:
@@ -758,7 +758,7 @@ class Script(Generic):
 
     @property
     def _intra_statement_markers(self):
-        """All markers (raw text) above/between st by index position."""
+        """All markers (raw text) above/between statements by index position."""
         return {
             i: self._intra_statement_marker_hashmap_txt[h]
             for h, i in self._intra_statement_marker_hashmap_idx.items()
@@ -802,7 +802,7 @@ class Script(Generic):
     def _get_marker_adjusted_idx(
         self, idx: int, counter: Counter, is_marker: bool = False, as_int: bool = False
     ) -> int:
-        """Generates an index (int) taking into account st and markers."""
+        """Generates an index (int) taking into account statements and markers."""
         # sourcery skip: simplify-constant-sum
         index = idx + (
             sum(v for k, v in counter.items() if k <= idx)
@@ -830,7 +830,7 @@ class Script(Generic):
 
     @property
     def _adjusted_contents(self):
-        """All st and markers by adjusted index position."""
+        """All statements and markers by adjusted index position."""
         try:
             counter = Counter(round(k) for k in self.markers)
             adjusted_statements = self._adjusted_statements(counter=counter)
@@ -895,10 +895,10 @@ class Script(Generic):
         Args:
             _id (Optional[str, int, Tuple[int, int], List]):
                 Identifier for statement(s) to execute, can be either:
-                    - *None* (default); execute all st
+                    - *None* (default); execute all statements
                     - A single statement's :attr:`~snowmobile.core.Name.nm`
                     - A single statement's index position
-                    - A tuple of lower/upper index bounds of st to execute
+                    - A tuple of lower/upper index bounds of statements to execute
                     - A list of statement names or index positions to execute
             as_df (bool):
                 Store statement's results as a :class:`~pandas.DataFrame`;

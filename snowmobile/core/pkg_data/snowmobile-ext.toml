@@ -99,7 +99,7 @@
     desc-is-simple = true
 
     named-objects = [
-        # 'grant' st
+        # 'grant' statements
         "select",
         "all",
         "drop",

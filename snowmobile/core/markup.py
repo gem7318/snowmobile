@@ -11,10 +11,10 @@ statement or marker within the script.
 
     Instead, ``m`` will generate and export the following two files:
 
-    -   A sql file stripped of all untagged comments, limited to st
+    -   A sql file stripped of all untagged comments, limited to statements
         within the context of ``script`` at the time ``m`` was created
     -   A markdown representation of the code and markup associated with the
-        same set of st
+        same set of statements
 
     By default, these files are exported to a ``.snowmobile`` directory
     alongside the sql file that was read by the ``script``; the directory name
@@ -97,7 +97,7 @@ class Markup(Generic):
             ``path`` is a full :class:`~pathlib.Path` to the sql file that the
             ``script`` was created from.
         incl_sql (bool):
-            Include st in export.
+            Include statements in export.
         incl_markers (bool):
             Include markers in export.
         incl_sql_tag (bool):

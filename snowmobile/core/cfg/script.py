@@ -733,9 +733,9 @@ class Script(Base):
             *   :meth:`split_sub_blocks()` traverses that space and identifies
                 all spans of text wrapped in `open` (``/*-``) and `close`
                 (``-*/``) tags, storing their index positions relative to the
-                other st & markers.
+                other statements & markers.
             *   These are stored as :class:`snowmobile.core.Script` attributes
-                as st are parsed and so that they can be exported in
+                as statements are parsed and so that they can be exported in
                 the appropriate order to a markdown file.
 
         Args:
@@ -851,7 +851,7 @@ class Script(Base):
         Will return ``sql`` with no modification if it's already a
         :mod:`sqlparse.sql` object.
 
-        Needed to accommodate dynamic addition of st as strings to
+        Needed to accommodate dynamic addition of statements as strings to
         an existing :class:`~snowmobile.Script` object from
         from raw strings as opposed to a :class:`sqlparse.sql.Statement`
         objects as is done when reading a sql file.

@@ -44,7 +44,7 @@ class SQL(Generic):
         *   All arguments except for :attr:`sn` are optional.
         *   The benefit of setting the other attributes on an instance of :class:`SQL`
             is to (optionally) avoid passing the same information to multiple methods
-            when generating a variety of st around the same object.
+            when generating a variety of statements around the same object.
 
     Attributes:
         nm (str):

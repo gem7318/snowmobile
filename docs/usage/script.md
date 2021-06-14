@@ -1,27 +1,29 @@
 (usage/script)=
 # Script
 <!--suppress ALL -->
-<hr class="sn-grey">
-<a
+
+ <hr class="sn-grey">
+
+ <a
     class="sphinx-bs badge badge-primary text-white reference external sn-api sn-link-container2"
     href="../autoapi/snowmobile/core/script/index.html"
     title="API Documentation">
     <span>snowmobile.core.script</span>
-</a>
+ </a>
 
-```{div} sn-dedent-v-b-h
-{class}`snowmobile.Script` parses a raw sql file into a composition of objects 
-that can be leveraged for:
-```
-```{div} sn-indent-h-cell-left-m, sn-block-list
->Documentation and standardization of sql
-> 
->Access to individual statements within a script
-> 
->Lightweight control flow and QA
-> 
->Code generation and warehouse cleanup
-```
+ ```{div} sn-dedent-v-b-h
+ {class}`snowmobile.Script` parses a raw sql file into a composition of objects 
+ that can be leveraged for:
+ ```
+ ```{div} sn-indent-h-cell-left-m, sn-block-list
+ >Documentation and standardization of sql
+ > 
+ >Access to individual statements within a script
+ > 
+ >Lightweight control flow and QA
+ > 
+ >Code generation and warehouse cleanup
+ ```
 
 <hr class="sn-spacer-thick">
 <hr class="sn-grey">

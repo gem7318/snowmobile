@@ -285,11 +285,11 @@ class Configuration(Generic):
         }
 
     def scopes_from_kwargs(self, only_populated: bool = False, **kwargs) -> Dict:
-        """Turns filter arguments into a valid set of kwargs for :class:`Scope`.
+        """Turns *script.filter()* arguments into a valid set of kwargs for :class:`Scope`.
 
         Returns dictionary of all combinations of 'arg' ("kw", "obj", "desc",
         "anchor" and "nm"), including empty sets for any 'arg' not included
-        in the keyword arguments pr.
+        in the keyword arguments provided.
 
         """
         scopes = {}

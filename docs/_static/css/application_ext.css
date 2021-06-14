@@ -10,7 +10,10 @@
     --sn-blue: #4f91ff;
     --sn-blue-light: #448aff1c;
     --sn-blue-light-border: #448aff26;
-    --sn-primary-blue-light: #3dceff !important;
+    /*--sn-primary-blue-light: #3dceff !important;*/
+    /*--sn-primary-blue-light: #55abff !important;*/
+    --sn-primary-blue-light: #55b6ff !important;
+    /*--sn-primary-blue-light: #46adff !important;*/
     --sn-primary-header-color: #ffff;
     --sn-primary-blue: #2196f3p;
 
@@ -55,7 +58,8 @@ body, input {
 
 
 [data-md-color-primary=blue] .md-typeset a {
-    color: var(--sn-primary-blue-light) !important;
+    /*color: var(--sn-primary-blue-light) !important;*/
+    color: var(--sn-primary-blue-light);
 } /* primary links */
 .md-nav__link[data-md-state="blur"] {
     color: #f7f7f78a;
@@ -151,10 +155,10 @@ p>code.docutils.notranslate {
     /*color: var(--sn-code-white);*/
     color: aliceblue;
 } /* in-line back-ticked code */
-p a code span.pre {
-    background-color: inherit;
-    color: inherit;
-} /* internal reference links */
+/*.sn-pre-code p a code span.pre {*/
+/*    background-color: inherit;*/
+/*    color: inherit;*/
+/*} !* internal reference links *!*/
 
 
 /* Global spacing settings for content container --------------------------- */
@@ -251,7 +255,7 @@ dl.py.attribute > dt > code ~ em.property > span.pre {
     display: none;
 }
 dl.py.attribute > dt > code > span.pre {
-    background-color: #18191a;
+    /*background-color: #18191a;*/
     padding-left: 0.2em;
     padding-right: 0.2em;
     padding-bottom: 0.1em;
@@ -660,6 +664,7 @@ div.sn-dedent-list>ul>li>p>a>span{
 /*}*/
 .sn-dedent-list li span:hover {
     border-bottom: solid medium aliceblue;
+    font-weight: initial !important;
 }
 
 div.sn-dedent-list:not(.sn-depth1)>ul>li>p>a>span{
@@ -1376,7 +1381,8 @@ div.admonition label.tabbed-label {
     border-left-color: #0047c9;
 }
 .md-typeset .admonition > .admonition-title::before, .md-typeset .admonition > summary::before, .md-typeset details > .admonition-title::before, .md-typeset details > summary::before {
-    color: #59d2ff;
+    /*color: #59d2ff;*/
+    color: #1f6eff;
 }
 .md-typeset .admonition > .admonition-title, .md-typeset .admonition > summary, .md-typeset details > .admonition-title, .md-typeset details > summary {
     border-bottom-color: #0047c91a;
@@ -1912,20 +1918,20 @@ span.md-nav__link.caption {
 } /* Toggle - Setup */
 
 .toggle.admonition.note .toggle-button-hidden:before {
-    background-color: #04142b;
+    background-color: #536dfe;
     color: rgba(250, 243, 233, 0.76);
 } /* Toggle - Note */
 .admonition.note .toggle-button .bar {
-    background-color: #59d2ff;
+    background-color: #295fc1;
 } /* Toggle - Note */
 
 .toggle.admonition.sn-clear-title .toggle-button-hidden:before {
     background-color: var(--sn-background-dark);
     color: rgba(250, 243, 233, 0.76);
 } /* Toggle - Clear */
-.admonition.sn-clear-title .toggle-button .bar {
-    background-color: #56ffff85;
-} /* Toggle - Clear */
+/*.admonition.sn-clear-title .toggle-button .bar {*/
+/*    background-color: #536dfe;*/
+/*} !* Toggle - Clear *!*/
 
 .toggle.admonition.tip .toggle-button-hidden:before {
     background-color: #042026;
@@ -2267,8 +2273,73 @@ dl.py.class  dl.py.method {
     /*background-color: #060b10;*/
     background: linear-gradient(to right,#02080b 20%,#0d1721 95%);
     border-left: solid thin #536dfe;
+    /*border-left: solid thin #59fff3;*/
 /*     background: linear-gradient(to right,#1a2d3d 10%,#0d1721); */
 }
+
+dl.py > dt > code:nth-child(1), pre, dl.py code.sig-name.descname {
+    background-color: transparent;
+    /*color: #536dfdc4;*/
+    color: #55abff;
+    font-weight: 800;
+}
+dl.py a *, dl.py.p a * {
+    /*color: #536dfd;*/
+    /*color: #536dfe !important;*/
+    font-weight: 500;
+}
+dl.py.attribute p {
+    padding-right: 10rem;
+}
+dl.py.method p {
+    padding-right: 4rem;
+}
+dl.py.method > dt em {
+    color: #6c757d;
+}
+dl.py.method > dt em.property {
+    color: inherit;
+}
+dl.py.method > dt {
+    padding-right: 2rem;
+}
+/*dl.py.method > dt em.property {*/
+/*    color: #6c757d;*/
+/*    font-weight: 800;*/
+/*}*/
+dl.py.class > dt:first-of-type {
+    color: #6c757d;
+    font-weight: 800;
+}
+dl.py.class > dt code.sig-prename:first-of-type {
+    color: #55abff;
+}
+dl.py.class>dt code.sig-prename:first-of-type span {
+    font-size: 0.8rem;
+}
+dl.py.class>dt code.sig-name.descname span   {
+    font-size: 0.8rem;
+}
+
+
+a.reference:hover, a.reference code span pre {
+    /*color: #0895ae;*/
+    /*font-weight: 800;*/
+    /*color: #53e4fe;*/
+    color: #3dceff;
+    /*color: var(--sn-primary-blue-light);*/
+}
+.md-nav__link:hover {
+    color: #2196f3;
+}
+/*dl.py.method a, dl.py p>code.sig-name.descname {*/
+    /*color: #63a3e2 !important;*/
+/*}*/
+/*dl.py a * {*/
+/*    background-color: transparent;*/
+/*    color: #536dfe;*/
+/*    font-weight: 800;*/
+/*}*/
 
 dl.py.attribute dd.field-odd {
     display: block;
@@ -2311,12 +2382,19 @@ dl.py.class>dt {
     padding-bottom: 0.35rem;
     border-bottom: dotted thin #9dbec7;
 }
+dl.py p>code.docutils.notranslate  {
+    background-color: #0f2338b3;
+    color: #f0f8ffde;
+    font-size: 80%;
+    font-weight: 100;
+    line-height: 0.2rem;
+}
 /*dl.py.class dd {*/
 /*    padding-left: 0;*/
 /*}*/
-dl.py.class code, pre {
-    background-color: #4070a012;
-} /* making backtick highlight background darker */
+/*dl.py.class code, pre {*/
+/*    background-color: #4070a012;*/
+/*} !* making backtick highlight background darker *!*/
 
 
 div.sn-left-pad p {
