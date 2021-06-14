@@ -30,8 +30,8 @@ provide a predictable, no-nonsense method of loading a :xref:`DataFrame`,
           ``path`` does not contain a statement whose tagged name matches
           the value of ``file_format`` or if an error is raised as the file
           is parsed
-        * Load times can be sped up and the process described above bypassed by
-          creating the :class:`~snowmobile.Table` with:
+        * Bypassed by creating the
+          :class:`~snowmobile.Table` with:
           
           .. code:: python
           
@@ -40,15 +40,15 @@ provide a predictable, no-nonsense method of loading a :xref:`DataFrame`,
    #.   Dimensional compatibility checks between ``df`` and the table being loaded
         into
 
-        * Load times can be sped up and the process described above bypassed by
-          creating the :class:`~snowmobile.Table` with:
+        * Bypassed by creating the
+          :class:`~snowmobile.Table` with:
           
           .. code:: python
           
              snowmobile.Table(validate_table=False, **kwargs)
    
-   #.   Processing column names of ``df`` to a generic database standard prior to
-        loading, including de-duplication of field names when applicable
+   #.   Coercing column names of ``df`` into a generic database standard prior
+        to loading, including de-duplication of field names when applicable
    
    #.   Argument or configuration based handling of action to take if table being
         loaded into already exists (respectively) via the ``if_exists`` argument to
