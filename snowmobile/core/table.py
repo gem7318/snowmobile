@@ -8,26 +8,28 @@ provide a predictable, no-nonsense method of loading an :xref:`DataFrame`,
 
 .. note::
    
-   **Effort behind it is primarily focused on:**
+   **Core functionality includes:**
    
    #.   Generating and executing generic DDL for ``df`` if the table doesn't yet
         exist
    
-   #.   Executing DDL for the **file format** being used `if it doesn't yet exist
-        in the current schema`; optionally supports locating and executing DDL for
-        file formats stored in an external SQL file, the location of which can be
-        specified in ``snowmobile.toml``
-       
-        * In the case of the latter, :class:`snowmobile.Table` will create a
+   #.   Executing DDL for the **file format** being used `if it doesn't yet
+        exist in the current schema`, or (optionally) specifying an alias
+        for a file format in its ``file_format`` argument; **in the case of the
+        latter:**
+
+        * An absolute path to an independent, user-defined sql file must be
+          specified within the **external-sources.ddl** field of
+          ``snowmobile.toml``
+        * :class:`snowmobile.Table` will create a
           :class:`~snowmobile.core.script.Script` from the
-          configured path and execute the (file format DDL) statement whose
-          tagged name maps to the value provided in the ``file_format`` argument
-          of :class:`snowmobile.Table()<snowmobile.core.table.Table>`
+          configured ``path`` and executes the (file format DDL) statement whose
+          tagged name maps to the value provided in its ``file_format`` argument
         * Occurs prior to attempting the load of ``df``, and an error will be
           thrown during the creation of the :class:`Table` if the
-          :class:`~snowmobile.core.script.Script` it creates does not contain a
-          statement whose name matches  the specified format or if another
-          error is raised as the file is parsed
+          :class:`~snowmobile.core.script.Script` it creates from the ``path``
+          does not contain a statement whose name matches  the specified
+          format or if an error is raised as the file is parsed
         * Load times can be sped up and the process described above bypassed by
           providing ``validate_format=False``
           to :class:`snowmobile.Table()<snowmobile.Table>`
