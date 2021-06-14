@@ -27,7 +27,7 @@ provide a predictable, no-nonsense method of loading a :xref:`DataFrame`,
           tagged name maps to the value provided in its ``file_format`` argument
         * An error will be thrown during the creation of the :class:`Table` if
           the :class:`~snowmobile.core.script.Script` created from the configured
-          ``path`` does not contain a statement whose tagged name matches the
+          ``path`` does not contain a statement whose tagged name matches
           the value of ``file_format`` or if an error is raised as the file
           is parsed
         * Load times can be sped up and the process described above bypassed by
