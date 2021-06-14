@@ -1,7 +1,7 @@
 """
 :class:`snowmobile.Table` is a canned implementation of
 the :xref:`bulk loading from a local file system` standard and is intended to
-provide a predictable, no-nonsense method of loading an :xref:`DataFrame`,
+provide a predictable, no-nonsense method of loading a :xref:`DataFrame`,
 ``df``, into a ``table`` (:class:`str`).
 
 ------
@@ -18,18 +18,18 @@ provide a predictable, no-nonsense method of loading an :xref:`DataFrame`,
         for a file format in its ``file_format`` argument; **in the case of the
         latter:**
 
-        * An absolute path to an independent, user-defined sql file must be
+        * An absolute ``path`` to an independent, user-defined sql file must be
           specified within the **external-sources.ddl** field of
           ``snowmobile.toml``
-        * :class:`snowmobile.Table` will create a
-          :class:`~snowmobile.core.script.Script` from the
-          configured ``path`` and executes the (file format DDL) statement whose
+        * Prior to attempting the load of ``df``, :class:`snowmobile.Table`
+          will create a :class:`~snowmobile.core.script.Script` from the
+          configured ``path`` and execute the (file format DDL) statement whose
           tagged name maps to the value provided in its ``file_format`` argument
-        * Occurs prior to attempting the load of ``df``, and an error will be
-          thrown during the creation of the :class:`Table` if the
-          :class:`~snowmobile.core.script.Script` it creates from the ``path``
-          does not contain a statement whose name matches  the specified
-          format or if an error is raised as the file is parsed
+        * An error will be thrown during the creation of the :class:`Table` if
+          the :class:`~snowmobile.core.script.Script` created from the configured
+          ``path`` does not contain a statement whose tagged name matches the
+          the value of ``file_format`` or if an error is raised as the file
+          is parsed
         * Load times can be sped up and the process described above bypassed by
           providing ``validate_format=False``
           to :class:`snowmobile.Table()<snowmobile.Table>`
