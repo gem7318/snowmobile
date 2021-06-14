@@ -24,12 +24,12 @@ provide a predictable, no-nonsense method of loading a :xref:`DataFrame`,
         * Prior to attempting the load of ``df``, :class:`snowmobile.Table`
           will create a :class:`~snowmobile.core.script.Script` from the
           configured ``path`` and execute the (file format DDL) statement whose
-          tagged name maps to the value provided in its ``file_format`` argument
+          tagged name maps to the value provided to its ``file_format`` argument
         * An error will be thrown during the creation of the :class:`Table` if
-          the :class:`~snowmobile.core.script.Script` created from the configured
-          ``path`` does not contain a statement whose tagged name matches
-          the value of ``file_format`` or if an error is raised as the file
-          is parsed
+          the :class:`~snowmobile.core.script.Script` associated with the
+          configured ``path`` does not contain a statement whose tagged name
+          matches the value of ``file_format`` or if an error is raised when
+          the file is parsed
         * Bypassed by creating the
           :class:`~snowmobile.Table` with:
           
@@ -349,7 +349,6 @@ class Table(Generic):
         if as_is:
             self.load()
             
-
     def load(
         self,
         if_exists: Optional[str] = None,
