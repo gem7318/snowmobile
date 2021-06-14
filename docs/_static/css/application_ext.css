@@ -2491,8 +2491,13 @@ h1[id^="autoapi"] ~ div.admonition ol>li {
     margin-top: 0.8rem;
 }
 h1[id^="autoapi"] ~ div.admonition ol li ul {
-    margin-top: -0.5rem;
+    margin-top: -0.2rem;
     padding-bottom: 0.5rem;
+}
+h1[id^="autoapi"] ~ div.admonition ol li ul li .highlight {
+    margin-top: 0.4rem;
+    margin-left: 0.5rem;
+    display: inline-block;
 }
 h1[id^=autoapi] ~ div.toctree-wrapper.compound ul li ul {
     margin: unset;

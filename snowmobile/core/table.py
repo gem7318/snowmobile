@@ -31,14 +31,21 @@ provide a predictable, no-nonsense method of loading a :xref:`DataFrame`,
           the value of ``file_format`` or if an error is raised as the file
           is parsed
         * Load times can be sped up and the process described above bypassed by
-          providing ``validate_format=False``
-          to :class:`snowmobile.Table()<snowmobile.Table>`
+          creating the :class:`~snowmobile.Table` with:
+          
+          .. code:: python
+          
+             snowmobile.Table(validate_format=False, **kwargs)
    
    #.   Dimensional compatibility checks between ``df`` and the table being loaded
         into
-       
-        * Load times can be sped up by providing ``validate_table=False`` to
-          :class:`snowmobile.Table()<snowmobile.Table>`
+
+        * Load times can be sped up and the process described above bypassed by
+          creating the :class:`~snowmobile.Table` with:
+          
+          .. code:: python
+          
+             snowmobile.Table(validate_table=False, **kwargs)
    
    #.   Processing column names of ``df`` to a generic database standard prior to
         loading, including de-duplication of field names when applicable
