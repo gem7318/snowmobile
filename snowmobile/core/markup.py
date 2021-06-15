@@ -18,7 +18,7 @@ statement or marker within the script.
 
     By default, these files are exported to a ``.snowmobile`` directory
     alongside the sql file that was read by the ``script``; the directory name
-    to use for ge exports can be configured in
+    to use for generated exports can be configured in
     :ref:`[script.export-dir-name]<script.export-dir-name>`
 
     If the target directory does not yet exist, it will be created as part of
@@ -287,8 +287,8 @@ class Markup(Generic):
         """Save files to disk.
 
         Args:
-            md (bool): Export a ge markdown file.
-            sql (bool): Export a ge sql file.
+            md (bool): Export a generated markdown file.
+            sql (bool): Export a generated sql file.
 
         """
         if md:

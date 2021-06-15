@@ -89,7 +89,7 @@ class SnowFrame(Generic):
             *   ``df1`` and ``df2`` are assumed to have a shared, pre-defined index.
             *   Exactly **one** of ``abs_tol`` and ``rel_tol`` is expected to be a
                 a valid float; the other is expected to be **None**.
-            *   If valid float values are pr for both ``abs_tol`` and ``rel_tol``,
+            *   If valid float values are    provided for both ``abs_tol`` and ``rel_tol``,
                 the outcome of the maximum **absolute** difference with respect to
                 ``abs_tol`` will be returned regardless of the value of ``rel_tol``.
 

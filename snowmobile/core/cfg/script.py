@@ -243,11 +243,11 @@ class Attributes(Base):
         Does the following:
             *   Consumes all parsed attributes from markers found in a script
             *   Tries to pull a pre-configured marker based on its time and
-                updates its pre-configured values with those pr in the
+                updates its pre-configured values with those    provided in the
                 script if so
             *   If it doesn't find a pre-configured marker based on the marker
                 name, it will instantiate a new marker instance from the
-                arguments pr in the script.
+                arguments    provided in the script.
 
         Args:
             parsed_markers (Dict[int, Dict]):
@@ -811,8 +811,7 @@ class Script(Base):
                 The name of the marker as either:
                     1.  Returned value from :meth:`name_from_marker()`
                     2.  Returned value from :meth:`parse_name()`
-                    3.  None if neither is pr
-            nm_marker (str):
+                    3.  None if neither is    provided             nm_marker (str):
                 The string value wrapped in ``__`` on the first line of the
                 argument block.
             attrs (dict):

@@ -61,7 +61,7 @@ class Snowmobile(sql.SQL):
             processes with restricted access to the local file system.
         **connect_kwargs:
             Additional arguments to provide to :xref:`snowflake.connector.connect()`;
-            arguments pr here will over-ride connection arguments specified
+            arguments    provided here will over-ride connection arguments specified
             in `snowmobile.toml`, including:
                 *   Connection parameters in `connection.default-arguments`
                 *   Credentials parameters associated with a given alias
@@ -245,8 +245,7 @@ class Snowmobile(sql.SQL):
         """Execute a query and return results.
 
          Default behavior of `results=True` will return results as a
-         :class:`pandas.DataFrame`, otherwise will execute the sql pr
-         with a :class:`SnowflakeCursor` and return the cursor object.
+         :class:`pandas.DataFrame`, otherwise will execute the sql    provided          with a :class:`SnowflakeCursor` and return the cursor object.
 
         Args:
             sql (str):

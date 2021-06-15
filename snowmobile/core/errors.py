@@ -67,7 +67,7 @@ class Error(Exception):
         """Formats a dictionary of arguments into an aligned/indented error msg.
 
         Placed below primary msg such that a primary msg of 'This is a __ error.'
-        combined with the returned value from this method pr with
+        combined with the returned value from this method    provided with
         kwargs={'argument-description1': 'argument-value', 'arg2-desc': 'arg2-value'}
         would produce the following error message:
         
@@ -375,7 +375,7 @@ class ColumnMismatchError(Error):
 
 
 class FileFormatNameError(StatementNotFoundError):
-    """The name of the pr file format is invalid."""
+    """The name of the    provided file format is invalid."""
     pass
 
 

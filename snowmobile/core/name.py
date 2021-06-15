@@ -35,10 +35,10 @@ class Name(Generic):
         incl_idx_in_desc (bool):
             Indicator of whether or not to include the statement index in the
             `description` component of the wrap; defaults to `True` so that all
-            ge statement tags are guaranteed to be unique for a given
+            generated statement tags are guaranteed to be unique for a given
             script.
                 *   Mainly included for testing purposes where setting to
-                    `False` enables comparing ge to pr statement
+                    `False` enables comparing generated to    provided statement
                     tags without having to change the index position of the
                     hard-coded/pr statement wrap when adding/removing tests.
         first_line_remainder (str):
@@ -178,7 +178,7 @@ class Name(Generic):
 
     @property
     def _obj_ge_base(self):
-        """Base for ge object."""
+        """Base for    generated object."""
         non_overlapping = {
             i: t
             for i, t in self.matched_terms.items()
@@ -258,7 +258,7 @@ class Name(Generic):
     def kw(self, ge: bool = False, pr: bool = False):
         """The final statement's **keyword** that is used by the API.
 
-        This will be the pr keyword if a statement wrap exists and a
+        This will be the    provided keyword if a statement wrap exists and a
         parsed/ge keyword otherwise.
 
         """

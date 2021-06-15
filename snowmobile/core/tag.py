@@ -51,7 +51,7 @@ class Attrs(dict):
 
         Returns (dict):
             Combined dictionary of statement attributes from those explicitly
-            pr within the script and from object's namespace if specified
+               provided within the script and from object's namespace if specified
             in **snowmobile.toml**.
 
         """

@@ -101,7 +101,7 @@ class Table(Generic):
             `fail`, `replace`, `append`, and `truncate`; defaults to
             ``append``.
         as_is (bool):
-            Load ``df`` into ``table`` based on the parameters pr to
+            Load ``df`` into ``table`` based on the parameters    provided to
             :class:`Table` without further pre-inspection by the user; defaults
             to `False`.
         path_ddl (Optional[Path]):
@@ -110,7 +110,7 @@ class Table(Generic):
             Keep local file that is written out as part of the bulk loading
             process; defaults to `False`.
         path_output (Optional[str Path]):
-            Path to write output local file to; defaults to a ge file
+            Path to write output local file to; defaults to a    generated file
             name exported in the current working directory.
         file_format (Optional[str]):
             The name of the file_format to use when loading ``df``; defaults

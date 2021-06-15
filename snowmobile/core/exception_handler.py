@@ -245,7 +245,7 @@ exceptions in current context are:\n\t{list(self.current.values())}
         return self
     
     def set_from(self, other: ExceptionHandler) -> ExceptionHandler:
-        """Updates attributes those from another ExceptionHandler instance."""
+        """Updates attributes of self with those from 'other'."""
         for k in ["_ctx_id", "in_context", "outcome"]:
             vars(self)[k] = vars(other)[k]
         return self

@@ -45,6 +45,9 @@
     --sn-section-shadow: 0 0 0.5em 0.05em #f8f9fa33;
 }
 
+.md-typeset {
+    font-size: 0.75rem;
+}
 .md-container {
     background: var(--sn-background-dark) !important;
 } /* parent container */
@@ -2321,6 +2324,26 @@ dl.py.class>dt code.sig-name.descname span   {
     font-size: 0.8rem;
 }
 
+/*dl.py.method span.pre:first-of-type {*/
+/*    padding-left: 0.2rem;*/
+/*}*/
+/*dl.py.method dt span.sig-paren:first-of-type::after {*/
+/*    white-space: pre;*/
+/*    content: "\a";*/
+/*!*     color: red; *!*/
+/*}*/
+/*dl.py.method dt span.sig-paren:nth-of-type(2)::before {*/
+/*    white-space: pre;*/
+/*    content: "\a   ";*/
+/*}*/
+/*dl.py.attribute dt em, dl.py.method dt em.sig-param:first-of-type {*/
+/*    padding-left: 1rem;*/
+/*}*/
+/*dl.py.method dt em.property ~ span.sig-paren::before, dl.py.method dt em.property ~ span.sig-paren::after {*/
+/*    content: unset;*/
+/*}*/
+
+
 
 a.reference:hover, a.reference code span pre {
     /*color: #0895ae;*/
@@ -3489,6 +3512,21 @@ h2[id="package-contents"] {
         float: inherit;
         margin-top: unset;
     }
+
+    dl.py.class dl.py.method {
+        padding-left: 0.6rem;
+        margin-right: unset;
+        padding-right: unset;
+        margin-left: -0.8rem;
+    }
+    dl.py.attribute {
+        margin-right: -1.5rem;
+        margin-left: -0.8rem;
+    }
+    dl.py.attribute p {
+        margin-right: -6rem;
+    }
+
 }
 
 @media only screen and (min-width: 501px) and (max-width: 76.1874em) {

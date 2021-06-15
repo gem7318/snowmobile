@@ -255,8 +255,8 @@ class Statement(Attrs, Name, Generic):
 
         note:
             The wrap name used here will be the user-pr wrap from the
-            original script or a ge :attr:`Name.nm` if a wrap was not
-            pr for a given statement.
+            original script or a    generated :attr:`Name.nm` if a wrap was not
+               provided for a given statement.
 
         """
         _open, _close = self.sn.cfg.script.tag()
