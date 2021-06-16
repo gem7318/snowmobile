@@ -1,15 +1,12 @@
 (usage/script)=
 # Script
-<!--suppress ALL -->
-
- <hr class="sn-grey">
-
- <a
-    class="sphinx-bs badge badge-primary text-white reference external sn-api sn-link-container2"
-    href="../autoapi/snowmobile/core/script/index.html"
-    title="API Documentation">
-    <span>snowmobile.core.script</span>
- </a>
+<hr class="sn-grey">
+<a
+   class="sphinx-bs badge badge-primary text-white reference external sn-api sn-link-container2"
+   href="../autoapi/snowmobile/core/script/index.html"
+   title="API Documentation">
+   <span>snowmobile.core.script</span>
+</a>
 
  ```{div} sn-dedent-v-b-h
  {class}`snowmobile.Script` parses a raw sql file into a composition of objects 

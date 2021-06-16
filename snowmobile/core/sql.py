@@ -5,8 +5,10 @@ everything from this object and provides it with the .query() method for
 statement execution.
 
 .. note::
+
+
    The :attr:`~SQL.auto_run` attribute defaults to `True`, meaning that the
-      generated sql will execute when a method is called; if set to `False`
+   generated sql will execute when a method is called; if set to `False`
    the method will return the sql as a string without executing.
 
    The :class:`SQL` object is primarily interacted with as a
@@ -733,7 +735,7 @@ object:\n\n{sql}
             raise e
         _name = self._schema_object(nm=obj_name, schema=obj_schema, typ=obj)
         sql = s(f"drop {obj} if exists {up(_name)}")
-        return self._query(sql=sql) if self(run) else sql
+        return self._query(sql=sql).snf.to_list(n=1) if self(run) else sql
     
     def clone(
         self,
@@ -1081,7 +1083,7 @@ object:\n\n{sql}
 
     # -- Generic 'use ___' Statements -----------------------------------------
 
-    def use(self, nm: str, obj: str, run: Optional[bool] = None):
+    def use(self, obj: str, nm: str, run: Optional[bool] = None):
         """Generic implementation of 'use' command for schema objects.
 
         Args:

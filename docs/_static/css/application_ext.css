@@ -262,7 +262,7 @@ dl.py.attribute > dt > code > span.pre {
     padding-left: 0.2em;
     padding-right: 0.2em;
     padding-bottom: 0.1em;
-    font-weight: 800;
+    /*font-weight: 800;*/
 }
 dl.py.attribute p {
     padding-right: 0.5rem;
@@ -2284,7 +2284,7 @@ dl.py > dt > code:nth-child(1), pre, dl.py code.sig-name.descname {
     background-color: transparent;
     /*color: #536dfdc4;*/
     color: #55abff;
-    font-weight: 800;
+    font-weight: 500;
 }
 dl.py a *, dl.py.p a * {
     /*color: #536dfd;*/
