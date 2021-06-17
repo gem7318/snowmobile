@@ -295,7 +295,7 @@ from {_loc}
         self,
         nm: Optional[str] = None,
         fields: Optional[List[str]] = None,
-        aggregates: Optional[List[Tuple[str, str]]] = None,
+        apply: Optional[List[Tuple[str, str]]] = None,
         n: Optional[int] = None,
         run: Optional[bool] = None,
         **kwargs,
@@ -304,30 +304,36 @@ from {_loc}
 
         Args:
             nm (str):
-                Table to select from, including prefixed schema name if table
-                is stored outside the schema associated with the current session
+                Table to select from, including schema if the table is outside
+                of the current schema
             fields (Optional[List[str]]):
                 Select these fields (optional).
-            aggregates (Optional[List[Tuple[str, str]]]):
-                Select aggregations of these fields (optional).
+            apply (Optional[List[Tuple[str, str]]]):
+            
+                Select aggregations of these fields.
+                
+                        **apply** [
+                           (*this_func, to_this_field, [as_alias]*),
+                           (*.., .., [..]*),
+                        ]
    
-                *   ``aggregates`` should be provided as a list of tuples, each
+                *   ``apply`` should be provided as a list of tuples, each
                     containing a minimum of 2 items (respectively) representing
                     the aggregate function to apply and the field to which it
                     should be applied
                 *   By default, the aggregated result inherits the name of the
                     field being aggregated, including any qualifier (optionally)
-                    provided with the field name
-                *   Alternatively, an alias for the aggregated result can be
-                    passed explicitly as a 3rd item in the tuple
-                *   The following snippet exhaustively illustrates the
-                    functionality described above
+                    provided with the field name or an explicit alias included
+                    in a 3rd item within in the tuple
+                    
+                        *The following snippet exhaustively illustrates the
+                        functionality described above*
                 
                 .. code-block:: python
                    
                     sn.select(
                        nm='sandbox.sample_table',
-                       aggregates=[
+                       apply=[
                            ('count', 'col1'),
                            ('count', 'distinct col1'),
                            ('count', 'distinct col1', 'col1_dst'),
@@ -353,8 +359,9 @@ from {_loc}
 
         Returns (Union[str, pd.DataFrame]):
             Either:
-                1.  The results of the query as a :class:`pandas.DataFrame`, or
-                2.  The generated query as a :class:`str` of sql.
+            
+            1.  The results of the query as a :class:`pandas.DataFrame`, or
+            2.  The generated query as a :class:`str` of sql.
 
         """
         _t = ' ' * 2
@@ -374,18 +381,18 @@ from {_loc}
         # fmt: on
         
         _fields = '*'
-        if aggregates:
+        if apply:
             _fields = [
                 ' '.join([
                     f"{f[0]}({f[1]})\n{_t * 2}as",
                     f"{f[1].replace(' ', '_')}" if len(f) == 2 else f"{f[2]}",
                 ])
-                for f in aggregates
+                for f in apply
             ]
         if fields:
-            if aggregates:
+            if apply:
                 raise ValueError(
-                    f"Only one of 'aggregates' or 'fields' can be provided."
+                    f"Only one of 'apply' or 'fields' can be provided."
                 )
             _fields = '\n'.join(
                 f"{_t + ',' if i > 0 else _t}{f}" for i, f in enumerate(fields)
@@ -393,7 +400,7 @@ from {_loc}
 
         limit = (
             f"limit {n or 1}"
-            if n != -1 and not aggregates
+            if n != -1 and not apply
             else str()
         )
         
@@ -768,13 +775,12 @@ object:\n\n{sql}
 
         Args:
             nm (str):
-                Name of the object to drop, including schema if creating a stage
-                outside of the current schema.
+                Schema object's name.
             obj (str):
-                Type of object to drop (e.g. 'table', 'schema', etc)
+                Type of schema object (e.g. 'table', 'view', or 'schema')
             run (bool):
-                Execute generated sql; defaults to `True`, otherwise returns
-                sql as a string.
+                Execute generated statement; defaults to `True`, otherwise
+                returns sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
