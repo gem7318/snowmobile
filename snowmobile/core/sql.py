@@ -304,20 +304,20 @@ from {_loc}
 
         Args:
             nm (str):
-                Table to select from, including schema if selecting from a
-                table stored in a different schema than current connection
+                Table to select from, including prefixed schema name if table
+                is stored outside the schema associated with the current session
             fields (Optional[List[str]]):
-                Select only this list of fields.
+                Select these fields (optional).
             aggregates (Optional[List[Tuple[str, str]]]):
-            
-                *   Select aggregations of certain fields
-                *   Fields should be provided as a list of tuples, each
-                    containing a minimum of 2 items that respectively represent
+                Select aggregations of these fields (optional).
+   
+                *   ``aggregates`` should be provided as a list of tuples, each
+                    containing a minimum of 2 items (respectively) representing
                     the aggregate function to apply and the field to apply the
                     function to
                 *   By default, the aggregated result inherits the name of the
-                    field being aggregated, including any qualifier on the field
-                    provided along with the field name
+                    field being aggregated, including any qualifier on the
+                    field provided along with the field name
                 *   Optionally, an alias for the aggregated result can be
                     passed explicitly as a 3rd item in the tuple
                 *   Exhaustive use of the functionality described above is
@@ -357,9 +357,10 @@ from {_loc}
                 2.  The generated query as a :class:`str` of sql.
 
         """
+        _t = ' ' * 2
         schema, nm = p(nm)
+        # fmt: off
         try:
-            # fmt: off
             schema, table = (
                 self._validate(
                     val=(schema or self.schema), nm='schema', attr_nm='schema'
@@ -368,11 +369,12 @@ from {_loc}
                     val=(nm or self.nm), nm='nm', attr_nm='nm'
                 )
             )
-            # fmt: on
         except ValueError as e:
             raise e
+        # fmt: on
+        
         target = f"{up(schema)}.{up(table)}"
-        _t = ' ' * 2
+        
         if aggregates:
             fields = [
                 (
@@ -389,11 +391,13 @@ from {_loc}
                 f"{_t + ',' if i > 0 else _t}{f}" for i, f in enumerate(fields)
             )
         )
+        
         limit = (
             f"limit {n or 1}"
             if n != -1 and not aggregates
             else str()
         )
+        
         sql = '\n'.join(
             [
                 'select',
@@ -402,6 +406,7 @@ from {_loc}
                 limit,
             ]
         )
+        
         return (
             self._query(sql=sql, **kwargs)
             if self(run)
