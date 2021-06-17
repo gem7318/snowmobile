@@ -275,8 +275,8 @@ from {_loc}
             lower (bool):
                 Lower case each column in the list that's returned.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, List]):
             Either:
@@ -313,15 +313,15 @@ from {_loc}
    
                 *   ``aggregates`` should be provided as a list of tuples, each
                     containing a minimum of 2 items (respectively) representing
-                    the aggregate function to apply and the field to apply the
-                    function to
+                    the aggregate function to apply and the field to which it
+                    should be applied
                 *   By default, the aggregated result inherits the name of the
-                    field being aggregated, including any qualifier on the
-                    field provided along with the field name
-                *   Optionally, an alias for the aggregated result can be
+                    field being aggregated, including any qualifier (optionally)
+                    provided with the field name
+                *   Alternatively, an alias for the aggregated result can be
                     passed explicitly as a 3rd item in the tuple
-                *   Exhaustive use of the functionality described above is
-                    illustrated in the following snippet
+                *   The following snippet exhaustively illustrates the
+                    functionality described above
                 
                 .. code-block:: python
                    
@@ -373,39 +373,33 @@ from {_loc}
             raise e
         # fmt: on
         
-        target = f"{up(schema)}.{up(table)}"
-        
+        _fields = '*'
         if aggregates:
-            fields = [
-                (
-                    f"{f[0]}({f[1]})\n{_t * 2}as {f[1].replace(' ', '_')}"
-                    if len(f) != 3
-                    else f"{f[0]}({f[1]})\n{_t * 2}as {f[2]}"
-                )
+            _fields = [
+                ' '.join([
+                    f"{f[0]}({f[1]})\n{_t * 2}as",
+                    f"{f[1].replace(' ', '_')}" if len(f) == 2 else f"{f[2]}",
+                ])
                 for f in aggregates
             ]
-        _fields = (
-            '*'
-            if not fields
-            else '\n'.join(
+        if fields:
+            if aggregates:
+                raise ValueError(
+                    f"Only one of 'aggregates' or 'fields' can be provided."
+                )
+            _fields = '\n'.join(
                 f"{_t + ',' if i > 0 else _t}{f}" for i, f in enumerate(fields)
             )
-        )
-        
+
         limit = (
             f"limit {n or 1}"
             if n != -1 and not aggregates
             else str()
         )
         
-        sql = '\n'.join(
-            [
-                'select',
-                _fields,
-                f"from {target}",
-                limit,
-            ]
-        )
+        target = f"{up(schema)}.{up(table)}"
+        
+        sql = '\n'.join(['select', _fields, f"from {target}", limit])
         
         return (
             self._query(sql=sql, **kwargs)
@@ -468,8 +462,8 @@ from {_loc}
                 Option to return distinct count of the `dst_of` column as a
                 percentage of the namespace depth of the table or view.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
@@ -560,8 +554,8 @@ from {_loc}
             obj (str):
                 Type of object to get DDL for (e.g. 'table', 'view', 'file-format').
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (str):
             Either:
@@ -617,8 +611,8 @@ from {_loc}
                 Dump contents of 'set_as' to a string of json prior to setting
                 comment.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
             **kwargs:
                 Keyword argument to pass to `json.loads(comment)` if
                 *from_json=True*.
@@ -703,8 +697,8 @@ object:\n\n{sql}
                 Table name, including schema if creating a stage outside of the
                 current schema.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
@@ -738,8 +732,8 @@ object:\n\n{sql}
                 Name of table, including schema if the table is outside of the
                 current schema.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
@@ -779,8 +773,8 @@ object:\n\n{sql}
             obj (str):
                 Type of object to drop (e.g. 'table', 'schema', etc)
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
@@ -860,8 +854,8 @@ object:\n\n{sql}
                 Type of object to clone (e.g. 'table', 'view', 'file-format');
                 defaults to `table`.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
             replace (bool):
                 Indicates whether to replace an existing stage if pre-existing;
                 default is `False`.
@@ -935,8 +929,8 @@ object:\n\n{sql}
                 Dump comment to a string of json before setting it on the schema
                 object.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
             **kwargs:
                 Keyword argument to pass to `json.dumps(comment, **kwargs)`
                 if *as_json = True*.
@@ -996,8 +990,8 @@ object:\n\n{sql}
                 Name of file format to specify for the stage, including schema
                 if using a format from outside of the current schema.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
             replace (bool):
                 Indicates whether to replace an existing stage if pre-existing;
                 default is `False`.
@@ -1028,8 +1022,8 @@ object:\n\n{sql}
             nm_stage (str):
                 Name of the staging table to load into.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
             options (dict):
                 Optional arguments to add to `put` statement in addition to
                 the values specified in the ``loading.put`` section
@@ -1080,8 +1074,8 @@ object:\n\n{sql}
             nm_stage (str):
                 Name of the staging table to load from.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
             options (dict):
                 Optional arguments to add to `put` statement in addition to
                 the values specified in the ``loading.put`` section
@@ -1120,8 +1114,8 @@ object:\n\n{sql}
             obj (str):
                 Type of object to retrieve information for (schema, session, ..).
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
@@ -1164,8 +1158,8 @@ object:\n\n{sql}
             obj (str):
                 Type of object to use (schema, warehouse, role, ..).
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
@@ -1261,8 +1255,8 @@ object:\n\n{sql}
             lower (bool):
                 Lower case each column in the list that's returned.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, List]):
             Either:
@@ -1294,8 +1288,8 @@ object:\n\n{sql}
             lower (bool):
                 Lower case each column in the list that's returned.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, List]):
             Either:

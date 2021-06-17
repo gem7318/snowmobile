@@ -3545,6 +3545,10 @@ h2[id="package-contents"] {
     dl.py.method dd {
         margin-left: 0.2rem;
     }
+    dl.py.method p {
+        margin-right: unset;
+        padding-right: unset;
+    }
     dl.py.method div.highlight {
         overflow: scroll;
         margin-left: unset;
