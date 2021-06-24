@@ -95,7 +95,7 @@
 
 # -- Named object, generic anchors, and keyword-exceptions for sql parsing ----
 [sql]
-    provided-over-generated = true
+ provided-over-generated = true
     desc-is-simple = true
 
     named-objects = [

@@ -61,31 +61,11 @@ class Snowmobile(sql.SQL):
             processes with restricted access to the local file system.
         **connect_kwargs:
             Additional arguments to provide to :xref:`snowflake.connector.connect()`;
-            arguments    provided here will over-ride connection arguments specified
+            arguments provided here will over-ride connection arguments specified
             in `snowmobile.toml`, including:
                 *   Connection parameters in `connection.default-arguments`
                 *   Credentials parameters associated with a given alias
                 *   Connection parameters associated with a given alias
-
-
-    Attributes:
-
-        cfg (snowmobile.core.configuration.Configuration):
-            :class:`snowmobile.Configuration` object, which represents a fully
-            parsed/validated `snowmobile.toml` file.
-        con (SnowflakeConnection):
-            :xref:`SnowflakeConnection` object; this attribute is populated
-            when a connection is established and can be `None` if the
-            :class:`Snowmobile` object was instantiated with `delay=True`.
-        ensure_alive (bool):
-            Establish a new connection if a method requiring a connection
-            against the database is called while :attr:`alive` is `False`;
-            defaults to `True`.
-        e (ExceptionHandler):
-            A :class:`ExceptionHandler<snowmobile.core.exception_handler.ExceptionHandler`
-            class for orchestrating exceptions across objects; kept as a
-            public attribute on the class as examining its contents can be
-            helpful in debugging database errors.
 
     """
 
@@ -100,25 +80,25 @@ class Snowmobile(sql.SQL):
         **connect_kwargs,
     ):
 
-        # Parsed snowmobile.toml
         self.cfg: Configuration = Configuration(
             creds=creds,
             config_file_nm=config_file_nm,
             from_config=from_config,
             silence=silence,
         )
+        """snowmobile.core.configuration.Configuration: *snowmobile.toml*"""
 
-        # snowmobile.core.sql.SQL; inherits SQL and Generic
         super().__init__(_query_func=self.query, _cfg=self.cfg)
+        """snowmobile.core.sql.SQL: Generic sql commands."""
         
-        # Snowflake Attributes; con = `None` until set by Snowmobile.connect()
         self.con: Optional[SnowflakeConnection] = None
+        """SnowflakeConnection: Can be `None` until set by :meth:`Snowmobile.connect()`"""
 
-        # Exception / Context Management
         self.e: ExceptionHandler = ExceptionHandler(within=self).set(ctx_id=-1)
+        """snowmobile.core.exception_handler.ExceptionHandler: Exception / context management"""
 
-        # Connection
-        self.ensure_alive = ensure_alive
+        self.ensure_alive: bool = ensure_alive
+        """bool: Reconnect to :ref:`Snowflake` if connection is lost"""
 
         if not delay:
             self.connect(**connect_kwargs)
@@ -245,7 +225,7 @@ class Snowmobile(sql.SQL):
         """Execute a query and return results.
 
          Default behavior of `results=True` will return results as a
-         :class:`pandas.DataFrame`, otherwise will execute the sql    provided          with a :class:`SnowflakeCursor` and return the cursor object.
+         :class:`pandas.DataFrame`, otherwise will execute the sql provided          with a :class:`SnowflakeCursor` and return the cursor object.
 
         Args:
             sql (str):

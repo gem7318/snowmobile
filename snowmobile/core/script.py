@@ -175,7 +175,7 @@ class Script(Generic):
     def read(self, path: Path = None) -> Script:
         """Runs quick path validation and reads in a sql file as a string.
 
-        A valid `path` must be    provided if the `script.path` attribute hasn't
+        A valid `path` must be provided if the `script.path` attribute hasn't
         been set; ``ValueErrors`` will be thrown if neither is valid.
 
         Args:
@@ -238,12 +238,12 @@ class Script(Generic):
                 individual statement.
             index (int):
                 Index position of the statement within the script; defaults
-                to ``n + 1`` if index is not    provided where ``n`` is the number
+                to ``n + 1`` if index is not provided where ``n`` is the number
                 of statements within the script at the time ``parse_one()``
                 is called.
             nm (Optional[str]):
-                Optionally    provided the name of the statement being added; the
-                script instance will treat this value as if it were    provided                 within an in-script wrap.
+                Optionally provided the name of the statement being added; the
+                script instance will treat this value as if it were provided                 within an in-script wrap.
 
         """
         index = index or self.depth + 1
@@ -386,14 +386,14 @@ class Script(Generic):
     def _update_scope_script(self, _id: Any[int, str], **kwargs) -> Dict:
         """Returns a valid set of scope args from an ``_id`` and the scope kwargs.
 
-        Uses template property from configuration if the ``_id``    provided does
+        Uses template property from configuration if the ``_id`` provided does
         not yet exist in ``script.filters``.
 
         Args:
             _id (Any[int, str]):
                 Integer or string value for scope _id.
             **kwargs:
-                Arguments    provided to ``script.filter()`` (e.g. 'include_kw',
+                Arguments provided to ``script.filter()`` (e.g. 'include_kw',
                 'excl_anchor', etc).
 
         """
@@ -850,7 +850,7 @@ class Script(Generic):
 
         Args:
             _id (Union[Tuple, List]):
-                _id field    provided to script.run() if it's neither an integer
+                _id field provided to script.run() if it's neither an integer
                 or a string.
 
         Returns (List[int]):

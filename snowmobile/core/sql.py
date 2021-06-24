@@ -1,7 +1,8 @@
 """
-:class:`SQL` contains utility methods to generate & execute
-common SQL commands; :class:`~snowmobile.core.connection.Snowmobile` inherits
-everything from this object and provides it with the .query() method for
+:class:`SQL` contains utility methods to generate common SQL commands;
+:class:`~snowmobile.core.connection.Snowmobile` inherits
+everything from this object and passes along its
+:meth:`~snowmobile.core.connection.Snowmobile.query()` method for
 statement execution.
 
 .. note::
@@ -300,7 +301,7 @@ from {_loc}
         run: Optional[bool] = None,
         **kwargs,
     ) -> Union[str, pd.DataFrame]:
-        """Select from table `nm`.
+        """Generic `select` statement.
 
         Args:
             nm (str):
@@ -323,7 +324,7 @@ from {_loc}
                     should be applied
                 *   By default, the aggregated result inherits the name of the
                     field being aggregated, including any qualifier (optionally)
-                    provided with the field name or an explicit alias included
+                 provided with the field name or an explicit alias included
                     in a 3rd item within in the tuple
                     
                         *The following snippet exhaustively illustrates the
@@ -498,7 +499,7 @@ from {_loc}
         if as_perc:
             if not dst_of:
                 raise ValueError(
-                    "`as_perc=True`    provided without specifying `dst_of` column."
+                    "`as_perc=True` provided without specifying `dst_of` column."
                 )
             sql = f"select count(distinct {dst_of}) / count(*) {_from}"
             
@@ -825,7 +826,7 @@ object:\n\n{sql}
                 for restrictions and considerations when cloning objects.
 
         Note:
-            *   In this specific method, the value    provided to ``nm`` and ``to``
+            *   In this specific method, the value provided to ``nm`` and ``to``
                 can be a single object name, a single schema, or both in the
                 form of `obj_schema.obj_name` depending on the desired outcome.
             *   Additionally, **at least one of the** ``nm`` **or** ``to``
@@ -839,7 +840,7 @@ object:\n\n{sql}
                         the source object's *schema* without specifying so in
                         the ``to`` argument.
             *   If providing a schema without a name to either argument, prefix
-                the value    provided with `__` to signify it's a schema and not
+                the value provided with `__` to signify it's a schema and not
                 a lower-level object to be cloned.
                     *   e.g. providing `nm='sample_table'` and
                         `to='__sandbox'` will clone `sample_table` from the
@@ -894,7 +895,7 @@ object:\n\n{sql}
             )
             if not to_schema and not to:
                 raise ValueError(
-                    "At least one of '__schema' or 'name` must be    provided "
+                    "At least one of '__schema' or 'name` must be provided "
                     "in the 'to' argument of sql.clone()."
                 )
             if nm == to and schema == to_schema:
@@ -1221,7 +1222,7 @@ object:\n\n{sql}
         unspecified argument can fall back to an attribute if it has been set.
 
         Each of the 'closing' variables below represents a different ending to
-        a sentence within the exception message depending on the value    provided         from the method and if the attribute the argument falls back to has been
+        a sentence within the exception message depending on the value provided         from the method and if the attribute the argument falls back to has been
         set at the time the method is called.
 
         Args:
@@ -1244,7 +1245,7 @@ object:\n\n{sql}
                 else f" or set the '{attr_nm}' attribute before calling the method."
             )
             raise ValueError(
-                f"\nValue    provided for '{nm}' is not valid{closing1}\n"
+                f"\nValue provided for '{nm}' is not valid{closing1}\n"
                 f"Please provide a valid value for '{nm}'{closing2}"
             )
         return val

@@ -38,7 +38,7 @@ class Name(Generic):
             generated statement tags are guaranteed to be unique for a given
             script.
                 *   Mainly included for testing purposes where setting to
-                    `False` enables comparing generated to    provided statement
+                    `False` enables comparing generated to provided statement
                     tags without having to change the index position of the
                     hard-coded/pr statement wrap when adding/removing tests.
         first_line_remainder (str):
@@ -234,7 +234,7 @@ class Name(Generic):
         delim = self.cfg.script.patterns.core.delimiter
         return (
             self._nm_pr
-            if original             else
+            if og else
             f"{self._anchor(og)}{delim}{self.desc()}"
         )
         
@@ -258,7 +258,7 @@ class Name(Generic):
     def kw(self, ge: bool = False, pr: bool = False):
         """The final statement's **keyword** that is used by the API.
 
-        This will be the    provided keyword if a statement wrap exists and a
+        This will be the provided keyword if a statement wrap exists and a
         parsed/ge keyword otherwise.
 
         """
@@ -305,7 +305,7 @@ class Name(Generic):
         """Constructing 'anchor' from raw attributes if og=False."""
         return (
             self._nm_pr
-            if original             else
+            if og else
             f"{self.kw()} {self.obj()}"
         )
 

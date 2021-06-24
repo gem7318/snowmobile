@@ -40,12 +40,12 @@ class Scope(Generic):
             :attr:`excl_arg` if they are not passed as a keyword argument
             by the user in :class:`Script`; defaults to including the
             :attr:`base` and excluding an empty list.
-        provided_args (dict):
-            The set of keyword arguments    provided at the time of the last call
+     provided_args (dict):
+            The set of keyword arguments provided at the time of the last call
             to :meth:`eval()`.
         check_against_args (dict):
             The set of keyword arguments checked against at the time of the
-            last call to :meth:`eval()`; will use    provided arguments if they
+            last call to :meth:`eval()`; will use provided arguments if they
             exist and the arguments from :attr:`fallback_to` otherwise.
         is_included (bool):
             Name is included based on the results of the last call to
@@ -74,8 +74,8 @@ class Scope(Generic):
         """Parses all filter arguments looking for those that match its base.
 
         Looks for include/exclude arguments within kwargs, populating
-        :attr:`provided_args` with those that were    provided and populates
-        :attr:`check_against_args` with the same values if they were    provided         and fills in defaults from :attr:`fallback_to` otherwise.
+        :attr:`provided_args` with those that were provided and populates
+        :attr:`check_against_args` with the same values if they were provided         and fills in defaults from :attr:`fallback_to` otherwise.
 
         Args:
             **kwargs:

@@ -101,7 +101,7 @@ class Table(Generic):
             `fail`, `replace`, `append`, and `truncate`; defaults to
             ``append``.
         as_is (bool):
-            Load ``df`` into ``table`` based on the parameters    provided to
+            Load ``df`` into ``table`` based on the parameters provided to
             :class:`Table` without further pre-inspection by the user; defaults
             to `False`.
         path_ddl (Optional[Path]):

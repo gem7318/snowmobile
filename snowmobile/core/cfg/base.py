@@ -74,7 +74,7 @@ class Base(BaseModel, Config):
         return dict()
 
     def kwarg(self, arg_nm: str, arg_val: Any, arg_typ: Any) -> Any:
-        """Compares a    provided keyword argument to a configured keyword argument."""
+        """Compares a provided keyword argument to a configured keyword argument."""
         if isinstance(arg_val, arg_typ):
             return arg_val
         return (

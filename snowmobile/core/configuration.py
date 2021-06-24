@@ -348,7 +348,7 @@ class Configuration(Generic):
             return self
 
         def _reading_provided(self):
-            self.p("(1 of 2) Checking    provided path...")
+            self.p("(1 of 2) Checking provided path...")
             return self
 
         def _locating_outcome(self, is_provided: bool, file: str):
@@ -362,7 +362,7 @@ class Configuration(Generic):
 
         def _provided_found(self, file_path: Path):
             path = self.offset_path(file_path=file_path)
-            self.p(f"(2 of 2) Reading    provided path {path}")
+            self.p(f"(2 of 2) Reading provided path {path}")
             return self
 
         def _found(self, file_path: Path, is_provided: bool):

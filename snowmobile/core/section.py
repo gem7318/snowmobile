@@ -275,7 +275,7 @@ class Section(Generic):
 
     Parameters:
         is_marker (bool):
-            Information    provided is associated with a marker as opposed to
+            Information provided is associated with a marker as opposed to
             a statement; defaults to *False*.
         h_contents (str):
             String representation of header contents.
