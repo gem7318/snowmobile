@@ -3,7 +3,7 @@ An analytics-focused wrapper around the snowflake.connector for Python.
 """
 # isort: skip_file
 # fmt: off
-__version__ = "0.2.0b24"
+__version__ = "0.2.0b25"
 __author__ = "Grant Murray"
 __application__ = "snowmobile"
 

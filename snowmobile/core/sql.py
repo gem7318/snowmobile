@@ -257,13 +257,12 @@ from {_loc}
         """Returns an ordered list of columns for a table or view.
 
         note:
-            *   The default behavior of this method is to retrieve the columns
-                for a table or view by selecting a single sample record
-                from the table and extracting the column names directly off
-                the returned :class:`pandas.DataFrame` due to the performance
-                gains in selecting a sample record as opposed to querying the
-                ``information_schema.columns``.
-            *   This can be changed by passing `from_info_schema=False`.
+            *   Default behavior is to retrieve the columns for a table or view
+                by selecting a single sample record and returning the column index
+                from the DataFrame that's returned which is much faster than
+                selecting the **column_names** from ``information_schema.columns``
+                pulling column names from the information schema
+            *   This can be changed by passing `from_info_schema=True`.
 
         Args:
             nm (str):
@@ -324,8 +323,8 @@ from {_loc}
                     should be applied
                 *   By default, the aggregated result inherits the name of the
                     field being aggregated, including any qualifier (optionally)
-                 provided with the field name or an explicit alias included
-                    in a 3rd item within in the tuple
+                    provided with the field name or an explicit alias included
+                    as a 3rd item within the tuple
                     
                         *The following snippet exhaustively illustrates the
                         functionality described above*

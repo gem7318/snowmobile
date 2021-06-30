@@ -73,7 +73,6 @@ class Name(Generic):
         # '_pr' placeholders
         # ------------------
         self._nm_pr = nm_pr or str()
-        # self._attrs = attrs or dict()
         self._anchor_pr = str()
         self._kw_pr = str()
         self._obj_pr = str()
@@ -239,12 +238,12 @@ class Name(Generic):
         )
         
     def nm(
-        self, ge: bool = False, pr: bool = False, og: bool = False
+        self, ge: bool = False, pr: bool = False, og: bool = True,
     ) -> str:
         """The final statement's **name** that is used by the API.
 
-        This will be the full wrap name if a statement wrap exists and a
-        parsed/ge wrap name otherwise.
+        This will be the full statement name if a tag exists and a
+        parsed/generated name otherwise.
 
         """
         if ge:
