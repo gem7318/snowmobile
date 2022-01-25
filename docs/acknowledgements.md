@@ -26,7 +26,7 @@
 +++ 
 **{any}`sqlparse`**
 -   The {meth}`sqlparse.parsestream()` method is used for the **initial** parsing
-    of a raw SQL file into individual statements.
+    of a raw SQL file into individual st.
 
 <hr class="sn-spacer">
 <hr class="sn-green">

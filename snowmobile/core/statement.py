@@ -4,19 +4,50 @@ Base class for all :class:`Statement` objects.
 from __future__ import annotations
 
 import time
-from typing import Any, Callable, Dict, Optional, Union, Tuple
+from typing import Any, Callable, Dict, Optional, Union, Tuple, List
 
 import pandas as pd
 import sqlparse
-# from IPython.display import Markdown, display
+
+from pydantic import BaseModel, Field
+
 from pandas.io.sql import DatabaseError as pdDataBaseError
 from snowflake.connector.errors import DatabaseError, ProgrammingError
 
 from . import ExceptionHandler, Section, Name, errors, cfg
-from . import Generic, Snowmobile  # isort: skip
+from . import Generic  # isort: skip
+from .tag import Attrs
+from .connection import Snowmobile
 
 
-class Statement(Name, Generic):
+class Time(BaseModel):
+    """
+    Container for execution time info.
+    """
+    
+    #: int: Unix timestamp statement is started
+    started: int = Field(default_factory=int)
+    
+    #: int: Unix timestamp statement is completed
+    ended: int = Field(default_factory=int)
+    
+    def __init__(self, **data):
+        super().__init__(**data)
+    
+    def __int__(self):
+        """Execution time in seconds."""
+        return int(self.ended - self.started)
+    
+    def __str__(self):
+        """Execution time as a string for console output."""
+        return (
+            f"{int(self)}s"
+            if int(self) < 60
+            else f"{int(int(self) / 60)}m"
+        )
+
+
+class Statement(Attrs, Name, Generic):
     """Base class for all :class:`Statement` objects.
 
     Home for attributes and methods that are associated with **all** statement
@@ -30,10 +61,6 @@ class Statement(Name, Generic):
         index (int):
             The context-specific index position of a statement within a script;
             can be `None`.
-        _index (int):
-            The original index position of a statement as read from the source;
-            This is used to restore the index position of a given statement
-            before exiting a specified context within :class:`snowmobile.Script`.
         patterns (config.Pattern):
             :class:`config.Pattern` object for more succinct access to
             values specified in **snowmobile.toml**.
@@ -61,37 +88,31 @@ class Statement(Name, Generic):
         execution_time_txt (str):
             Plain text description of execution time if executed; returned in
             seconds if execution time is less than 60 seconds, minutes otherwise.
-        attrs_raw (str):
-            A raw string of the tag/attributes associated with the statement.
-        attrs_parsed (dict):
-            A parsed dictionary of the tag/attributes associated with the statement.
-        is_tagged (bool):
-            Indicates whether or not the statement is tagged by the user.
-        is_multiline (bool):
-            Indicates whether or not a statement tag is a multiline tag; will
-            be `False` by default if :attr:`is_tagged` is `False`.
         first_keyword (sqlparse.sql.Token):
             The first keyword within the statement as a :class:`sqlparse.sql.Token`.
         sql (str):
             The sql associated with the statement as a raw string.
-        tag (Name):
-            Statement's :class:`~snowmobile.core.name.Name`.
 
     """
 
     # fmt: off
-    _PROCESS_OUTCOMES: Dict[Any, Any] = {
+    PROCESS_OUTCOMES: Dict[Any, Any] = {
+        0: ("-", ""),
+        
+        # -- start: base
+        1: ("-", "error: execution"),
+        2: ("success", "completed"),
+        # -- end: base
+        
+        # -- start: derived
         -3: ("success", "passed"),
         -2: ("warning", "failed"),
         -1: ("-", "error: post-processing"),
-        # -- derived end
-        0: ("-", ""),
-        # -- base start
-        1: ("-", "error: execution"),
-        2: ("success", "completed"),
+        # -- end: derived
+        
     }
 
-    _DERIVED_FAILURE_MAPPING = {
+    DERIVED_FAILURE_MAPPING = {
         'qa-diff': errors.QADiffFailure,
         'qa-empty': errors.QAEmptyFailure
     }
@@ -114,7 +135,7 @@ class Statement(Name, Generic):
         self.outcome: bool = True
         self.executed: bool = bool()
 
-        self.sn = sn
+        # self.sn = sn
         self.statement: sqlparse.sql.Statement = sn.cfg.script.ensure_sqlparse(
             statement
         )
@@ -122,68 +143,90 @@ class Statement(Name, Generic):
         self.patterns: cfg.Pattern = sn.cfg.script.patterns
         self.results: pd.DataFrame = pd.DataFrame()
 
+        #: Time: Execution time info
+        self.time: Time = Time()
+        
         self.start_time: int = int()
         self.end_time: int = int()
         self.execution_time: int = int()
         self.execution_time_txt: str = str()
 
-        self.attrs_raw = attrs_raw or str()
-        self.is_multiline = "\n" in self.attrs_raw
-        self.is_tagged: bool = bool(self.attrs_raw)
-        self._sql = sn.cfg.script.isolate_sql(s=self.statement)
-        self.attrs_parsed, self._nm = self.parse()
+        Attrs.__init__(self, sn=sn, raw=attrs_raw)
+        self._sql = sn.cfg.script.strip_comments(s=self.statement)
+        parsed, self._nm_intl = self.parse()
+        self.update(parsed)
         
         Name.__init__(
-            self, index=index, sql=self.sql, nm_pr=self._nm, configuration=self.sn.cfg
+            self,
+            index=index,
+            sql=self.sql(),
+            nm_pr=self._nm_intl,
+            configuration=self.sn.cfg,
         )
 
         self.e = e or ExceptionHandler(within=self)
 
-    @property
-    def sql(self):
+    def sql(
+        self, set_as: Optional[str] = None, tag: bool = False,
+    ) -> Union[str, Statement]:
         """Raw sql from statement, including result limit if enabled."""
+        if set_as:
+            self._sql = set_as
+            return self
+        if tag:
+            _attrs = self.tag(raw=False, namespace=True)
+            if _attrs:
+                _tag = self.sn.cfg.script.tag_from_attrs(
+                    attrs=_attrs,
+                    nm=_attrs.get('name', self.nm()),
+                    wrap=False,
+                )
+            else:
+                _tag = self.nm()
+            tag = self.sn.cfg.script.wrap(_tag)
+            return f"{tag}\n{self._sql}"
         if (
             self.sn.cfg.script.result_limit in [-1, 0]
             or self._sql.split('\n')[-1].strip().startswith('limit')
-            or not self._nm.lower().strip().startswith('select')
+            or not self._sql.split('\n')[0].strip().lower().startswith('select')
         ):
             return self._sql
         return f"{self._sql}\nlimit {self.sn.cfg.script.result_limit}"
 
     def parse(self) -> Tuple[Dict, str]:
-        """Parses a statement tag into a valid dictionary.
+        """Parses tag contents into a valid dictionary.
 
         Uses the values specified in **snowmobile.toml** to parse a
-        raw string of statement arguments into a valid dictionary.
+        raw string of statement attributes into a valid dictionary.
 
         note:
             *   If :attr:`is_multiline` is `True` and `name` is not included
                 within the arguments, an assertion error will be thrown.
             *   If :attr:`is_multiline` is `False`, the raw string within
-                the tag will be treated as the name.
-            *   The :attr:`tag` attribute is set once parsing is completed
+                the wrap will be treated as the name.
+            *   The :attr:`wrap` attribute is set once parsing is completed
                 and name has been validated.
 
         Returns (dict):
-            Parsed tag arguments as a dictionary.
+            Parsed wrap arguments as a dictionary.
 
         """
         if not self.is_tagged:
             return dict(), str()
 
         if self.is_multiline:
-            attrs_parsed = self.sn.cfg.script.parse_str(block=self.attrs_raw)
+            attrs_parsed = self.sn.cfg.script.parse_str(block=self.tag(raw=True))
             if "name" in attrs_parsed:
                 name = attrs_parsed.pop("name")
             else:
                 try:
-                    name = self.sn.cfg.script.parse_name(raw=self.attrs_raw)
+                    name = self.sn.cfg.script.parse_name(raw=self.tag(raw=True))
                 except errors.InvalidTagsError as e:
                     raise e
 
             return attrs_parsed, name
 
-        return dict(), self.attrs_raw
+        return dict(), self.tag(raw=True)
 
     def start(self):
         """Sets :attr:`start_time` attribute."""
@@ -192,14 +235,14 @@ class Statement(Name, Generic):
     def end(self):
         """Updates execution time attributes.
 
-        In total, sets:
+        In namespace, sets:
             *   :attr:`end_time`
             *   :attr:`execution_time`
             *   :attr:`execution_time_txt`
 
         """
+        self.time.ended = self.end_time = time.time()
         self._outcome, self.outcome, self.executed = 2, True, True
-        self.end_time = time.time()
         self.execution_time = int(self.end_time - self.start_time)
         self.execution_time_txt = (
             f"{self.execution_time}s"
@@ -207,83 +250,41 @@ class Statement(Name, Generic):
             else f"{int(self.execution_time/60)}m"
         )
 
-    @property
-    def attrs_total(self) -> Dict:
-        """Parses namespace for attributes specified in **snowmobile.toml**.
-
-        Searches attributes for those matching the keys specified in
-        ``script.markdown.attributes.aliases`` within **snowmobile.toml**
-        and adds to the existing attributes stored in :attr:`attrs_parsed`
-        before returning.
-
-        Returns (dict):
-            Combined dictionary of statement attributes from those explicitly
-            provided within the script and from object's namespace if specified
-            in **snowmobile.toml**.
-
-        """
-        current_namespace = {
-            **self.sn.cfg.attrs_from_obj(
-                obj=self, within=list(self.sn.cfg.attrs.from_namespace)
-            ),
-            **self.sn.cfg.methods_from_obj(
-                obj=self, within=list(self.sn.cfg.attrs.from_namespace)
-            ),
-        }
-        namespace_overlap_with_config = set(
-            current_namespace
-        ).intersection(  # all from current namespace
-            self.sn.cfg.attrs.from_namespace
-        )  # snowmobile.toml
-        attrs = {k: v for k, v in self.attrs_parsed.items()}  # parsed from .sql
-        for k in namespace_overlap_with_config:
-            attr = current_namespace[k]
-            attr_value = attr() if isinstance(attr, Callable) else attr
-            if attr_value:
-                attrs[k] = attr_value
-        return attrs
-
     def trim(self) -> str:
-        """Statement as a string including only the sql and a single-line tag name.
+        """Statement as a string including only the sql and a single-line wrap name.
 
         note:
-            The tag name used here will be the user-provided tag from the
-            original script or a generated :attr:`Name.nm` if a tag was not
+            The wrap name used here will be the user-pr wrap from the
+            original script or a    generated :attr:`Name.nm` if a wrap was not
             provided for a given statement.
 
         """
-        patterns = self.sn.cfg.script.patterns
-        open_p, close_p = patterns.core.to_open, patterns.core.to_close
-        return f"{open_p}{self.nm}{close_p}\n{self.sql};\n"
-
-    # def render(self) -> Statement:
-    #     """Renders the statement's sql as markdown in Notebook/IPython environments."""
-    #     display((Markdown(self.as_section().sql_md)))
-    #     return self
+        _open, _close = self.sn.cfg.script.tag()
+        return f"{_open}{self.nm()}{_close}\n{self.sql()};\n"
 
     @property
     def is_derived(self):
         """Indicates whether or not it's a generic or derived (QA) statement."""
-        return self.anchor in self.sn.cfg.QA_ANCHORS
+        return self.anchor() in self.sn.cfg.QA_ANCHORS
 
     @property
-    def lines(self) -> int:
-        """Depth of the statement's sql by number of lines."""
-        return len(self.sql.split("\n"))
+    def lines(self) -> List[str]:
+        """Returns each line within the statement as a list."""
+        return self.sql().split("\n")
 
     def as_section(self, incl_sql_tag: Optional[bool] = None, result_wrap: Optional[str] = None) -> Section:
         """Returns current statement as a :class:`Section` object."""
-        attrs = self.attrs_total
+        attrs = self.tag(namespace=True)
         results = attrs.get('results')
         if results and results.empty:
             _ = attrs.pop('results')
             
         return Section(
             index=self.index,
-            h_contents=self.nm,
-            parsed=self.attrs_total,
-            raw=self.attrs_raw,
-            sql=self.sql,
+            h_contents=self.nm(),
+            parsed=self.tag(namespace=True),
+            raw=self.tag(raw=True),
+            sql=self.sql(),
             cfg=self.sn.cfg,
             results=self.results,
             incl_sql_tag=incl_sql_tag,
@@ -330,9 +331,9 @@ class Statement(Name, Generic):
         """Resets attributes on the statement object to reflect as if read from source.
 
         In its current form, includes:
-            *   Resetting the statement/tag's index to their original values.
+            *   Resetting the statement/wrap's index to their original values.
             *   Resetting the :attr:`is_included` attribute of the statement's
-                :attr:`tag` to `True`.
+                :attr:`wrap` to `True`.
             *   Populating :attr:`error_last` with errors from current context.
             *   Caching current context's timestamp and resetting back to `None`.
 
@@ -399,96 +400,95 @@ class Statement(Name, Generic):
         try:
             if self:
                 self.start()
-                self.results = self.sn.query(self.sql, as_df=as_df, lower=lower)
+                self.time.started = time.time()
+                self.results = self.sn.query(self.sql(), as_df=as_df, lower=lower)
                 self.end()
                 self.e.set(outcome=2)
 
         except (ProgrammingError, pdDataBaseError, DatabaseError) as e:
             self.e.collect(e=e).set(outcome=1)
 
-        finally:  # only post-process when execution did not raise database error
+        finally:  # only when execution did not raise database error
             if self.e.outcome != 1:
                 self.process()
+                
         # fmt: off
-
-        # ---------------------------
         if (
-            self.e.seen(             # db error raised during execution
+            self.e.seen(             # db error raised during execution -------
                 of_type=errors.db_errors, to_raise=True
             )
-            and on_error != "c"      # stop on execution error
+            and on_error != "c"      # stop on execution error ----------------
         ):
             raise self.e.get(
                 of_type=errors.db_errors,
                 to_raise=True,
                 first=True,
             )
-        # ---------------------------
+        
         if (
-            self.e.seen(             # post-processing error occurred
+            self.e.seen(             # post-processing error occurred ---------
                 of_type=errors.StatementPostProcessingError,
                 to_raise=True,
             )
-            and on_exception != "c"  # stop on post-processing exception
+            and on_exception != "c"  # stop on post-processing exception ------
         ):
             raise self.e.get(
                 of_type=errors.StatementPostProcessingError,
                 to_raise=True,
                 first=True,
             )
-        # ---------------------------
+        
         if (
-            self.is_derived        # is child class with `.process()` method
-            and not self.outcome   # outcome of `.process()` did not pass
-            and on_failure != "c"  # stop on failure of `.process()`
+            self.is_derived        # is child class with `.process()` method --
+            and not self.outcome   # outcome of `.process()` did not pass -----
+            and on_failure != "c"  # stop on failure of `.process()` ----------
         ):
             raise self.e.get(
-                of_type=list(self._DERIVED_FAILURE_MAPPING.values()),
+                of_type=list(self.DERIVED_FAILURE_MAPPING.values()),
                 to_raise=True,
                 first=True,
             )
-        # ---------------------------
         # fmt: on
 
-        # if render:
-        #     self.render()
+        if render:
+            self.render()
 
         return self
 
-    def set_sql(self, sql: str) -> None:
-        """Public entry point to manually set the statement's .sql attribute."""
-        self._sql = sql
-
     @staticmethod
     def _validate_parsed(attrs_parsed: Dict):
-        """Returns args to verify 'name' attribute is present in a multiline tag."""
+        """Returns args to verify 'name' attribute is present in a multiline wrap."""
         condition, msg = (
             attrs_parsed.get("name"),
-            f"Required attribute 'name' not found in multi-line tag's "
+            f"Required attribute 'name' not found in multi-line wrap's "
             f"arguments;\n attributes found are: {','.join(list(attrs_parsed))}",
         )
         return condition, msg
 
     def outcome_txt(self, _id: Optional[int] = None) -> str:
         """Outcome as a string."""
-        return self._PROCESS_OUTCOMES[_id or self.e.outcome or 0][1]
+        return self.PROCESS_OUTCOMES[_id or self.e.outcome or 0][1]
 
     @property
     def outcome_html(self) -> str:
         """Outcome as an html admonition banner."""
         # TODO: Move this to patterns
-        alert = self._PROCESS_OUTCOMES[self.e.outcome or 0][0]
+        alert = self.PROCESS_OUTCOMES[self.e.outcome or 0][0]
         return f"""
 <div class="alert-{alert}">
 <center><b>====/ {self.outcome_txt()} /====</b></center>
 </div>""".strip()
+
+    def __len__(self):
+        """Number of lines in the statement."""
+        return len(self.lines)
 
     def __bool__(self):
         """Determined by the value of :attr:`Name.is_included`."""
         return self.is_included
 
     def __str__(self) -> str:
-        return f"Statement('{self.nm}')"
+        return f"Statement('{self.nm()}')"
 
     def __repr__(self) -> str:
-        return f"Statement('{self.nm}')"
+        return f"Statement('{self.nm()}')"

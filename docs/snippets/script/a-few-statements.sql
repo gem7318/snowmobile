@@ -1,4 +1,4 @@
--- ..docs/snippets/script/a-few-statements.sql
+-- ..docs/snippets/script/a-few-st.sql
 
 create or replace table sample_table (
 	col1 number(18,0),

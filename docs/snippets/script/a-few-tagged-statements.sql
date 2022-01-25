@@ -1,4 +1,4 @@
--- ..docs/snippets/script/a-few-tagged-statements.sql
+-- ..docs/snippets/script/a-few-tagged-st.sql
 
 select * from sample_table;
 

@@ -1,7 +1,7 @@
 
 /*-
 __script__
-__description*: Script houses test cases for QA statements.
+__description*: Script houses test cases for QA st.
 -*/
 
 /*-set param~schema_name-*/
@@ -206,7 +206,7 @@ union
 	from simple_union;
 
 
-/* statement without a tag */
+/* statement without a wrap */
 select * from snowmobile_testing.sample_table st;
 
 /*-drop-schema~snowmobile_testing-*/

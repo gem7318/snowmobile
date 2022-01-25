@@ -1,12 +1,18 @@
 """
-Module handles:
+snowmobile.core.Configuration is a parsed snowmobile.toml file; class handles:
 
--   Locating `snowmobile.toml`, from cached location or from file system
-    traversal
--   Checking **[ext-sources]** for specified external configurations
--   Instantiating the parent-level modules from :mod:`snowmobile.core.cfg`
-    as attributes on the :class:`~snowmobile.core.configuration.Configuration`
-    class
+1.  Locating `snowmobile.toml`, from:
+
+    a.  A cached location specific to the version of :xref:`snowmobile`
+        and the file name (defaults to `snowmobile.toml`)
+    b.  Finding a file based on its name from traversing the file system,
+        used when initially finding snowmobile.toml or when a bespoke
+        configuration file name has been provided
+        
+2.  Checking **[ext-sources]** for specified external configurations
+3.  Instantiating each section in snowmobile.toml from the (Pydantic)
+    models defined in :mod:`snowmobile.core.cfg`; root sections are set as
+    individual attributes on :class:`~snowmobile.core.configuration.Configuration`
 
 """
 from __future__ import annotations
@@ -27,76 +33,79 @@ from .cache import Cache
 
 
 class Configuration(Generic):
-    """User-facing access point for a fully parsed `snowmobile.toml` file.
-
-
-    Args:
-        config_file_nm (Optional[str]):
-            Name of configuration file to use; defaults to `snowmobile.toml`.
-        creds (Optional[str]):
-            Alias for the set of credentials to authenticate with; default
-            behavior will fall back to the `connection.default-creds`
-            specified in `snowmobile.toml`, `or the first set of credentials
-            stored if this configuration option is left blank`.
-        from_config (Optional[str, Path]):
-            A full path to a specific configuration file to use; bypasses any
-            checks for a cached file location and can be useful for container-based
-            processes with restricted access to the local file system.
-        export_dir(Optional[Path]):
-            Path to save a template `snowmobile.toml` file to; if provided,
-            the file will be exported within the __init__ method and nothing
-            else will be instantiated.
-
-    Attributes:
-        file_nm (str):
-            Name of configuration file provided; defaults to `snowmobile.toml`.
-        cache (Cache):
-            :class:`~snowmobile.core.cache.Cache` object for tracking the
-            location of `snowmobile.toml` across of
-            :class:`~snowmobile.Snowmobile`
-        location (Path):
-            Path to configuration file used to instantiate the instance with.
-        connection (snowmobile.core.cfg.Connection):
-            **[connection]**
-        loading (snowmobile.core.cfg.Loading):
-            **[loading]**
-        script (snowmobile.core.cfg.Script):
-            **[script]**
-        sql (snowmobile.core.cfg.SQL):
-            **[sql]**
-        ext_sources (snowmobile.core.cfg.Locations):
-            **[ext-sources]**
-
+    """
+    A parsed `snowmobile.toml` file.
     """
 
     # -- Statement components to be considered for scope.
-    SCOPE_ATTRIBUTES = ["kw", "obj", "desc", "anchor", "nm"]
-    SCOPE_TYPES = ["incl", "excl"]
+    _SCOPE_ATTRIBUTES = ["kw", "obj", "desc", "anchor", "nm"]
+    _SCOPE_TYPES = ["incl", "excl"]
 
-    # -- Anchors to associate with QA statements.
+    # -- Anchors to associate with QA st.
     QA_ANCHORS = {"qa-diff", "qa-empty"}
 
     def __init__(
         self,
-        config_file_nm: Optional[str] = None,
         creds: Optional[str] = None,
+        config_file_nm: Optional[str] = None,
         from_config: Optional[Path, str] = None,
         export_dir: Optional[Path, str] = None,
+        silence: bool = False,
     ):
-        """Instantiates instances of the needed params to locate creds file.
+        """*All keyword arguments optional.*
+        
+        Args:
+            config_file_nm (Optional[str]):
+                Name of configuration file to use; defaults to `snowmobile.toml`.
+            creds (Optional[str]):
+                Alias for the set of credentials to authenticate with; default
+                behavior will fall back to the `connection.default-creds`
+                specified in `snowmobile.toml`, `or the first set of credentials
+                stored if this configuration option is left blank`.
+            from_config (Optional[str, Path]):
+                A full path to a specific configuration file to use; bypasses
+                any checks for a cached file location and can be useful for
+                container-based processes with restricted access to the local
+                file system.
+            export_dir(Optional[Path]):
+                Path to save a template `snowmobile.toml` file to; if pr,
+                the file will be exported within the __init__ method and nothing
+                else will be instantiated.
+                
         """
         # fmt: off
         super().__init__()
 
-        self._stdout = self.Stdout()
+        self._stdout = self.Stdout(silence=silence)
+        """Stdout: Console output."""
 
         self.file_nm = config_file_nm or "snowmobile.toml"
+        """str: Configuration file name; defaults to 'snowmobile.toml'."""
 
         self.cache = Cache()
+        """snowmobile.core.cache.Cache: Persistent cache; caches :attr:`location`."""
+        
+        self.location = Path()
+        """pathlib.Path: Full path to configuration file."""
+        
+        self.connection: Optional[cfg.Connection] = None
+        """snowmobile.core.cfg.Connection: **[connection]** from snowmobile.toml."""
+        
+        self.loading: Optional[cfg.Loading] = None
+        """snowmobile.core.cfg.Loading: **[loading]** from snowmobile.toml."""
+        
+        self.script: Optional[cfg.Script] = None
+        """snowmobile.core.cfg.Script: **[script]** from snowmobile.toml."""
+        
+        self.sql: Optional[cfg.SQL] = None
+        """snowmobile.core.cfg.SQL: **[sql]** from snowmobile-ext.toml."""
+        
+        self.ext_sources: Optional[cfg.Location] = None
+        """snowmobile.core.cfg.Location: **[external-sources]** from snowmobile.toml."""
 
         # for snowmobile_template.toml export only
         if export_dir:
-            self._stdout._exporting(file_name=self.file_nm)
+            self._stdout.exporting(file_name=self.file_nm)
             export_dir = export_dir or Path.cwd()
             export_path = export_dir / self.file_nm
             template_path = paths.DIR_PKG_DATA / "snowmobile-template.toml"
@@ -124,7 +133,7 @@ class Configuration(Generic):
                     cfg_raw = toml.load(r)
 
                 # set 'provided-creds' value if alias is passed explicitly
-                cfg_raw['connection']['provided-creds'] = creds.lower() if creds else ""
+                cfg_raw['connection']['pr-creds'] = creds.lower() if creds else ""
 
                 # check for specified 'external-sources', else set to defaults
                 ext_sources = cfg_raw["external-sources"]
@@ -143,13 +152,14 @@ class Configuration(Generic):
 
                 # recursively merge snowmobile.toml and snowmobile-ext.toml -
                 # note that the dict order matters; if d1 and d2 share a key at
-                # the same level, the value from d1 will supsersede that of d2
+                # the same level, the value from d1 will supersede that of d2
                 merged = rmerge_dicts(
                     d1=cfg_raw,
                     d2=snowmobile_ext
                 )
 
                 # set root classes as configuration attributes
+                # merged = self._find_and_merge_configurations()
                 self.connection = cfg.Connection(**merged.get('connection', {}))
                 self.loading = cfg.Loading(**merged.get('loading', {}))
                 self.script = cfg.Script(**merged.get('script', {}))
@@ -160,6 +170,9 @@ class Configuration(Generic):
                 raise IOError(e)
 
             # fmt: on
+            
+    def _find_and_merge_configurations(self, **kwargs):
+        pass
 
     @property
     def markdown(self) -> cfg.Markup:
@@ -186,7 +199,7 @@ class Configuration(Generic):
                 configuration file is intended to come from cache or from
                 a bottom-up traversal of the file system if not yet cached.
         """
-        self._stdout._locating_outcome(is_provided)
+        self._stdout._locating_outcome(is_provided=is_provided, file=self.file_nm)
         if self.location.is_file():
             self._stdout._found(file_path=self.location, is_provided=is_provided)
             return self.location
@@ -208,6 +221,7 @@ class Configuration(Generic):
             if found.is_file():
                 self.location = found
                 self.cache.save_item(item_name=self.file_nm, item_value=self.location)
+                # TODO: Add a silence method that will shut this up if desired
                 self._stdout._file_located(file_path=self.location)
                 return self.location
 
@@ -225,7 +239,7 @@ class Configuration(Generic):
             attrs (dict):
                 Dictionary containing attributes.
             to_none (bool):
-                Set all of the object's attributes batching a key in `attrs`
+                Set all of the object's attributes batching a key in `wrap`
                 to `None`; defaults ot `False`.
 
         Returns (Any):
@@ -266,12 +280,12 @@ class Configuration(Generic):
         # TODO: Stick somewhere that makes sense
         return {
             f"{typ}_{attr}": set()
-            for typ in self.SCOPE_TYPES
-            for attr in self.SCOPE_ATTRIBUTES
+            for typ in self._SCOPE_TYPES
+            for attr in self._SCOPE_ATTRIBUTES
         }
 
     def scopes_from_kwargs(self, only_populated: bool = False, **kwargs) -> Dict:
-        """Turns filter arguments into a valid set of kwargs for :class:`Scope`.
+        """Turns *script.filter()* arguments into a valid set of kwargs for :class:`Scope`.
 
         Returns dictionary of all combinations of 'arg' ("kw", "obj", "desc",
         "anchor" and "nm"), including empty sets for any 'arg' not included
@@ -285,13 +299,13 @@ class Configuration(Generic):
         return {k: v for k, v in scopes.items() if v} if only_populated else scopes
 
     def scopes_from_tag(self, t: Any):
-        """Generates list of keyword arguments to instantiate all scopes for a tag."""
+        """Generates list of keyword arguments to instantiate all scopes for a wrap."""
         return [
             {
-                "base": self.attrs_from_obj(obj=t, within=self.SCOPE_ATTRIBUTES)[k],
+                "base": self.methods_from_obj(obj=t, within=self._SCOPE_ATTRIBUTES)[k](),
                 "arg": k
             }
-            for k in self.SCOPE_ATTRIBUTES
+            for k in self._SCOPE_ATTRIBUTES
         ]
 
     def json(self, by_alias: bool = False, **kwargs):
@@ -315,40 +329,40 @@ class Configuration(Generic):
     class Stdout(utils.Console):
         """Console output."""
 
-        def __init__(self):
-            super().__init__()
+        def __init__(self, silence: bool = False):
+            super().__init__(silence=silence)
 
-        def _exporting(self, file_name: str):
-            print(f"Exporting {file_name}..")
+        def exporting(self, file_name: str):
+            self.p(f"Exporting {file_name}..")
 
         def _exported(self, file_path: Path):
             path = self.offset_path(file_path=file_path)
-            print(f"<1 of 1> Exported {path}")
+            self.p(f"<1 of 1> Exported {path}")
 
         def _locating(self):
-            print("Locating credentials..")
+            self.p("Locating credentials..")
             return self
 
-        def _checking_cache(self):
-            print("(1 of 2) Finding snowmobile.toml..")
+        def _checking_cache(self, file: str):
+            self.p(f"(1 of 2) Finding {file}..")
             return self
 
         def _reading_provided(self):
-            print("(1 of 2) Checking provided path...")
+            self.p("(1 of 2) Checking provided path...")
             return self
 
-        def _locating_outcome(self, is_provided: bool):
+        def _locating_outcome(self, is_provided: bool, file: str):
             _ = self._locating()
-            return self._checking_cache() if not is_provided else self._reading_provided()
+            return self._checking_cache(file) if not is_provided else self._reading_provided()
 
         def _cache_found(self, file_path: Path):
             path = self.offset_path(file_path=file_path)
-            print(f"(2 of 2) Cached path found at {path}")
+            self.p(f"(2 of 2) Cached path found at {path}")
             return self
 
         def _provided_found(self, file_path: Path):
             path = self.offset_path(file_path=file_path)
-            print(f"(2 of 2) Reading provided path {path}")
+            self.p(f"(2 of 2) Reading provided path {path}")
             return self
 
         def _found(self, file_path: Path, is_provided: bool):
@@ -359,11 +373,11 @@ class Configuration(Generic):
             )
 
         def _cache_not_found(self):
-            print("(2 of 2) Cached path not found")
+            self.p("(2 of 2) Cached path not found")
             return self
 
         def _traversing_for(self, creds_file_nm: str):
-            print(f"\nLooking for {creds_file_nm} in local file system..")
+            self.p(f"\nLooking for {creds_file_nm} in local file system..")
             return self
 
         def _not_found(self, creds_file_nm: str):
@@ -371,11 +385,11 @@ class Configuration(Generic):
 
         def _file_located(self, file_path: Path):
             path = self.offset_path(file_path=file_path)
-            print(f"(1 of 1) Located '{file_path.name}' at {path}")
+            self.p(f"(1 of 1) Located '{file_path.name}' at {path}")
             return self
 
         def _cannot_find(self, creds_file_nm: str):
-            print(
+            self.p(
                 f"(1 of 1) Could not find config file {creds_file_nm} - "
                 f"please double check the name of your configuration file or "
                 f"value passed in the 'creds_file_nm' argument"

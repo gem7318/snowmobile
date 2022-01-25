@@ -11,8 +11,6 @@ from typing import List
 
 from pathlib import Path
 
-sys.path.append(".")
-
 HERE = Path(__file__).absolute()
 ROOT = HERE.parent.parent
 DOCS_DIR = ROOT / "docs"
@@ -20,9 +18,10 @@ LINKS_DIR = DOCS_DIR / "links"
 EXT_DIR = DOCS_DIR / "ext"
 PACKAGE_DIR = ROOT / "snowmobile"
 
+os.chdir(str(ROOT))
+sys.path.append(".")
 to_insert = {
     "DOCS_DIR": DOCS_DIR,
-    # "LINKS_DIR": LINKS_DIR,
     "EXT_DIR": EXT_DIR,
     "PACKAGE_DIR": PACKAGE_DIR,
     "ROOT": ROOT,
@@ -31,7 +30,6 @@ for dir_name, dir_path in to_insert.items():
     sys.path.insert(0, str(dir_path))
     print(f"<added> {dir_name}: {dir_path.as_posix()}")
 
-os.chdir(str(ROOT))
 
 # -- Runtime extensions -------------------------------------------------------
 
@@ -86,14 +84,12 @@ exclude_patterns = ["_build", "__main__.py", "__init__.py", "**.ipynb_checkpoint
 
 # Project Information ---------------------------------------------------------
 
-# TODO: Sort out the requirements dependencies; see Build #12815403
 from snowmobile import __version__
 
 project = "snowmobile"
 copyright = "2020, Grant E Murray"
 author = "Grant E Murray"
-version = __version__
-release = __version__
+version, release = __version__, __version__
 
 
 # Sphinx Panels ---------------------------------------------------------------
@@ -179,7 +175,6 @@ copybutton_selector = "div:not(.output) div:not(.sn-output) > div.highlight pre,
 
 # https://sphinx-autoapi.readthedocs.io/en/latest/reference/config.html
 
-# autoapi_add_toctree_entry = False
 autoapi_add_toctree_entry = True
 autoapi_type = "python"
 autoapi_dirs = ["../snowmobile"]
@@ -190,10 +185,11 @@ autoapi_ignore = [
     "**_runner/*",
     "**/.snowmobile/*",
 ]
-autoapi_python_class_content = "class"  # 'both' if __init__ as well
-autoapi_member_order = "bysource"  # 'bysource' or 'groupwise'
-# 'bysource' means 'by docstring order' for attributes and 'by actual source'
-# for methods and properties.
+autoapi_python_class_content = "both"  # 'both' if __init__ as well
+autoapi_member_order = "bysource"  # or 'groupwise'
+# note::
+# - 'bysource' means 'by docstring order' for attributes and 'by actual source'
+# - for methods and properties.
 
 
 # -- ToggleButton -------------------------------------------------------------
@@ -218,12 +214,9 @@ html_theme = "sphinx_material"
 extensions.append("sphinx_material")
 
 html_theme_options = {
-    # 'google_analytics_account': 'UA-XXXXX',
-    # 'logo_icon': '&#xe869',
     "html_minify": True,
     "html_prettify": False,
     "css_minify": True,
-    # "globaltoc_depth": 3,
     "globaltoc_depth": 1,
     "globaltoc_collapse": True,
     "globaltoc_includehidden": True,
@@ -231,10 +224,9 @@ html_theme_options = {
     "repo_name": "gem7318/snowmobile",
     "nav_title": "",
     "color_primary": "blue",
-    "color_accent": "cyan",
-    # "color_accent": "orange",
-    # "color_primary": "lightcyan",
-    # "theme_color": "2196f3",
+    # "color_accent": "cyan",
+    # "color_accent": "#0895ae",
+    "color_accent": "#3dceff",
     "theme_color": "3391c6",
     "body_max_width": None,
     'master_doc': True,
@@ -248,9 +240,6 @@ html_theme_options = {
         },
     ]
 }
-# Accent colors:
-# red, pink, purple, deep-purple, indigo, blue, light-blue, cyan,
-# teal, green, light-green, lime, yellow, amber, orange, deep-orange
 
 
 # Other HTML Options ----------------------------------------------------------
@@ -292,10 +281,6 @@ napoleon_use_keyword = True
 
 napoleon_custom_sections = "Attributes"
 
-# napoleon_type_aliases = {
-#     "DictCursor": "SnowflakeCursor",
-# }
-
 
 # -- External URLs ------------------------------------------------------------
 
@@ -321,19 +306,70 @@ html_js_files = [
     'js/scrollbar.js',
     'js/ios.js',
     'js/resize.js',
-    # 'js/index.d.ts',
     'js/darkreader.js',
     'js/theme.js',
-    # 'js/version.js',
 ]
 
 
-# TODO: Exclude all caps too
+autoapi_members_to_skip = {
+    # Maps types to member names where type is defined by the 'what' argument
+    # and must be within the values ('attribute', 'class', 'data', 'exception',
+    # 'function', 'method', 'module', 'package')
+    'attribute': [
+        '_index',
+        '_sql',
+        '_stdout',
+        'MSG',
+        'QA_ANCHORS',
+        'PROCESS_OUTCOMES',
+        'ANCHOR_TO_QA_BASE_MAP',
+        'DERIVED_FAILURE_MAPPING',
+    ],
+    'package': [
+        'utils',
+        'pkg_data',
+    ],
+    'module': [
+        'cache',
+        'column',
+        'name',
+        'paths',
+        'scope',
+        'section',
+        'snowframe',
+        'exception_handler',
+        'base',
+        'errors',
+        
+    ],
+    'data': [
+        'HERE',
+        'DIR_MODULES',
+        'DIR_PKG_DATA',
+        'EXTENSIONS_DEFAULT_PATH',
+        'DDL_DEFAULT_PATH',
+        'SQL_EXPORT_HEADING_DEFAULT_PATH',
+    ],
+    'class': [
+        'Stdout',
+    ]
+}
+
+
 def autoapi_skip_member(app, what, name, obj, skip, options):
     """Exclude all private attributes, methods, and dunder methods from Sphinx."""
     import re
-    exclude = re.findall("\._.*", str(obj)) or "stdout" in str(obj).lower()
-    return skip or exclude
+    exclude_private = re.findall("\._.*", str(obj))
+    exclude_explicit = any(
+        member in str(name)
+        for member in autoapi_members_to_skip.get(what, list())
+    )
+    return skip or any(
+        [
+            exclude_private,
+            exclude_explicit,
+        ]
+    )
 
 
 def rm_build_dirs(to_rm: List[str] = None, root_dir: Path = DOCS_DIR):
@@ -350,7 +386,6 @@ def setup(app):
 
     # -- setup
     if not os.environ.get('READTHEDOCS'):
-        # rm_build_dirs()
         try:
             rm_build_dirs()
         except Exception as e:

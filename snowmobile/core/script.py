@@ -9,13 +9,24 @@ import time
 from collections import Counter
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, ContextManager, Dict, List, Optional, Set, Tuple, Union, ItemsView
+from typing import (
+    Set,
+    Any,
+    Dict,
+    List,
+    Union,
+    Tuple,
+    Optional,
+    ItemsView,
+    KeysView,
+    ValuesView,
+    ContextManager,
+)
 
 import sqlparse
 
 from . import (
     Generic,
-    Snowmobile,
     Diff,
     Empty,
     ExceptionHandler,
@@ -24,6 +35,8 @@ from . import (
     errors,
     cfg,
 )
+from .connection import Snowmobile
+from .cfg import Marker
 
 
 class Script(Generic):
@@ -39,7 +52,7 @@ class Script(Generic):
             A raw string of valid sql code as opposed to reading from a
             ``path``.
         as_generic (bool):
-            Instantiate all statements as generic statements; skips all checks
+            Instantiate all statements as generic st; skips all checks
             for a mapping of a statement anchor to a derived statement class
             to instantiate in the place of a generic
             :class:`~snowmobile.core.statement.Statement`.
@@ -58,7 +71,7 @@ class Script(Generic):
         patterns (snowmobile.core.cfg.script.Pattern):
             Configured patterns from :ref:`snowmobile.toml`.
         as_generic (bool):
-            Instantiate all statements as generic statements; skips all checks
+            Instantiate all statements as generic st; skips all checks
             for a mapping of a statement anchor to a derived statement class
             to instantiate in the place of a generic
             :class:`~snowmobile.core.statement.Statement`.
@@ -79,7 +92,7 @@ class Script(Generic):
     """
 
     # Maps statement anchors to alternate base class.
-    _ANCHOR_TO_QA_BASE_MAP = {"qa-diff": Diff, "qa-empty": Empty}
+    ANCHOR_TO_QA_BASE_MAP = {"qa-diff": Diff, "qa-empty": Empty}
 
     def __init__(
         self,
@@ -92,10 +105,11 @@ class Script(Generic):
     ):
         if not path and not sql:
             raise ValueError(
-                "At least one of the `path` or `sql` arguments must be provided."
+                "At least one of the `path` or `sql` arguments must be pr."
             )
 
         super().__init__()
+        # TODO: Just inherit from sn
         if not sn:
             sn = Snowmobile(delay=delay, **kwargs)
         self.sn: Snowmobile = sn
@@ -108,14 +122,14 @@ class Script(Generic):
         self.markers: Dict[int, cfg.Marker] = dict()
         self.path: Path = Path()
         self.name: str = str()
-        self.source: str = str()
+        self._source: str = str()
+        self._source_end: int = int()
 
         self._is_from_str: Optional[bool] = None
         self._is_post_init: bool = False
         self._statements_all: Dict[int, Statement] = dict()
         self._statements_parsed: Dict[int, sqlparse.sql.Statement] = dict()
-        self._open = sn.cfg.script.patterns.core.to_open
-        self._close = sn.cfg.script.patterns.core.to_close
+        self._open, self._close = sn.cfg.script.tag()
         self._intra_statement_marker_hashmap_idx: Dict = dict()
         self._intra_statement_marker_hashmap_txt: Dict = dict()
         self._all_marker_hashmap: Dict = dict()
@@ -137,7 +151,7 @@ class Script(Generic):
 
         self.e = ExceptionHandler(
             within=self,
-            children=self.statements,
+            children=self.st,
             is_active_parent=True,
             to_mirror=["set", "reset"],
         )
@@ -145,9 +159,10 @@ class Script(Generic):
         self._stdout: Script.Stdout = self.Stdout(name=self.name, statements=dict())
 
     def _post_source__init__(self, from_str: bool = False) -> Script:
-        """Sets final attributes and parses source once provided."""
+        """Sets final attributes and parses source once pr."""
         self.name = self.path.name
         self._is_from_str = from_str
+        self._source_end = len(self._source.split('\n'))
 
         try:
             self._parse()
@@ -172,7 +187,7 @@ class Script(Generic):
             self.path: Path = Path(str(path)) if path else self.path
             self.name = self.path.name
             with open(self.path, "r") as r:
-                self.source = r.read()
+                self._source = r.read()
 
             return self._post_source__init__()
 
@@ -184,21 +199,26 @@ class Script(Generic):
         # fmt: off
         if not name.endswith(".sql"):
             raise ValueError(
-                f"`name` must end in .sql; '{name}' provided."
+                f"`name` must end in .sql; '{name}' pr."
             )
         # fmt: on
-        self.source = sql
+        self._source = sql
         self.path: Path = Path(str(directory)) / name
         return self._post_source__init__(from_str=True)
 
-    @property
-    def source_stream(self) -> sqlparse.sql.Statement:
-        """Parses source sql into individual statements."""
-        for s in sqlparse.parsestream(stream=self.source):
+    def source(self, original: bool = False) -> str:
+        """The script's sql as a raw string."""
+        if original:
+            return '\n'.join(self._source.split('\n')[0:self._source_end])
+        return '\n\n'.join(f"{s.sql(tag=True)};" for _, s in self.items())
+
+    def _stream(self, stream: Optional[str] = None) -> sqlparse.sql.Statement:
+        """Parses source sql into individual st."""
+        for s in sqlparse.parsestream(stream=stream or self._source):
             if self.sn.cfg.script.is_valid_sql(s=s):
                 yield s
 
-    def add_s(
+    def parse_one(
         self,
         s: Union[sqlparse.sql.Statement, str],
         index: Optional[int] = None,
@@ -209,7 +229,7 @@ class Script(Generic):
         Default behavior will only add ``sqlparse.sql.Statement`` objects
         returned from ``script.source_stream``.
 
-        ``clean_parse()`` utility function is utilized so that generated sql
+        ``clean_parse()`` utility function is utilized so that    generated sql
         within Python can be inserted back into the script as raw strings.
 
         Args:
@@ -219,24 +239,25 @@ class Script(Generic):
             index (int):
                 Index position of the statement within the script; defaults
                 to ``n + 1`` if index is not provided where ``n`` is the number
-                of statements within the script at the time ``add_s()``
+                of statements within the script at the time ``parse_one()``
                 is called.
             nm (Optional[str]):
                 Optionally provided the name of the statement being added; the
-                script instance will treat this value as if it were provided
-                within an in-script tag.
+                script instance will treat this value as if it were provided                 within an in-script wrap.
 
         """
         index = index or self.depth + 1
         if nm:
-            _open = self.sn.cfg.script.patterns.core.to_open
-            _close = self.sn.cfg.script.patterns.core.to_open
-            s: str = f"{_open}{nm}{_close}\n{s}"
+            s: str = f"{self._open}{nm}{self._close}\n{s}"
         s: sqlparse.sql.Statement = self.sn.cfg.script.ensure_sqlparse(sql=s)
 
         markers, attrs_raw = self.sn.cfg.script.split_sub_blocks(s=s)
         self._log_markers(idx=index, markers=markers)
         self._add_s(s=s, index=index, attrs_raw=attrs_raw)
+        
+    def parse_stream(self, stream: str) -> None:
+        """Parses a stream of sql and adds onto existing Script contents."""
+        self._parse_statements(stream=stream)
 
     def _add_s(
         self, s: sqlparse.sql.Statement, index: int, attrs_raw: str
@@ -271,7 +292,7 @@ class Script(Generic):
 
         # method is being invoked by user, not initial object instantiation
         if self._is_post_init:
-            self.source = f"{self.source}\n{self._statements_all[index].trim()}"
+            self._source = f"{self._source}\n{self._statements_all[index].trim()}"
 
     def _log_markers(self, idx: int, markers: List[str]) -> None:
         """Stores intra-statement markers.
@@ -292,28 +313,28 @@ class Script(Generic):
         self, s: sqlparse.sql.Statement, generic: Statement
     ) -> Union[Diff, Empty]:
         """Instantiates a QA statement object based off the statement's anchor."""
-        qa_base_class = self._ANCHOR_TO_QA_BASE_MAP[generic.anchor]
+        qa_base_class = self.ANCHOR_TO_QA_BASE_MAP[generic.anchor(pr=True)]
         return qa_base_class(
             sn=self.sn,
             statement=s,
             index=generic.index,
-            attrs_raw=generic.attrs_raw
-            # , e=self.e,
+            attrs_raw=generic.tag(raw=True)
         )
 
-    def _parse_statements(self) -> None:
+    def _parse_statements(self, stream: Optional[str] = None) -> None:
         """Instantiates statement objects for all statements in source sql."""
-        self._statements_all.clear()
-        parsed = self.source_stream
-        for i, s in enumerate(parsed, start=1):
-            self.add_s(s=s, index=i)
+        if not stream:
+            self._statements_all.clear()
+        parsed = self._stream(stream=stream)
+        for i, s in enumerate(parsed, start=self.depth + 1):
+            self.parse_one(s=s, index=i)
 
     def _parse_markers(self):
         """Parses all markers into a hashmap to the raw text within the marker."""
         cfg = self.sn.cfg.script
         self._all_marker_hashmap = {
             hash(m): m
-            for m in cfg.find_tags(sql=self.source).values()
+            for m in cfg.find_tags(sql=self._source).values()
             if cfg.is_marker(m)
         }
 
@@ -423,7 +444,7 @@ class Script(Generic):
         from_id: Optional[Union[str, int]] = None,
         last: bool = False,
     ) -> ContextManager[Script]:
-        """Subset the script based on attributes of its statements.
+        """Subset the script based on attributes of its st.
 
         ``script.filter()`` returns a modified instance of script that can
         be operated on within the context defined.
@@ -432,7 +453,7 @@ class Script(Generic):
             Keyword arguments beginning with ``incl`` or ``excl`` expect a
             string or a list of strings containing regex patterns with which
             to check for a match against the associated attribute of its
-            statements' :class:`~snowmobile.core.name.Name`.
+            st' :class:`~snowmobile.core.name.Name`.
 
         Args:
             incl_kw:
@@ -466,7 +487,7 @@ class Script(Generic):
 
         Returns (Script):
             The instance of script based on the context imposed by arguments
-            provided.
+            pr.
 
         """
         def to_list(arg: Union[List, str, None]) -> Union[None, List]:
@@ -545,61 +566,47 @@ class Script(Generic):
             return self
 
     def _depth(self, full: bool = False) -> int:
-        return len(self._adjusted_contents) if full else len(self.statements)
+        return len(self._adjusted_contents) if full else len(self.st)
 
     @property
     def depth(self) -> int:
         """Count of statements in the script."""
+        if not self._statements_all:
+            return 0
         return self._depth()
 
     @property
     def lines(self) -> int:
         """Number of lines in the script"""
-        return sum(s.lines for s in self.statements.values())
+        return sum(len(s) for s in self.st.values())
 
     def _id(self, _id: Union[int, str]) -> int:
-        """Returns index position of a statement given its index or tag name."""
+        """Returns index position of a statement given its index or wrap name."""
         if isinstance(_id, int):
             return _id if _id > 0 else (self.depth + _id + 1)
         try:
-            s = (
-                self.contents(by_index=False)
-                if _id in self.duplicates
-                else self.contents(by_index=False, validate=False)
-            )
-            return s[_id].index
+            statements = {
+                k: v
+                for k, v in self.items(
+                    by_index=False,
+                    validate=bool(_id in self.duplicates),
+                )
+            }
+            return statements[_id].index
         except Exception as e:
             raise e
-
-    @property
-    def statements(self) -> Dict[int, Statement]:
-        """All statements by index position included in the current context."""
-        if not self.filtered:
-            return self._statements_all
-        statements = {s.index: s for s in self._statements_all.values() if s}
-        return {
-            current_idx: statements[prior_idx].set_state(index=current_idx)
-            for current_idx, prior_idx in enumerate(sorted(statements), start=1)
-        }
 
     @property
     def excluded(self):
         """All statements by index position excluded from the current context."""
         return {
-            i: s for i, s in self._statements_all.items() if i not in self.statements
+            i: s for i, s in self._statements_all.items() if i not in self.st
         }
 
     @property
     def executed(self) -> Dict[int, Statement]:
         """Executed statements by index position included in the current context."""
-        return {i: s for i, s in self.statements.items() if s.executed}
-
-    def statement(self, _id: Optional[str, int] = None) -> Any[Statement, Empty, Diff]:
-        """Fetch a single statement by _id."""
-        index_of_id = self._id(_id=_id)
-        if index_of_id not in self.statements:
-            raise errors.StatementNotFoundError(nm=_id)
-        return self.statements[index_of_id]
+        return {i: s for i, s in self.st.items() if s.executed}
 
     def reset(
         self,
@@ -641,51 +648,56 @@ class Script(Generic):
     @property
     def duplicates(self) -> Dict[str, int]:
         """Dictionary of indistinct statement names/tags within script."""
-        counted = collections.Counter([s.nm for s in self._statements_all.values()])
+        counted = collections.Counter([s.nm() for s in self._statements_all.values()])
         return {tag: cnt for tag, cnt in counted.items() if cnt > 1}
 
-    def contents(
-        self,
-        by_index: bool = True,
-        ignore_scope: bool = False,
-        markers: bool = False,
-        validate: bool = True,
-    ) -> Dict[Union[int, str], Statement]:
-        """Dictionary of all executed statements with option to ignore current
-        scope."""
-        if not markers and ignore_scope:
-            contents_to_return = self.statements
-        elif not markers:
-            contents_to_return = self._statements_all
-        else:
-            contents_to_return = self._adjusted_contents
-        if by_index:
-            return contents_to_return
-        # validation to ensure keys are unique if fetching contents by tag name
-        if validate and not (
-            len({s for s in contents_to_return})
-            == len({s.nm for s in contents_to_return.values()})
-        ):
-            raise errors.DuplicateTagError(nm=self.path.name)
-        return {s.nm: s for i, s in contents_to_return.items()}
+    def s(self, _id: Optional[str, int] = None) -> Any[Statement, Empty, Diff]:
+        """Fetch a single statement by _id."""
+        index_of_id = self._id(_id=_id)
+        if index_of_id not in self.st:
+            raise errors.StatementNotFoundError(nm=_id)
+        return self.st[index_of_id]
 
-    def dtl(self, full: bool = False) -> None:
+    @property
+    def st(self) -> Dict[Union[int, str], Statement]:
+        """Accessor for all statements."""
+        if not self.filtered:
+            return self._statements_all
+        statements = {s.index: s for s in self._statements_all.values() if s}
+        return {
+            current_idx: statements[prior_idx].set_state(index=current_idx)
+            for current_idx, prior_idx in enumerate(sorted(statements), start=1)
+        }
+
+    def dtl(
+        self,
+        full: bool = False,
+        excluded: bool = False,
+        title: bool = True,
+        r: bool = False,
+    ) -> Union[str, None]:
         """Prints summary of statements within the current scope to console."""
-        self._console.display()
-        dtl = self.statements if not full else self._adjusted_contents
+        dtl = self.st if not full else self._adjusted_contents
         depth = self._depth(full=full)
+        if excluded:
+            dtl, depth = self.excluded, len(self.excluded)
+        _text = []
+        if title:
+            _text.append(self._console.display(r=True))
         for i, s in dtl.items():
-            print(f"{str(i).rjust(len(str(depth)), ' ')}: {s}")
+            _text.append(f"{str(i).rjust(len(str(depth)), ' ')}: {s}")
+        text = '\n'.join(_text)
+        return self._console.cprint(text, r)
 
     @property
     def first_s(self):
         """First statement by index position."""
-        return self.statements[min(self.statements)]
+        return self.st[min(self.st)]
 
     @property
     def last_s(self):
         """Last statement by index position"""
-        return self.statements[max(self.statements)]
+        return self.st[max(self.st)]
 
     @property
     def first(self) -> Union[Statement, Empty, Diff]:
@@ -802,7 +814,7 @@ class Script(Generic):
         """Statements by adjusted index position."""
         return {
             self._get_marker_adjusted_idx(idx=i, counter=counter): s
-            for i, s in self.statements.items()
+            for i, s in self.st.items()
         }
 
     def _adjusted_markers(self, counter: Counter):
@@ -846,7 +858,7 @@ class Script(Generic):
 
         """
         if not _id:
-            return list(self.statements)
+            return list(self.st)
         if isinstance(_id, List):
             return _id
         elif isinstance(_id, Tuple):
@@ -936,24 +948,55 @@ class Script(Generic):
             self._console.display()
             for i in indices_to_execute:
                 _run(_id=i, v=not render, **total_kwargs)
-
-    @property
-    def _console(self):
-        """External stdout object for console feedback without cluttering code."""
-        self._stdout.statements = self.statements
-        return self._stdout
-
-    def s(self, _id) -> Statement:
-        """Accessor for :meth:`statement`."""
-        return self.statement(_id=_id)
-
-    @property
-    def st(self) -> Dict[Union[int, str], Statement]:
-        """Accessor for :attr:`statements`."""
-        return self.statements
+    
+    def items(
+        self,
+        by_index: bool = True,
+        ignore_scope: bool = False,
+        statements: bool = True,
+        markers: bool = False,
+        validate: bool = True,
+    ) -> ItemsView[Union[int, str], Union[Statement, Marker]]:
+        """Dunder items."""
+        if by_index and statements and not markers and not ignore_scope:
+            return self.st.items()
+        elif by_index and statements and not markers:
+            return self._statements_all.items()
+        elif statements and not markers:
+            return {s.nm(): s for s in self.st.values()}.items()
+        contents_to_return = self._adjusted_contents
+        if not statements:
+            contents_to_return = {
+                i: s
+                for i, s in contents_to_return.items()
+                if not any(
+                    [isinstance(s, Statement), issubclass(Statement, type(s))]
+                )
+            }
+        if by_index:
+            return contents_to_return.items()
+        # validation to ensure keys are unique if fetching contents by wrap name
+        if validate and not (
+            len({s for s in contents_to_return})
+            == len({s.nm() for s in contents_to_return.values()})
+        ):
+            raise errors.DuplicateTagError(nm=self.path.name)
+        return {s.nm(): s for i, s in contents_to_return.items()}.items()
+    
+    def keys(self, **kwargs) -> KeysView[Union[int, str]]:
+        """Access keys of items only."""
+        return {k: v for k, v in self.items(**kwargs)}.keys()
+    
+    def values(self, **kwargs) -> ValuesView[Union[int, str]]:
+        """Access values of items only."""
+        return {k: v for k, v in self.items(**kwargs)}.values()
+    
+    def dict(self, **kwargs) -> Dict:
+        """Unpacking items view into an actual dictionary."""
+        return {k: v for k, v in self.items(**kwargs)}
 
     def __call__(self, _id: Union[int, str]) -> Statement:
-        return self.statement(_id=_id)
+        return self.s(_id=_id)
 
     def __str__(self) -> str:
         return f"snowmobile.Script('{self.name}')"
@@ -965,9 +1008,11 @@ class Script(Generic):
         """Dunder iteration."""
         return self.st
 
-    def items(self) -> ItemsView[int, Statement]:
-        """Dunder items."""
-        return self.st.items()
+    @property
+    def _console(self):
+        """External stdout object for console feedback without cluttering code."""
+        self._stdout.statements = self.st
+        return self._stdout
 
     # noinspection PyMissingOrEmptyDocstring
     class Stdout:
@@ -995,7 +1040,7 @@ class Script(Generic):
 
         @property
         def max_width_tag_and_time(self) -> int:
-            return max(len(f"{s.nm} (~0s)") for s in self.statements.values())
+            return max(len(f"{s.nm()} (~0s)") for s in self.statements.values())
 
         def console_progress(self, s: Statement) -> str:
             return f"<{s.index} of {self.cnt_statements}>".rjust(
@@ -1003,29 +1048,31 @@ class Script(Generic):
             )
 
         def console_tag_and_time(self, s: Statement) -> str:
-            return f"{s.nm} ({s.execution_time_txt})".ljust(
+            return f"{s.nm()} ({s.execution_time_txt})".ljust(
                 self.max_width_tag_and_time + 3, "."
             )
 
         def console_outcome(self, s: Statement) -> str:
             return f"<{s.outcome_txt().lower()}>".ljust(self.max_width_outcome, " ")
 
-        def status(self, s: Statement, return_val: bool = False) -> Union[None, str]:
+        def status(self, s: Statement, r: bool = False) -> Union[None, str]:
             progress = self.console_progress(s)
             tag_and_time = self.console_tag_and_time(s)
             outcome = self.console_outcome(s)
             stdout = f"{progress} {tag_and_time} {outcome}"
             self.outputs[s.index] = stdout
-            if self.verbose:
-                print(stdout)
-            if return_val:
-                return stdout
+            return self.cprint(stdout, r)
 
-        def display(self, underline: bool = True):
+        def display(self, underline: bool = True, r: bool = False) -> Union[str, None]:
             name = self.name
             if underline:
                 bottom_border = "=" * len(name)
-                # name = f"{bottom_border}\n{name}\n{bottom_border}"
                 name = f"{name}\n{bottom_border}"
-            if self.verbose:
-                print(f"{name}")
+            return self.cprint(name, r)
+            
+        def cprint(self, text: str, r: bool) -> Union[str, None]:
+            """Conditionally print or return 'text' based on 'r'."""
+            if self.verbose and not r:
+                print(text)
+            if r:
+                return text

@@ -5,13 +5,13 @@ __description***: The primary purpose of this script is to test the most basic
 of marker functionality.
 
 The expected behavior is to detect:
-1. *markers_standard.sql*, a leading marker before any statements
-1. *markers2.sql*, a marker between two statements
-1. *markers3.sql*, a second consecutive marker between two statements
-1. *trailing_marker*, a trailing marker after all statements
+1. *markers_standard.sql*, a leading marker before any st
+1. *markers2.sql*, a marker between two st
+1. *markers3.sql*, a second consecutive marker between two st
+1. *trailing_marker*, a trailing marker after all st
 
 __secondary***: The secondary purpose of this script is to test the re-indexing
-of statements and markers.
+of st and markers.
 
 The behavior expected is for the script to containing the following objects/order:
 1. Marker(`markers_standard.sql')
@@ -33,8 +33,8 @@ __description: second marker
 
 /*-
 __marker3__
-__description: third marker in total, second consecutive marker between two
-statements.
+__description: third marker in namespace, second consecutive marker between two
+st.
 -*/
 
 /*-create table~sample_table2-*/

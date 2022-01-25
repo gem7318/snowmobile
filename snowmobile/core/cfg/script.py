@@ -109,14 +109,14 @@ class Marker(Base):
     """[script.markdown.attributes.markers]"""
 
     # fmt: off
-    nm: str = Field(
+    name: str = Field(
         default_factory=str, alias="name"
     )
     group: str = Field(
         default_factory=str, alias="as-group"
     )
     attrs: Dict = Field(
-        default_factory=dict, alias="attrs"
+        default_factory=dict, alias="wrap"
     )
     raw: str = Field(
         default_factory=int, alias="raw-text"
@@ -165,24 +165,28 @@ class Marker(Base):
 
     def set_name(self, name: str, overwrite: bool = False) -> Marker:
         """Sets the name attribute."""
-        if self.nm and not overwrite:
+        if self.name and not overwrite:
             return self
-        self.nm = name.replace("_", "")
+        self.name = name.replace("_", "")
         return self
 
     def as_args(self):
         """Returns a dictionary of arguments for :class:`Section`."""
         if self.attrs.get("name"):
-            self.nm = self.attrs.pop("name")
+            self.name = self.attrs.pop("name")
         if self.attrs.get("marker-name"):
             _ = self.attrs.pop("marker-name")
-        return {"h_contents": self.nm, "parsed": self.attrs, "is_marker": True}
+        return {"h_contents": self.nm(), "parsed": self.attrs, "is_marker": True}
+    
+    def nm(self):
+        """Marker name."""
+        return self.name
 
     def __str__(self):
-        return f"Marker('{self.nm}')"
+        return f"Marker('{self.nm()}')"
 
     def __repr__(self):
-        return f"Marker('{self.nm}')"
+        return f"Marker('{self.nm()}')"
 
 
 class Attributes(Base):
@@ -294,14 +298,14 @@ class Attributes(Base):
         return {**grouped, **attrs}
 
     def _add_reserved(self, nm: str, attrs: Dict, is_marker: bool = False):
-        """Adds a single reserved attr's configuration to attrs.
+        """Adds a single reserved attr's configuration to wrap.
 
         Args:
             nm: Attribute name.
             attrs: Full dictionary of attributes.
             is_marker: Dictionary of attributes is for a marker.
 
-        Returns: Revised attrs.
+        Returns: Revised wrap.
 
         """
         reserved_attr = self.reserved[nm]
@@ -316,7 +320,7 @@ class Attributes(Base):
 
     def add_reserved_attrs(self, attrs: Dict, is_marker: bool = False):
         """Batch modifies all reserved attributes to their configuration."""
-        attrs = {k: v for k, v in attrs.items()}  # work on a copy of attrs
+        attrs = {k: v for k, v in attrs.items()}  # work on a copy of wrap
         for nm in self.reserved:
             attrs = self._add_reserved(nm=nm, attrs=attrs, is_marker=is_marker)
         return attrs
@@ -434,7 +438,7 @@ class QA(Base):
 
 
 class Type(Base):
-    """snowmobile-ext.toml: [tag-to-type-xref]"""
+    """snowmobile-ext.toml: [wrap-to-type-xref]"""
 
     # fmt: off
     as_str: List = Field(
@@ -466,7 +470,7 @@ class Script(Base):
         default_factory=QA, alias="qa"
     )
     types: Type = Field(
-        default_factory=Type, alias="tag-to-type-xref"
+        default_factory=Type, alias="wrap-to-type-xref"
     )
     export_dir_nm: str = Field(
         default_factory=str, alias="export-dir-name"
@@ -475,6 +479,13 @@ class Script(Base):
         default_factory=int, alias="result-limit"
     )
     # fmt: on
+    
+    def tag(self) -> Tuple[str, str]:
+        """Open/close pattern for statement tags."""
+        return (
+            self.patterns.core.to_open,
+            self.patterns.core.to_close,
+        )
 
     @staticmethod
     def power_strip(val_to_strip: str, chars_to_strip: Iterable[str]) -> str:
@@ -508,8 +519,6 @@ class Script(Base):
         """Parses an argument into its target data type based on its `arg_key`
         and the ``script.name-to-type-xref`` defined in **snowmobile.toml**."""
         arg_key, _, _ = arg_key.partition("*")
-        # _open, _close = self.patterns.core.to_open, self.patterns.core.to_close
-        # arg_value = arg_value.strip(f"{_open}\n").strip(f'\n{_close}')
         if arg_key in self.types.as_list:
             return self.arg_to_list(arg_as_str=arg_value)
         elif arg_key in self.types.as_float:
@@ -546,7 +555,7 @@ class Script(Base):
 
         Args:
             block (str):
-                Raw string of all text found between a given open/close tag.
+                Raw string of all text found between a given open/close wrap.
             strip_blanks (bool):
                 Strip blank lines from string; defaults to `False`.
             strip_trailing (bool):
@@ -559,6 +568,43 @@ class Script(Base):
         stripped = p.strip(block, blanks=strip_blanks, trailing=strip_trailing)
         splitter = self.split_args(args_str=stripped)
         return self.parse_split_arguments(splitter=splitter)
+
+    def wrap(self, tag: str) -> str:
+        """Wraps a raw string of sql in open/closing patterns."""
+        _open, _close = self.tag()
+        return f"{_open}{tag}{_close}"
+    
+    @staticmethod
+    def attr_construct(attr_nm: str, attr_value: str) -> str:
+        """Returns a parsable attribute from an attribute name and value."""
+        return f"__{attr_nm}: {attr_value}"
+    
+    def tag_from_attrs(
+        self, attrs: Dict, nm: Optional[str] = None, wrap: bool = False, **kwargs
+    ) -> str:
+        """Construct a parsable tag out of a dictionary of attributes."""
+        if not attrs.get('name', nm) and not kwargs.get('unsafe'):
+            raise ValueError(
+                "'name' must be part of 'attrs' or provided as a method argument."
+            )
+        attrs = attrs.copy()
+        
+        if nm:
+            attrs['name'] = nm
+            
+        _attrs = [self.attr_construct('name', attrs.pop('name'))]
+        ordered_attributes = self.markup.attrs.order
+        
+        for attr in ordered_attributes:
+            if attrs.get(attr):
+                _attrs.append(self.attr_construct(attr, attrs[attr]))
+        for attr_nm, attr_value in attrs.items():
+            if attr_nm != 'name' and attr_nm not in ordered_attributes:
+                _attrs.append(self.attr_construct(attr_nm, attr_value))
+                
+        _tag = '\n'.join(_attrs)
+        tag = f"\n{_tag}\n"
+        return self.wrap(tag) if wrap else tag
 
     def as_parsable(
         self,
@@ -602,7 +648,7 @@ class Script(Base):
                 raise AssertionError(
                     f"parsing.find_tags() error.\n"
                     f"Found different number of open-tags to closing-tags; please check "
-                    f"script to ensure each open-tag matching '{to_open}' has an "
+                    f"script to ensure each open-wrap matching '{to_open}' has an "
                     f"associated closing-_tag matching '{to_close}'."
                 )
             return {i: (open_spans[i], close_spans[i]) for i in close_spans}
@@ -629,13 +675,13 @@ class Script(Base):
         """
         tags = [t for t in self.find_tags(sql=sql).values() if marker in t]
         assert len(tags) <= 1, (
-            f"Found more than one tag within script containing '{marker}'; "
+            f"Found more than one wrap within script containing '{marker}'; "
             f"expected exactly one."
         )
         return tags[0] if tags else str()
 
     def has_tag(self, s: sqlparse.sql.Statement) -> bool:
-        """Checks if a given statement has a tag that directly precedes the sql."""
+        """Checks if a given statement has a wrap that directly precedes the sql."""
         s_tot: str = s.token_first(skip_cm=False).value
         spans_by_index = self.find_spans(sql=s_tot)
         if not spans_by_index:
@@ -667,7 +713,7 @@ class Script(Base):
         return has_sql and not s.value.isspace()
 
     @staticmethod
-    def isolate_sql(s: sqlparse.sql.Statement) -> str:
+    def strip_comments(s: sqlparse.sql.Statement) -> str:
         """Isolates just the sql within a :class:`sqlparse.sql.Statement` object."""
         s_sql = s.token_first(skip_cm=True)
         if not s_sql:
@@ -699,8 +745,8 @@ class Script(Base):
         Returns (Tuple[List, str]):
             A tuple containing:
                 1.  A list of __marker__ blocks if they exist; empty list otherwise
-                2.  The last tag/block before the start of the actual SQL (e.g. the
-                    tag/block that is associated with the statement passed to ``s``.
+                2.  The last wrap/block before the start of the actual SQL (e.g. the
+                    wrap/block that is associated with the statement passed to ``s``.
 
         """
         blocks = list(self.find_tags(sql=s.value).values())
@@ -724,16 +770,16 @@ class Script(Base):
     def parse_name(
         self, raw: str, offset: Optional[int] = None, silence: bool = False
     ) -> str:
-        """Parses name from a raw set of arguments if not given an explicit tag."""
+        """Parses name from a raw set of arguments if not given an explicit wrap."""
         by_line = raw.strip("\n").split("\n")
         offset = offset or 0
         try:
             if by_line[offset].startswith("__"):
                 e = errors.InvalidTagsError(
                     msg=f"""
-    invalid statement tags provided.
+    invalid statement tags pr.
     multi-line statement tags without an explicit `__name` attribute must include
-    a name not beginning with '__' on the first line within the open & closing tag;
+    a name not beginning with '__' on the first line within the open & closing wrap;
     first line found is:\n```\n{raw}\n```.
     """
                 )
@@ -765,8 +811,7 @@ class Script(Base):
                 The name of the marker as either:
                     1.  Returned value from :meth:`name_from_marker()`
                     2.  Returned value from :meth:`parse_name()`
-                    3.  None if neither is provided
-            nm_marker (str):
+                    3.  None if neither is provided             nm_marker (str):
                 The string value wrapped in ``__`` on the first line of the
                 argument block.
             attrs (dict):

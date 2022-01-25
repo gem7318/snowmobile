@@ -1,12 +1,12 @@
 """
-Inspect the parsing of a sql file containing two bare statements.
-../docs/snippets/script/a-few-statements.py
+Inspect the parsing of a sql file containing two bare st.
+../docs/snippets/script/a-few-st.py
 """
 
 # Setup -----------------------------------------------------------------------
 from pathlib import Path
 paths = {p.name: p for p in Path.cwd().glob('**/*.sql')}
-path = paths['a-few-tagged-statements.sql']
+path = paths['a-few-tagged-st.sql']
 
 import snowmobile
 
@@ -19,7 +19,7 @@ script = snowmobile.Script(path=path, sn=sn)
 script.dtl()
 """
 >>>
-a-few-tagged-statements.sql
+a-few-tagged-st.sql
 ===========================
 1: Statement('select data~s1')
 2: Statement('select data~sample_table')
@@ -45,7 +45,7 @@ Statement('select data~s1')
  obj_pr: '' | obj_ge: data | obj: data
 desc_pr: '' | desc_ge: s1 | desc: s1
   nm_pr: '' | nm_ge: select data~s1 | nm: select data~s1
-    
+  
 Statement('select all~sample_table')
   kw_pr: select | kw_ge: select | kw: select
  obj_pr: all | obj_ge: data | obj: all

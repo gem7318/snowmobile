@@ -12,7 +12,7 @@ def setup_for_qa_statement_tests(sn):
     from snowmobile import Script
 
     script = Script(path=FILES[QA_SCRIPT_NAME], sn=sn)
-    script.run(1)  # create temp table for statements to run on
+    script.run(1)  # create temp table for st to run on
     return script
 
 
@@ -87,7 +87,7 @@ def test_qa_empty_failure_exceptions(setup_for_qa_statement_tests):
             # except Exception as e:
             #     to_inspect = e
             #     raise e
-        for i in s.statements:
+        for i in s.st:
             with pytest.raises(QAEmptyFailure):
                 s.run(i)
                 # try:
@@ -115,7 +115,7 @@ def test_qa_diff_failure_exceptions(setup_for_qa_statement_tests):
         with pytest.raises(QADiffFailure):
             s.run()
 
-        for i in s.statements:
+        for i in s.st:
             with pytest.raises(QADiffFailure):
                 s.run(i)
             with pytest.raises(QADiffFailure):
@@ -135,7 +135,7 @@ def test_qa_diff_post_processing_exception(setup_for_qa_statement_tests):
         with pytest.raises(StatementPostProcessingError):
             s.run()
 
-        for i in s.statements:
+        for i in s.st:
             with pytest.raises(StatementPostProcessingError):
                 s.run(i)
 

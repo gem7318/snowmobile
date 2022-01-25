@@ -1,8 +1,13 @@
 """
-:class:`SQL` contains utility methods to generate & execute
-common SQL commands.
+:class:`SQL` contains utility methods to generate common SQL commands;
+:class:`~snowmobile.core.connection.Snowmobile` inherits
+everything from this object and passes along its
+:meth:`~snowmobile.core.connection.Snowmobile.query()` method for
+statement execution.
 
 .. note::
+
+
    The :attr:`~SQL.auto_run` attribute defaults to `True`, meaning that the
    generated sql will execute when a method is called; if set to `False`
    the method will return the sql as a string without executing.
@@ -21,19 +26,22 @@ common SQL commands.
 """
 from __future__ import annotations
 
+import json
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Callable, Tuple
 
 import pandas as pd
 
 from . import Generic
+from .configuration import Configuration
 from .utils.parsing import p, up, strip as s
+from .errors import SnowflakeObjectNotFound
 
 
 class SQL(Generic):
     """SQL class for generation & execution of common sql commands.
 
-    Intended to be interacted with as an attribute of :class:`~snowmobile.Snowmobile`.
+    Intended to be interacted with as a parent of :class:`~snowmobile.Snowmobile`.
 
     .. note::
         *   All arguments except for :attr:`sn` are optional.
@@ -42,8 +50,6 @@ class SQL(Generic):
             when generating a variety of statements around the same object.
 
     Attributes:
-        sn (snowmobile.Snowmobile):
-            :class:`Snowmobile` for sql execution and connection information.
         nm (str):
             Object name to use in generated sql (e.g. 'some_table_name')
         obj (str):
@@ -59,21 +65,55 @@ class SQL(Generic):
 
     def __init__(
         self,
-        sn=None,
+        _query_func: Callable,
+        _cfg: Configuration,
         nm: Optional[str] = None,
+        schema: Optional[str] = None,
         obj: Optional[str] = None,
         auto_run: Optional[bool] = True,
     ):
         """Initializes a :class:`snowmobile.SQL` object."""
         super().__init__()
-        self.sn = sn
-        schema, nm = p(nm=nm)
-        self.nm: str = nm
-        self.schema = schema or sn.cfg.connection.current.schema_name
+        
+        _schema, self.nm = p(nm=nm)
+        
+        self.schema = schema or _schema or _cfg.connection.current.schema_name
+        
         self.obj: str = obj or "table"
         self.auto_run: bool = auto_run
-
-    def info_schema_tables(
+        
+        self._query = _query_func
+        self._cfg = _cfg
+        
+    # -- Information Schema ---------------------------------------------------
+    
+    def info_schema(
+        self,
+        loc: str,
+        where: Optional[List[str]] = None,
+        fields: Optional[List[str]] = None,
+        order_by: Optional[List] = None,
+        run: Optional[bool] = None,
+    ) -> Union[str, pd.DataFrame]:
+        """Generic case of selecting from information schema location."""
+        _fields = self.fields(fields=fields)
+        _order_by = self.order(by=order_by)
+        _loc = f"information_schema.{loc}"
+        _where = [w for w in where or list() if w]
+        if _where:
+            clauses = 'and'.join(f"\n\t{clause}" for clause in _where)
+            _where = f"where\n{clauses}"
+        sql = f"""
+select
+{_fields}
+from {_loc}
+{_where}
+{_order_by}
+"""
+        _sql = s(sql, trailing=False, blanks=True)
+        return self._query(_sql) if self(run) else _sql
+    
+    def table_info(
         self,
         nm: Optional[str] = None,
         fields: List[str] = None,
@@ -114,13 +154,15 @@ class SQL(Generic):
         # fmt: off
         try:
             schema, nm = p(nm)
-            table = self._validate(
-                val=(nm or self.nm), nm='nm', attr_nm='nm'
+            table, schema = (
+                self._validate(
+                    val=(nm or self.nm), nm='nm', attr_nm='nm'
+                ),
+                self._validate(
+                    val=(schema or self.schema), nm='schema', attr_nm='schema'
+                )
             )
-            schema = self._validate(
-                val=(schema or self.schema), nm='schema', attr_nm='schema'
-            )
-            
+
         except ValueError as e:
             raise e
 
@@ -139,9 +181,9 @@ class SQL(Generic):
         )
         # fmt: on
 
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
-    def info_schema_columns(
+    def column_info(
         self,
         nm: Optional[str] = None,
         fields: Optional[List] = None,
@@ -177,8 +219,8 @@ class SQL(Generic):
                 2.  The generated query as a :class:`str` of sql.
 
         """
-        # fmt: off
         try:
+            # fmt: off
             schema, nm = p(nm)
             table = self._validate(
                 val=(nm or self.nm), nm='nm', attr_nm='nm'
@@ -186,9 +228,9 @@ class SQL(Generic):
             schema = self._validate(
                 val=(schema or self.schema), nm='schema', attr_nm='schema'
             )
+            # fmt: on
         except ValueError as e:
             raise e
-        # fmt: on
         restrictions = {
             **(restrictions or dict()),
             **{
@@ -203,25 +245,232 @@ class SQL(Generic):
             obj="column", fields=fields, restrictions=restrictions, order_by=order_by
         )
 
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
+    
+    def columns(
+        self,
+        nm: Optional[str] = None,
+        from_info_schema: bool = False,
+        lower: bool = False,
+        run: Optional[bool] = None,
+    ) -> Union[str, List]:
+        """Returns an ordered list of columns for a table or view.
 
-    # TODO: (rename) 'count' --> 'cnt'
+        note:
+            *   Default behavior is to retrieve the columns for a table or view
+                by selecting a single sample record and returning the column index
+                from the DataFrame that's returned which is much faster than
+                selecting the **column_names** from ``information_schema.columns``
+                pulling column names from the information schema
+            *   This can be changed by passing `from_info_schema=True`.
+
+        Args:
+            nm (str):
+                Name of table or view, including schema if the table or view is
+                outside of the current schema.
+            from_info_schema (bool):
+                Indicates whether to retrieve columns via the
+                ``information_schema.columns`` or by selecting a sample record
+                from the table or view; defaults to `False`.
+            lower (bool):
+                Lower case each column in the list that's returned.
+            run (bool):
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
+
+        Returns (Union[str, List]):
+            Either:
+                1.  An ordered list of columns for the table or view, **or**
+                2.  The query against the table or view as a :class:`str` of sql.
+
+        """
+        if from_info_schema:
+            return self._columns_from_info_schema(nm=nm, lower=lower, run=run)
+        else:
+            return self._columns_from_sample(nm=nm, lower=lower, run=run)
+        
+    # -- Common Queries -------------------------------------------------------
+    
+    def select(
+        self,
+        nm: Optional[str] = None,
+        fields: Optional[List[str]] = None,
+        apply: Optional[List[Tuple[str, str]]] = None,
+        n: Optional[int] = None,
+        run: Optional[bool] = None,
+        **kwargs,
+    ) -> Union[str, pd.DataFrame]:
+        """Generic `select` statement.
+
+        Args:
+            nm (str):
+                Table to select from, including schema if the table is outside
+                of the current schema
+            fields (Optional[List[str]]):
+                Select these fields (optional).
+            apply (Optional[List[Tuple[str, str]]]):
+            
+                Select aggregations of these fields.
+                
+                        **apply** [
+                           (*this_func, to_this_field, [as_alias]*),
+                           (*.., .., [..]*),
+                        ]
+   
+                *   ``apply`` should be provided as a list of tuples, each
+                    containing a minimum of 2 items (respectively) representing
+                    the aggregate function to apply and the field to which it
+                    should be applied
+                *   By default, the aggregated result inherits the name of the
+                    field being aggregated, including any qualifier (optionally)
+                    provided with the field name or an explicit alias included
+                    as a 3rd item within the tuple
+                    
+                        *The following snippet exhaustively illustrates the
+                        functionality described above*
+                
+                .. code-block:: python
+                   
+                    sn.select(
+                       nm='sandbox.sample_table',
+                       apply=[
+                           ('count', 'col1'),
+                           ('count', 'distinct col1'),
+                           ('count', 'distinct col1', 'col1_dst'),
+                       ],
+                       run=False,
+                    )
+                    >>>
+                    select
+                     count(col1)
+                       as col1
+                     ,count(distinct col1)
+                       as distinct_col1
+                     ,count(distinct col1)
+                       as col1_dst
+                    from sandbox.sample_table
+
+            n (int):
+                Number of records to return, implemented as a 'limit' clause
+                in the query; defaults to 1.
+            run (bool):
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
+
+        Returns (Union[str, pd.DataFrame]):
+            Either:
+            
+            1.  The results of the query as a :class:`pandas.DataFrame`, or
+            2.  The generated query as a :class:`str` of sql.
+
+        """
+        _t = ' ' * 2
+        schema, nm = p(nm)
+        # fmt: off
+        try:
+            schema, table = (
+                self._validate(
+                    val=(schema or self.schema), nm='schema', attr_nm='schema'
+                ),
+                self._validate(
+                    val=(nm or self.nm), nm='nm', attr_nm='nm'
+                )
+            )
+        except ValueError as e:
+            raise e
+        # fmt: on
+        
+        _fields = '*'
+        if apply:
+            _fields = [
+                ' '.join([
+                    f"{f[0]}({f[1]})\n{_t * 2}as",
+                    f"{f[1].replace(' ', '_')}" if len(f) == 2 else f"{f[2]}",
+                ])
+                for f in apply
+            ]
+        if fields:
+            if apply:
+                raise ValueError(
+                    f"Only one of 'apply' or 'fields' can be provided."
+                )
+            _fields = '\n'.join(
+                f"{_t + ',' if i > 0 else _t}{f}" for i, f in enumerate(fields)
+            )
+
+        limit = (
+            f"limit {n or 1}"
+            if n != -1 and not apply
+            else str()
+        )
+        
+        target = f"{up(schema)}.{up(table)}"
+        
+        sql = '\n'.join(['select', _fields, f"from {target}", limit])
+        
+        return (
+            self._query(sql=sql, **kwargs)
+            if self(run)
+            else sql
+        )
+     
+    # noinspection PyBroadException
+    def exists(self, nm: Optional[str] = None) -> bool:
+        """Checks the existence of a table or view.
+
+        Args:
+            nm (str):
+                Name of table or view, including schema if the table or view is
+                outside of the current schema.
+
+        Returns (bool):
+            Boolean indication of whether or not the table or view exists.
+
+        """
+        try:
+            _ = self.select(nm=nm, n=1)
+            return True
+        except:
+            return False
+
+    def is_distinct(self, nm: Optional[str] = None, field: Optional[str] = None) -> bool:
+        """Checks if table `nm` is distinct on column `on_col`
+
+        Args:
+            nm (str):
+                Table name.
+            field (str):
+                Column name.
+                
+        """
+        try:
+            return self.count(nm=nm, dst_of=field, as_perc=True) == 1
+        except ValueError as e:
+            raise e
+
     def count(
             self,
             nm: Optional[str] = None,
+            of: Optional[str] = None,
             dst_of: Optional[str] = None,
             as_perc: Optional[bool] = None,
-            run: Optional[bool] = None
-    ):
+            run: Optional[bool] = None,
+    ) -> Union[int, float]:
         """Number of records within a table or view.
 
         Args:
             nm (str):
-                Table name, including schema if creating a stage outside of the
-                current schema.
+                Table name, including schema if querying outside current schema.
+            of (str):
+                Column name (indistinct).
+            dst_of (str):
+                Column name (distinct).
+            as_perc (bool):
+                Option to return distinct count of the `dst_of` column as a
+                percentage of the namespace depth of the table or view.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
@@ -229,27 +478,225 @@ class SQL(Generic):
                 2.  The generated query as a :class:`str` of sql.
 
         """
+        schema, nm = p(nm)
         try:
+            obj_schema = self._validate(
+                val=(schema or self.schema), nm='obj_schema', attr_nm='schema'
+            )
             obj_name = self._validate(
-                val=(nm or self.nm),
-                nm="obj_name",
-                attr_nm="obj_name",
+                val=(nm or self.nm), nm='obj_name', attr_nm='obj_name'
             )
         except ValueError as e:
             raise e
         
-        _from = f"from {obj_name}"
+        _from = f"from {obj_schema}.{obj_name}"
         sql = f"select count(*) {_from}"
+        if of:
+            sql = f"select count({of}) {_from}"
         if dst_of:
             sql = f"select count(distinct {dst_of}) {_from}"
         if as_perc:
+            if not dst_of:
+                raise ValueError(
+                    "`as_perc=True` provided without specifying `dst_of` column."
+                )
             sql = f"select count(distinct {dst_of}) / count(*) {_from}"
             
-        return self.sn.query(sql=sql).snf.to_list(n=1) if self(run) else sql
+        return self._query(sql=sql, as_scalar=True) if self(run) else sql
+    
+    def show(
+        self,
+        obj: str,
+        in_loc: Optional[str] = None,
+        names: bool = False,
+        run: Optional[bool] = None,
+        **kwargs,
+    ) -> Union[pd.DataFrame, List[str], str]:
+        """Show schema objects of typ 'obj', optionally 'in_loc'.
 
-    def table_last_altered(
+        Args:
+            obj (str):
+                Schema object type ('tables', 'file formats', etc).
+            in_loc (str):
+                Snowflake location ('in schema sandbox', 'in database prod', etc).
+            names (bool):
+                Return a list of schema object names only ('name' field).
+            run (bool):
+                Execute the generated sql or return it as a string.
+
+        Returns (Union[pd.DataFrame, str]):
+            Either:
+                1.  The results of the query as a :class:`pandas.DataFrame`
+                2.  The 'names' column of the results returned as a list
+                3.  The generated query as a :class:`str` of sql
+            
+        """
+        _in_loc = f" in {in_loc}" if in_loc else str()
+        sql = s(f"show {obj}{_in_loc}")
+        if self(run):
+            result = self._query(sql, **kwargs)
+            return (
+                result
+                if not names
+                else result.snf.to_list(
+                    'name' if not kwargs.get('lower') else 'NAME'
+                )
+            )
+        return self._query(sql, **kwargs) if self(run) else sql
+    
+    # -- Metadata -------------------------------------------------------------
+    
+    def ddl(
+        self,
+        nm: Optional[str] = None,
+        obj: Optional[str] = None,
+        run: Optional[bool] = None,
+    ) -> str:
+        """Query the DDL for an schema object.
+
+        Args:
+            nm (str):
+                Name of the object to get DDL for, including schema if object
+                is outside of the current schema.
+            obj (str):
+                Type of object to get DDL for (e.g. 'table', 'view', 'file-format').
+            run (bool):
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
+
+        Returns (str):
+            Either:
+                1.  The results of the query as a :class:`pandas.DataFrame`, or
+                2.  The generated query as a :class:`str` of sql.
+
+        """
+        schema, nm = p(nm)
+        try:
+            # fmt: off
+            obj, schema, nm = (
+                self._validate(
+                    val=(obj or self.obj), nm='obj', attr_nm='obj'
+                ),
+                self._validate(
+                    val=(schema or self.schema), nm='schema', attr_nm='schema'
+                ),
+                self._validate(
+                    val=(nm or self.nm), nm='nm', attr_nm='nm'
+                )
+            )
+            # fmt: on
+        except ValueError as e:
+            raise e
+        _nm = self._schema_object(nm=nm, schema=schema, typ=obj)
+        sql = s(f"select get_ddl('{obj}', '{up(_nm)}') as ddl")
+        return self._query(sql=sql).snf.to_list(n=1) if self(run) else sql
+    
+    def comment(
+        self,
+        nm: Optional[str] = None,
+        obj: Optional[str] = None,
+        set_as: Optional[str] = None,
+        from_json: bool = False,
+        as_json: bool = False,
+        run: Optional[bool] = None,
+        **kwargs,
+    ) -> Union[str, Dict]:
+        """Get or set comment on a schema object.
+
+        Args:
+            nm (str):
+                Name of the schema object, including schema prefix if object
+                is outside implicit scope of the current connection.
+            obj (str):
+                Type of schema object (e.g. 'table', 'schema', etc).
+            set_as (str):
+                Content to set as comment on schema object.
+            from_json (bool):
+                Parse schema object comment as a string of json and return it
+                as a dictionary.
+            as_json (bool):
+                Dump contents of 'set_as' to a string of json prior to setting
+                comment.
+            run (bool):
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
+            **kwargs:
+                Keyword argument to pass to `json.loads(comment)` if
+                *from_json=True*.
+
+        Returns (Union[str, pd.DataFrame]):
+            Either:
+                1.  The schema object comment as a :class:`str`
+                2.  The generated query as a :class:`str` of sql.
+                3.  The schema object comment as a dictionary if *from_json=True*
+
+        """
+        # fmt: off
+        if set_as:
+            return self._set_comment(
+                nm=nm,
+                obj=obj,
+                comment=set_as,
+                as_json=as_json,
+                run=run,
+                **kwargs,
+            )
+        try:
+            schema, nm = p(nm)
+            obj, obj_schema, obj_name = (
+                self._validate(
+                    val=(obj or self.obj), nm='obj', attr_nm='obj'
+                ).lower(),
+                self._validate(
+                    val=(schema or self.schema), nm='obj_schema', attr_nm='schema'
+                ).lower(),
+                self._validate(
+                    val=(nm or self.nm), nm='obj_name', attr_nm='nm'
+                ).lower()
+            )
+        except ValueError as e:
+            raise e
+        
+        sql = self.info_schema(
+            loc=self._cfg.sql.info_schema_loc(obj, stem=True),
+            fields=['comment'],
+            where=[
+                f"lower({obj if obj != 'view' else 'table'}_name) = '{obj_name}'",
+                self._c(
+                    val=f"lower(table_schema) = '{obj_schema}'",
+                    condition=bool(obj in ['table', 'view'])
+                ),
+            ],
+            run=False,
+        )
+        
+        if self(run):
+            
+            df = self._query(sql)
+            
+            if df.empty:
+                raise SnowflakeObjectNotFound(
+                    msg=(f"""
+Object not found; \ndouble check that the schema object
+exists and that the below sql is querying the intended
+object:\n\n{sql}
+"""
+                         )
+                )
+            
+            comment = df.snf.to_list('comment', n=1)
+            return (
+                comment if not from_json
+                else
+                json.loads(comment, **kwargs) if comment else dict()
+            )
+        
+        # fmt: on
+        return sql
+    
+    def last_altered(
         self, nm: Optional[str] = None, run: Optional[bool] = None
-    ) -> Union[str, pd.DataFrame]:
+    ) -> Union[str, pd.Timestamp]:
         """Last altered timestamp for a table or view.
 
         Args:
@@ -257,8 +704,8 @@ class SQL(Generic):
                 Table name, including schema if creating a stage outside of the
                 current schema.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
@@ -267,35 +714,33 @@ class SQL(Generic):
 
         """
         try:
-            sql = self.info_schema_tables(
-                nm=nm, fields=["table_name", "table_schema", "last_altered"]
+            sql = self.table_info(
+                nm=nm,
+                fields=["last_altered"],
+                run=False,
             )
-            return self.sn.query(sql=sql) if self(run) else sql
+            return (
+                self._query(sql=sql, as_scalar=True)
+                if self(run)
+                else sql
+            )
         except AssertionError as e:
             raise e
+    
+    # -- Common DML Commands --------------------------------------------------
 
-    def create_stage(
-        self,
-        nm_stage: str,
-        nm_format: str,
-        replace: bool = False,
-        run: Optional[bool] = None,
+    def truncate(
+        self, nm: Optional[str] = None, run: Optional[bool] = None
     ) -> Union[str, pd.DataFrame]:
-        """Create a staging table.
+        """Truncate a table.
 
         Args:
-            nm_stage (str):
-                Name of stage to create, including schema if creating a stage
-                outside of the current schema.
-            nm_format (str):
-                Name of file format to specify for the stage, including schema
-                if using a format from outside of the current schema.
+            nm (str):
+                Name of table, including schema if the table is outside of the
+                current schema.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
-            replace (bool):
-                Indicates whether to replace an existing stage if pre-existing;
-                default is `False`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
@@ -303,10 +748,22 @@ class SQL(Generic):
                 2.  The generated query as a :class:`str` of sql.
 
         """
-        create = self._create(replace=replace)
-        _sql = f"{create} stage {nm_stage} file_format = {nm_format};"
-        sql = s(_sql)
-        return self.sn.query(sql=sql) if self(run) else sql
+        schema, nm = p(nm)
+        try:
+            # fmt: off
+            schema, name = (
+                self._validate(
+                    val=(schema or self.schema), nm='schema', attr_nm='schema'
+                ),
+                self._validate(
+                    val=(nm or self.nm), nm='nm', attr_nm='nm'
+                )
+            )
+            # fmt: on
+        except ValueError as e:
+            raise e
+        sql = s(f"truncate table {up(schema)}.{up(name)}")
+        return self._query(sql=sql) if self(run) else sql
 
     def drop(
         self,
@@ -318,13 +775,12 @@ class SQL(Generic):
 
         Args:
             nm (str):
-                Name of the object to drop, including schema if creating a stage
-                outside of the current schema.
+                Schema object's name.
             obj (str):
-                Type of object to drop (e.g. 'table', 'schema', etc)
+                Type of schema object (e.g. 'table', 'view', or 'schema')
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated statement; defaults to `True`, otherwise
+                returns sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
@@ -332,29 +788,27 @@ class SQL(Generic):
                 2.  The generated query as a :class:`str` of sql.
 
         """
-        # fmt: off
         schema, nm = p(nm)
         try:
-            obj_schema = self._validate(
-                val=(schema or self.schema), nm='obj_schema', attr_nm='schema'
+            # fmt: off
+            obj_schema, obj_name, obj = (
+                self._validate(
+                    val=(schema or self.schema), nm='obj_schema', attr_nm='schema'
+                ),
+                self._validate(
+                    val=(nm or self.nm), nm='obj_name', attr_nm='obj_name'
+                ),
+                self._validate(
+                    val=(obj or self.obj), nm='obj', attr_nm='obj'
+                )
             )
-            obj_name = self._validate(
-                val=(nm or self.nm), nm='obj_name', attr_nm='obj_name'
-            )
-            obj = self._validate(
-                val=(obj or self.obj), nm='obj', attr_nm='obj'
-            )
+            # fmt: on
         except ValueError as e:
             raise e
-        # fmt: on
-        _sql = (
-            f"drop {obj} if exists {up(obj_schema)}.{up(obj_name)}"
-            if obj.lower() in ["table", "view", "file_format"]
-            else f"drop {obj} if exists {up(obj_name)}"
-        )
-        sql = s(_sql)
-        return self.sn.query(sql=sql) if self(run) else sql
-
+        _name = self._schema_object(nm=obj_name, schema=obj_schema, typ=obj)
+        sql = s(f"drop {obj} if exists {up(_name)}")
+        return self._query(sql=sql).snf.to_list(n=1) if self(run) else sql
+    
     def clone(
         self,
         nm: Optional[str] = None,
@@ -375,7 +829,7 @@ class SQL(Generic):
                 can be a single object name, a single schema, or both in the
                 form of `obj_schema.obj_name` depending on the desired outcome.
             *   Additionally, **at least one of the** ``nm`` **or** ``to``
-                **arguments must be provided**.
+                **arguments must be pr**.
             *   The defaults for the target object are constructed such that
                 users can **either**:
                     1.  Clone objects to *other* schemas that inherit the
@@ -406,8 +860,8 @@ class SQL(Generic):
                 Type of object to clone (e.g. 'table', 'view', 'file-format');
                 defaults to `table`.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
             replace (bool):
                 Indicates whether to replace an existing stage if pre-existing;
                 default is `False`.
@@ -418,22 +872,26 @@ class SQL(Generic):
                 2.  The generated query as a :class:`str` of sql.
 
         """
-        schema, nm = p(nm)
-        to_schema, to = p(nm=to)
-        # fmt: off
         try:
-            obj = self._validate(
-                val=(obj or self.obj), nm='obj', attr_nm='obj'
-            )
-            schema = self._validate(
-                val=(schema or self.schema), nm='schema', attr_nm='schema'
-            )
-            nm = self._validate(
-                val=(nm or self.nm), nm='nm', attr_nm='nm'
+            # fmt: off
+            schema, nm = p(nm)
+            to_schema, to = p(nm=to)
+            obj, schema, nm = (
+                self._validate(
+                    val=(obj or self.obj), nm='obj', attr_nm='obj'
+                ),
+                self._validate(
+                    val=(schema or self.schema), nm='schema', attr_nm='schema'
+                ),
+                self._validate(
+                    val=(nm or self.nm), nm='nm', attr_nm='nm'
+                )
             )
 
-            to_schema = to_schema or schema
-            to = to or nm
+            to_schema, to = (
+                to_schema or schema,
+                to or nm
+            )
             if not to_schema and not to:
                 raise ValueError(
                     "At least one of '__schema' or 'name` must be provided "
@@ -444,15 +902,115 @@ class SQL(Generic):
                     f"Target object name & schema mirrors source object name/schema. "
                     f"Please provide a different value `to`"
                 )
+            # fmt: on
         except ValueError as e:
             raise e
-        # fmt: on
-        create = self._create(replace=replace)
-        _sql = (
-            f"{create} {obj} {up(to_schema)}.{up(to)} " f"clone {up(schema)}.{up(nm)}"
+        _create = self._create(replace=replace)
+        _src = self._schema_object(nm=nm, schema=schema, typ=obj)
+        _target = self._schema_object(nm=to, schema=to_schema, typ=obj)
+        sql = s(f"{_create} {obj} {up(_src)} clone {up(_target)}")
+        return self._query(sql=sql) if self(run) else sql
+    
+    def _set_comment(
+        self,
+        comment: str,
+        nm: Optional[str] = None,
+        obj: Optional[str] = None,
+        as_json: bool = False,
+        run: Optional[bool] = None,
+        **kwargs,
+    ) -> str:
+        """Drop a ``Snowflake`` object.
+
+        Args:
+            comment (str):
+                Value to set as comment on the schema object.
+            nm (str):
+                Name of the schema object to set comment on, including schema
+                prefix if it's a table, view, or file format located outside
+                of the current schema.
+            obj (str):
+                Type of schema object (e.g. 'table', 'schema', etc)
+            as_json (bool):
+                Dump comment to a string of json before setting it on the schema
+                object.
+            run (bool):
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
+            **kwargs:
+                Keyword argument to pass to `json.dumps(comment, **kwargs)`
+                if *as_json = True*.
+
+        Returns (str):
+            Db response from the statement as a string.
+
+        """
+        # fmt: off
+        schema, nm = p(nm)
+        try:
+            obj, obj_schema, obj_name = (
+                self._validate(
+                    val=(obj or self.obj), nm='obj', attr_nm='obj'
+                ).lower(),
+                self._validate(
+                    val=(schema or self.schema), nm='obj_schema', attr_nm='schema'
+                ).lower(),
+                self._validate(
+                    val=(nm or self.nm), nm='obj_name', attr_nm='nm'
+                ).lower()
+            )
+        except ValueError as e:
+            raise e
+        
+        _comment = (
+            comment
+            if not as_json
+            else json.dumps(comment, **kwargs)
         )
-        sql = s(_sql)
-        return self.sn.query(sql=sql) if self(run) else sql
+        _name = self._schema_object(nm=obj_name, schema=obj_schema, typ=obj)
+        _sql = (
+            f"""
+            comment on {obj} {_name}
+            is '{_comment}'
+            """
+        )
+        sql = s(_sql, trailing=False, blanks=True)
+        return self._query(sql, as_scalar=True) if self(run) else sql
+    
+    # -- Staging Operations ---------------------------------------------------
+
+    def create_stage(
+        self,
+        nm_stage: str,
+        nm_format: str,
+        replace: bool = False,
+        run: Optional[bool] = None,
+    ) -> Union[str, pd.DataFrame]:
+        """Create a staging table.
+
+        Args:
+            nm_stage (str):
+                Name of stage to create, including schema if creating a stage
+                outside of the current schema.
+            nm_format (str):
+                Name of file format to specify for the stage, including schema
+                if using a format from outside of the current schema.
+            run (bool):
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
+            replace (bool):
+                Indicates whether to replace an existing stage if pre-existing;
+                default is `False`.
+
+        Returns (Union[str, pd.DataFrame]):
+            Either:
+                1.  The results of the query as a :class:`pandas.DataFrame`, or
+                2.  The generated query as a :class:`str` of sql.
+
+        """
+        create = self._create(replace=replace)
+        sql = s(f"{create} stage {nm_stage} file_format = {nm_format};")
+        return self._query(sql=sql) if self(run) else sql
 
     def put_file_from_stage(
         self,
@@ -470,8 +1028,8 @@ class SQL(Generic):
             nm_stage (str):
                 Name of the staging table to load into.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
             options (dict):
                 Optional arguments to add to `put` statement in addition to
                 the values specified in the ``loading.put`` section
@@ -490,8 +1048,8 @@ class SQL(Generic):
         statement = [f"put file://{path.as_posix()} @{nm_stage}"]
         # fmt: off
         defaults = (
-            self.sn.cfg.loading.put.dict(by_alias=False) if not ignore_defaults
-            else dict()
+            dict() if ignore_defaults
+            else self._cfg.loading.put.dict(by_alias=False)
         )
         options = {
             **defaults,
@@ -503,7 +1061,7 @@ class SQL(Generic):
         _sql = "\n".join(statement)
         sql = s(_sql, trailing=False, whitespace=False, blanks=True)
 
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
     def copy_into_table_from_stage(
         self,
@@ -522,8 +1080,8 @@ class SQL(Generic):
             nm_stage (str):
                 Name of the staging table to load from.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
             options (dict):
                 Optional arguments to add to `put` statement in addition to
                 the values specified in the ``loading.put`` section
@@ -540,7 +1098,7 @@ class SQL(Generic):
         """
         statement = [f"copy into {nm} from @{nm_stage}"]
         defaults = (
-            self.sn.cfg.loading.copy_into.dict(by_alias=False)
+            self._cfg.loading.copy_into.dict(by_alias=False)
             if not ignore_defaults
             else dict()
         )
@@ -549,142 +1107,9 @@ class SQL(Generic):
             statement.append(f"\t{k} = {v}")
         _sql = "\n".join(statement)
         sql = s(_sql, trailing=False, whitespace=False, blanks=True)
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
-    def show_file_formats(self, run: Optional[bool] = None) -> Union[str, pd.DataFrame]:
-        """Lists all file formats in the current schema.
-
-        Args:
-            run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
-
-        Returns (Union[str, pd.DataFrame]):
-            Either:
-                1.  The results of the query as a :class:`pandas.DataFrame`, or
-                2.  The generated query as a :class:`str` of sql.
-
-        """
-        sql = f"show file formats"
-        return self.sn.query(sql=sql) if self(run) else sql
-
-    def ddl(
-        self,
-        nm: Optional[str] = None,
-        obj: Optional[str] = None,
-        run: Optional[bool] = None,
-    ) -> str:
-        """Query the DDL for an in-warehouse object.
-
-        Args:
-            nm (str):
-                Name of the object to get DDL for, including schema if object
-                is outside of the current schema.
-            obj (str):
-                Type of object to get DDL for (e.g. 'table', 'view', 'file-format').
-            run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
-
-        Returns (str):
-            Either:
-                1.  The results of the query as a :class:`pandas.DataFrame`, or
-                2.  The generated query as a :class:`str` of sql.
-
-        """
-        schema, nm = p(nm)
-        try:
-            obj = self._validate(val=(obj or self.obj), nm="obj", attr_nm="obj")
-            schema = self._validate(
-                val=(schema or self.schema), nm="schema", attr_nm="schema"
-            )
-            nm = self._validate(val=(nm or self.nm), nm="nm", attr_nm="nm")
-        except ValueError as e:
-            raise e
-        _sql = f"select get_ddl('{obj}', '{up(schema)}.{up(nm)}') as ddl"
-        sql = s(_sql)
-        return self.sn.query(sql=sql).snf.to_list(n=1) if self(run) else sql
-
-    def select(
-        self,
-        nm: Optional[str] = None,
-        n: Optional[int] = None,
-        run: Optional[bool] = None,
-    ) -> Union[str, pd.DataFrame]:
-        """Select `n` sample records from a table.
-
-        Args:
-            nm (str):
-                Name of table or view to sample, including schema if the table
-                or view is outside of the current schema.
-            n (int):
-                Number of records to return, implemented as a 'limit' clause
-                in the query; defaults to 1.
-            run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
-
-        Returns (Union[str, pd.DataFrame]):
-            Either:
-                1.  The results of the query as a :class:`pandas.DataFrame`, or
-                2.  The generated query as a :class:`str` of sql.
-
-        """
-        schema, nm = p(nm)
-        # fmt: off
-        try:
-            schema = self._validate(
-                val=(schema or self.schema), nm='schema', attr_nm='schema'
-            )
-            table = self._validate(
-                val=(nm or self.nm), nm='nm', attr_nm='nm'
-            )
-        except ValueError as e:
-            raise e
-        # fmt: on
-        limit = f"limit {n or 1}" if n != -1 else str()
-        sql = f"""
-select
-    *
-from {up(schema)}.{up(table)}
-{limit}
-        """
-        return self.sn.query(sql=sql) if self(run) else sql
-
-    def truncate(
-        self, nm: Optional[str] = None, run: Optional[bool] = None
-    ) -> Union[str, pd.DataFrame]:
-        """Truncate a table.
-
-        Args:
-            nm (str):
-                Name of table, including schema if the table is outside of the
-                current schema.
-            run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
-
-        Returns (Union[str, pd.DataFrame]):
-            Either:
-                1.  The results of the query as a :class:`pandas.DataFrame`, or
-                2.  The generated query as a :class:`str` of sql.
-
-        """
-        schema, nm = p(nm)
-        # fmt: off
-        try:
-            schema = self._validate(
-                val=(schema or self.schema), nm='schema', attr_nm='schema'
-            )
-            name = self._validate(
-                val=(nm or self.nm), nm='nm', attr_nm='nm'
-            )
-        except ValueError as e:
-            raise e
-        # fmt: on
-        _sql = f"truncate table {up(schema)}.{up(name)}"
-        sql = s(_sql)
-        return self.sn.query(sql=sql) if self(run) else sql
+    # -- Current Connection Information ---------------------------------------
 
     def current(
         self, obj: str, run: Optional[bool] = None
@@ -695,8 +1120,8 @@ from {up(schema)}.{up(table)}
             obj (str):
                 Type of object to retrieve information for (schema, session, ..).
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
@@ -706,7 +1131,7 @@ from {up(schema)}.{up(table)}
         """
         _sql = f"select current_{obj}()"
         sql = s(_sql)
-        return self.sn.query(sql=sql).snf.to_list(n=1) if self(run) else sql
+        return self._query(sql=sql).snf.to_list(n=1) if self(run) else sql
 
     def current_session(self, run: Optional[bool] = None) -> Union[str, pd.DataFrame]:
         """Select the current session."""
@@ -728,8 +1153,10 @@ from {up(schema)}.{up(table)}
         """Select the current role."""
         return self.current(obj="role", run=run)
 
-    def use(self, nm: str, obj: str, run: Optional[bool] = None):
-        """Generic implementation of 'use' command for in-warehouse objects.
+    # -- Generic 'use ___' Statements -----------------------------------------
+
+    def use(self, obj: str, nm: str, run: Optional[bool] = None):
+        """Generic implementation of 'use' command for schema objects.
 
         Args:
             nm (str):
@@ -737,8 +1164,8 @@ from {up(schema)}.{up(table)}
             obj (str):
                 Type of object to use (schema, warehouse, role, ..).
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, pd.DataFrame]):
             Either:
@@ -756,7 +1183,7 @@ from {up(schema)}.{up(table)}
         # fmt: on
         _sql = f"use {obj} {up(name)}"
         sql = s(_sql)
-        return self.sn.query(sql=sql) if self(run) else sql
+        return self._query(sql=sql) if self(run) else sql
 
     def use_schema(
         self, nm: Optional[str] = None, run: Optional[bool] = None
@@ -782,67 +1209,48 @@ from {up(schema)}.{up(table)}
         """Use role command."""
         return self.use(obj="role", nm=nm, run=run)
 
-    def columns(
-        self,
-        nm: Optional[str] = None,
-        from_info_schema: bool = False,
-        run: Optional[bool] = None,
-    ) -> Union[str, List]:
-        """Returns an ordered list of columns for a table or view.
+    # -- Private and Static Methods -------------------------------------------
 
-        note:
-            *   The default behavior of this method is to retrieve the columns
-                for a table or view by selecting a single sample record
-                from the table and extracting the column names directly off
-                the returned :class:`pandas.DataFrame` due to the performance
-                gains in selecting a sample record as opposed to querying the
-                ``information_schema.columns``.
-            *   This can be changed by passing `from_info_schema=False`.
+    @staticmethod
+    def _validate(
+        val: Optional[str, int], nm: str, attr_nm: Optional[str] = None
+    ) -> str:
+        """Validates the value of an argument passed to a method.
+
+        This method is built to validate method arguments in instances where an
+        unspecified argument can fall back to an attribute if it has been set.
+
+        Each of the 'closing' variables below represents a different ending to
+        a sentence within the exception message depending on the value provided         from the method and if the attribute the argument falls back to has been
+        set at the time the method is called.
 
         Args:
+            val (Union[str, int]:
+                Value to validate.
             nm (str):
-                Name of table or view, including schema if the table or view is
-                outside of the current schema.
-            from_info_schema (bool):
-                Indicates whether to retrieve columns via the
-                ``information_schema.columns`` or by selecting a sample record
-                from the table or view; defaults to `False`.
-            run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
-
-        Returns (Union[str, List]):
-            Either:
-                1.  An ordered list of columns for the table or view, **or**
-                2.  The query against the table or view as a :class:`str` of sql.
+                Name of argument in the method being called.
+            attr_nm (str):
+                Name of attribute to fall back to if the boolean representation
+                of ``val`` is `False`.
 
         """
-        if from_info_schema:
-            return self._columns_from_info_schema(nm=nm, run=run)
-        else:
-            return self._columns_from_sample(nm=nm, run=run)
-
-    # noinspection PyBroadException
-    def exists(self, nm: Optional[str] = None) -> bool:
-        """Checks the existence of a table or view.
-
-        Args:
-            nm (str):
-                Name of table or view, including schema if the table or view is
-                outside of the current schema.
-
-        Returns (bool):
-            Boolean indication of whether or not the table or view exists.
-
-        """
-        try:
-            _ = self.select(nm=nm)
-            return True
-        except:
-            return False
+        if not val:
+            closing1 = (
+                "." if not attr_nm else f", nor is its fallback attribute '{attr_nm}'."
+            )
+            closing2 = (
+                "."
+                if not attr_nm
+                else f" or set the '{attr_nm}' attribute before calling the method."
+            )
+            raise ValueError(
+                f"\nValue provided for '{nm}' is not valid{closing1}\n"
+                f"Please provide a valid value for '{nm}'{closing2}"
+            )
+        return val
 
     def _columns_from_info_schema(
-        self, nm: Optional[str] = None, run: Optional[bool] = None
+        self, nm: Optional[str] = None, lower: bool = False, run: Optional[bool] = None
     ) -> Union[str, List]:
         """Retrieves list of columns for a table or view **from information schema**.
 
@@ -850,9 +1258,11 @@ from {up(schema)}.{up(table)}
             nm (str):
                 Name of table or view, including schema if the table or view is
                 outside of the current schema.
+            lower (bool):
+                Lower case each column in the list that's returned.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, List]):
             Either:
@@ -861,13 +1271,19 @@ from {up(schema)}.{up(table)}
                     :class:`str` of sql.
 
         """
-        sql = self.info_schema_columns(
+        sql = self.column_info(
             nm=nm, fields=["ordinal_position", "column_name"], order_by=[1], run=False
         )
-        return self.sn.query(sql).snf.to_list(col="column_name") if run else sql
+        if self(run):
+            return [
+                c.lower() if lower else c
+                for c in self._query(sql).snf.to_list(col="column_name")
+            ]
+        else:
+            return sql
 
     def _columns_from_sample(
-        self, nm: Optional[str] = None, run: Optional[bool] = None
+        self, nm: Optional[str] = None, lower: bool = False, run: Optional[bool] = None
     ) -> Union[str, List]:
         """Retrieves a list of columns for a table or view from **sampling table**.
 
@@ -875,9 +1291,11 @@ from {up(schema)}.{up(table)}
             nm (str):
                 Name of table or view, including schema if the table or view is
                 outside of the current schema.
+            lower (bool):
+                Lower case each column in the list that's returned.
             run (bool):
-                Indicates whether to execute generated sql or return as string;
-                default is `True`.
+                Execute generated sql; defaults to `True`, otherwise returns
+                sql as a string.
 
         Returns (Union[str, List]):
             Either:
@@ -887,40 +1305,10 @@ from {up(schema)}.{up(table)}
         """
         _sql = self.select(nm=nm, run=False, n=1)
         sql = s(_sql)
-        return list(self.sn.query(sql, lower=False).columns) if self(run) else sql
-
-    @staticmethod
-    def _create(replace: bool = False):
-        """Utility to generate 'create'/'create or replace' based on an argument."""
-        return "create" if not replace else "create or replace"
-
-    def _r(self, run: Union[bool, None]) -> bool:
-        """Determines whether or not to execute a piece of sql.
-
-        Used in all subsequent methods containing a `run` argument.
-
-        Args:
-            run (Union[bool, None]):
-                The value from a method's `run` argument.
-
-        Returns (bool):
-            Boolean value indicating whether or not to execute the sql generated by
-            the method to which the value of `run` was passed.
-
-        note:
-            *   The default value of `run` in all subsequent methods is ``None``.
-            *   When any method of :class:`SQL` containing a `run` argument is called,
-                the argument's value is passed to this method which returns either:
-                    1.  The argument's value if it is a valid bool (i.e. a user-provided
-                        value to the method), or
-                    2.  The boolean representation of the current :attr:`auto_run`
-                        attribute (`True` by default).
-
-        """
-        if isinstance(run, bool):
-            return run
+        if self(run):
+            return [c for c in self._query(sql, lower=lower).columns]
         else:
-            return bool(self.auto_run)
+            return sql
 
     def _info_schema_generic(
         self,
@@ -936,7 +1324,7 @@ from {up(schema)}.{up(table)}
         `snowmobile.core.sql._map_information_schema.py`.
 
         """
-        info_schema_loc = self.sn.cfg.sql.info_schema_loc(obj=obj)
+        info_schema_loc = self._cfg.sql.info_schema_loc(obj=obj)
         fields = self.fields(fields=fields)
         where = self.where(restrictions=restrictions)
         order_by = self.order(by=order_by)
@@ -984,76 +1372,71 @@ from {info_schema_loc}
             return str()
 
     @staticmethod
-    def fields(fields: List) -> str:
+    def fields(fields: Optional[List[str]] = None) -> str:
         """Utility to generate fields within a 'select' statement."""
         return "\n".join(
             f'\t{"," if i > 1 else ""}{f}'
             for i, f in enumerate(fields or ["*"], start=1)
         )
-
+    
     @staticmethod
-    def _validate(
-        val: Optional[str, int], nm: str, attr_nm: Optional[str] = None
-    ) -> str:
-        """Validates the value of an argument passed to a method.
+    def _c(val: str, condition: bool) -> str:
+        """Checks val based on a condition."""
+        return val if condition else str()
+    
+    @staticmethod
+    def _create(replace: bool = False):
+        """Utility to generate 'create'/'create or replace' based on an argument."""
+        return "create" if not replace else "create or replace"
 
-        This method is built to validate method arguments in instances where an
-        unspecified argument can fall back to an attribute if it has been set.
+    def _r(self, run: Union[bool, None]) -> bool:
+        """Determines whether or not to execute a piece of sql.
 
-        Each of the 'closing' variables below represents a different ending to
-        a sentence within the exception message depending on the value provided
-        from the method and if the attribute the argument falls back to has been
-        set at the time the method is called.
+        Used in all subsequent methods containing a `run` argument.
 
         Args:
-            val (Union[str, int]:
-                Value to validate.
-            nm (str):
-                Name of argument in the method being called.
-            attr_nm (str):
-                Name of attribute to fall back to if the boolean representation
-                of ``val`` is `False`.
+            run (Union[bool, None]):
+                The value from a method's `run` argument.
+
+        Returns (bool):
+            Boolean value indicating whether or not to execute the sql generated by
+            the method to which the value of `run` was passed.
+
+        note:
+            *   The default value of `run` in all subsequent methods is ``None``.
+            *   When any method of :class:`SQL` containing a `run` argument is called,
+                the argument's value is passed to this method which returns either:
+                    1.  The argument's value if it is a valid bool (i.e. a user-pr
+                        value to the method), or
+                    2.  The boolean representation of the current :attr:`auto_run`
+                        attribute (`True` by default).
 
         """
-        if not val:
-            closing1 = (
-                "." if not attr_nm else f", nor is its fallback attribute '{attr_nm}'."
-            )
-            closing2 = (
-                "."
-                if not attr_nm
-                else f" or set the '{attr_nm}' attribute before calling the method."
-            )
-            raise ValueError(
-                f"\nValue provided for '{nm}' is not valid{closing1}\n"
-                f"Please provide a valid value for '{nm}'{closing2}"
-            )
-        return val
+        if isinstance(run, bool):
+            return run
+        else:
+            return bool(self.auto_run)
+    
+    @staticmethod
+    def _schema_object(nm: str, schema: str, typ: str) -> str:
+        """Returns schema object as a string based on its 'typ'."""
+        return (
+            nm
+            if typ.lower() not in ['table', 'view', 'file_format']
+            else f"{schema}.{nm}"
+        )
 
-    def _reset(self):
-        self.schema = self.sn.cfg.connection.current.schema_name
+    def _reset(self) -> SQL:
+        self.schema = self._cfg.connection.current.schema_name
         self.nm = None
         self.obj = "table"
         return self
 
-    def copy(self) -> SQL:
-        """User-facing copy method."""
-        return self.__copy__()
-
-    def __copy__(self) -> SQL:
-        """Dunder copy method."""
-        return type(self)(sn=self.sn, nm=f"{self.schema}.{self.nm}", obj=self.obj)
-
     def __call__(self, run: bool) -> bool:
         return self._r(run)
-        # return self(run)
-        # for k, v in kwargs.items():
-        #     if k in vars(self):
-        #         setattr(self, k, v)
-        # return self
 
     def __str__(self) -> str:
-        return f"snowmobile.SQL(creds='{self.sn.cfg.connection.creds}')"
+        return f"snowmobile.SQL(creds='{self._cfg.connection.creds}')"
 
     def __repr__(self) -> str:
-        return f"snowmobile.SQL(creds='{self.sn.cfg.connection.creds}')"
+        return f"snowmobile.SQL(creds='{self._cfg.connection.creds}')"

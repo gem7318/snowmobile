@@ -92,7 +92,7 @@ class Connection(Base):
         default_factory=str, alias='default-creds'
     )
     provided_alias: str = Field(
-        default_factory=str, alias='provided-creds'
+        default_factory=str, alias='pr-creds'
     )
     credentials: Dict[str, Credentials] = Field(
         default_factory=dict, alias="stored-credentials"

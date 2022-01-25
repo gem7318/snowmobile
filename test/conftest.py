@@ -27,8 +27,8 @@ def sn_delayed():
 
 
 @pytest.fixture(scope="session")
-def sql(sn_delayed):
+def sql(sn):
     """Returns a sql object; connection omitted."""
     from snowmobile import SQL
 
-    return SQL(sn=sn_delayed, auto_run=True)
+    return SQL(_query_func=sn.query, _cfg=sn.cfg)

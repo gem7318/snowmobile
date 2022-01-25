@@ -411,8 +411,7 @@ methods implemented on top of them, with the rest of the API accessing it as the
 
  (keyword-exceptions)=
  `generic-anchors`\
- *Generic anchors to use for a given keyword; will be used for generated statements
- if* `desc-is-simple` *is* **True**
+ *Generic anchors to use for a given keyword; will be used for generated statements  if* `desc-is-simple` *is* **True**
  
  (information-schema-exceptions)=
  `keyword-exceptions`\

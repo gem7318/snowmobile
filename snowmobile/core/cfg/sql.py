@@ -30,21 +30,24 @@ class SQL(Base):
         default=True, alias="desc-is-simple"
     )
     pr_over_ge: bool = Field(
-        default=True, alias="provided-over-generated"
+        default=True, alias="pr-over-ge"
     )
     # fmt: on
 
-    def info_schema_loc(self, obj: str) -> str:
+    def info_schema_loc(self, obj: str, stem: bool = False) -> str:
         """Returns information schema table for object if other than making plural.
 
         i.e.:
-            *   'table' --> 'tables'
+            *   'tables'  -> 'tables'
+            *   'table'  --> 'tables'
+            *   'schemas' -> 'schemata'
             *   'schema' --> 'schemata'
 
         """
-        obj = obj.strip("s")
+        obj = obj.rstrip("s")
         default = f"{obj}s"  # 'table' -> 'tables' / 'column' -> 'columns'
-        return f"information_schema.{self.info_schema_exceptions.get(obj, default)}"
+        _loc = f"information_schema.{self.info_schema_exceptions.get(obj, default)}"
+        return _loc if not stem else _loc.split('.')[-1]
 
     def objects_within(self, first_line: str):
         """Searches the first line of sql for matches to named objects."""

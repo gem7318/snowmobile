@@ -5,8 +5,12 @@ Instantiate `script` from 'overview.sql' and inspect high-level contents.
 
 # Setup -----------------------------------------------------------------------
 from pathlib import Path
-paths = {p.name: p for p in Path.cwd().glob('**/*.sql')}
-path = paths['overview.sql']
+paths = {
+    p.name: p
+    for p in Path.cwd().glob('**/*.sql')
+    if '.snowmobile' not in p.parents
+}
+path = paths['overview-base-sn.sql']
 
 import snowmobile
 
@@ -28,6 +32,34 @@ overview.sql
 6: Statement('insert into~s6')
 7: Statement('drop table~s7')
 """
+#
+# script.run(on_failure='c')
+# script(4).desc
+# script.run((1, -3))
+#
+# script.sn.query(script(10).sql)
+# script(9).attrs_parsed
+# script.dtl()
+#
+# script.run(8, on_failure='c')
+# script(8).results.head()
+#
+# script.sn.drop('any_other_table')
+# script.sn.drop('sample_table')
+#
+# script.dtl()
+# script(3).run().results.head()
+# script(8).run().results.head()
+#
+# with script.filter(incl_desc='DDL') as s:
+#     s.dtl()
+
+# with script.filter(
+#     excl_anchor=['qa.*', 'sample\b.*'],
+#     excl_desc=['DDL'],
+#     excl_kw='truncate',
+# ) as s:
+#     s.dtl()
 
 # -- Block 2 --
 # Store a few st, accessed by index position
@@ -65,4 +97,3 @@ overview.sql
 3: Statement('create transient table~s3')
 4: Statement('insert into~s4')
 """
-# snowmobile-include

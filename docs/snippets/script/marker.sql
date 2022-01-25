@@ -14,7 +14,7 @@ __description*_***: This is now a blank canvas of markdown..
 **The string spanning lines 3-38 in *intro.sql* were identified by *snowmobile*
 as a marker because:**
 -   It begins and ends (lines 3/38) with the patterns specified in *snowmobile.toml*
-	- see: `open-tag`, `close-tag`
+	- see: `open-wrap`, `close-wrap`
 -   Its second line contains only a string that is wrapped in double underscores (line 4)
 
 **The rendered markdown for this marker is formatted as such for the following reasons:**

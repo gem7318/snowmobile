@@ -8,6 +8,7 @@ from typing import Optional, Set
 
 from . import Generic, Configuration, Scope
 from .cfg import Pattern
+from .tag import Attrs
 
 
 class Name(Generic):
@@ -24,37 +25,27 @@ class Name(Generic):
         patt (snowmobile.Schema.Pattern):
             :class:`snowmobile.Schema.Pattern` object; represents
             ``script.patterns`` section of **snowmobile.toml**.
-        nm_pr (str):
-            Provided tag name for a given :class:`Statement`; can be empty.
+        _nm_pr (str):
+            Provided wrap name for a given :class:`Statement`; can be empty.
         index (int):
             Statement index position within :class:`Script`; can be empty.
         is_included (bool):
             Indicator of whether or not the combination of all scopes for this
-            statement tag is included within a given context.
+            statement wrap is included within a given context.
         incl_idx_in_desc (bool):
             Indicator of whether or not to include the statement index in the
-            `description` component of the tag; defaults to `True` so that all
+            `description` component of the wrap; defaults to `True` so that all
             generated statement tags are guaranteed to be unique for a given
             script.
                 *   Mainly included for testing purposes where setting to
                     `False` enables comparing generated to provided statement
                     tags without having to change the index position of the
-                    hard-coded/provided statement tag when adding/removing tests.
-        obj_pr (str):
-            The statement's `object name` if :attr:`is_struct_desc` evaluates
-            to `True`; empty string otherwise.
-        desc_pr (str):
-            The statement's `description` if :attr:`is_struct_desc` evaluates
-            to `True`; empty string otherwise.
-        anchor_pr (str):
-            The statement's `anchor`.
-        first_line (str):
-            A raw string of the first line of sql associated with the statement.
+                    hard-coded/pr statement wrap when adding/removing tests.
         first_line_remainder (str):
             The remainder of the first line once excluding the
             :attr:`first_keyword` and stripping repeating whitespace.
         scopes (set[Scope]):
-            Combination of all scopes for a given tag; this is essentially the
+            Combination of all scopes for a given wrap; this is essentially the
             all possible combinations of including/excluding any of the `kw`,
             `nm`, `obj`, `desc`, and `anchor` for a given instance of :class:`Name`.
 
@@ -66,12 +57,13 @@ class Name(Generic):
         nm_pr: Optional[str] = None,
         sql: Optional[str] = None,
         index: Optional[int] = None,
+        # attrs: Optional[Attrs] = None,
     ):
         super().__init__()
 
         # configuration
         # -------------
-        self._sql = sql
+        self._code = sql
         self.cfg: Configuration = configuration
         self.patt: Pattern = self.cfg.script.patterns
         self.index = index or int()
@@ -80,16 +72,16 @@ class Name(Generic):
 
         # '_pr' placeholders
         # ------------------
-        self.nm_pr = nm_pr or str()
-        self.anchor_pr = str()
-        self.kw_pr = str()
-        self.obj_pr = str()
-        self.desc_pr = str()
+        self._nm_pr = nm_pr or str()
+        self._anchor_pr = str()
+        self._kw_pr = str()
+        self._obj_pr = str()
+        self._desc_pr = str()
 
         # '_pr' parsing
         # -------------
         self.part_desc = tuple(
-            v for v in self.nm_pr.partition(self.patt.core.delimiter) if v
+            v for v in self._nm_pr.partition(self.patt.core.delimiter) if v
         )
         if len(self.part_desc) == 3:  # ('create table', '~', 'sample_records')
             anchor_vf = [  # ensure no extra space between words
@@ -97,12 +89,12 @@ class Name(Generic):
                 for v in self.part_desc[0].split(" ")
                 if self.cfg.script.power_strip(v, " ")
             ]
-            self.anchor_pr = " ".join(anchor_vf)  # 'create table'
-            self.kw_pr = anchor_vf[0]  # 'create'
-            self.obj_pr = (  # 'table'
+            self._anchor_pr = " ".join(anchor_vf)  # 'create table'
+            self._kw_pr = anchor_vf[0]  # 'create'
+            self._obj_pr = (  # 'table'
                 " ".join(anchor_vf[1:]) if len(anchor_vf) >= 2 else str()
             )
-            self.desc_pr = " ".join(  # 'sample records'
+            self._desc_pr = " ".join(  # 'sample records'
                 self.cfg.script.power_strip(v, " ")
                 for v in self.part_desc[-1].split(" ")
                 if self.cfg.script.power_strip(v, " ")
@@ -110,11 +102,11 @@ class Name(Generic):
 
         # sql parsing
         # -----------
-        stripped_sql = self.cfg.script.power_strip(
+        stripped_code = self.cfg.script.power_strip(
             val_to_strip=sql, chars_to_strip="\n "  # trailing lines and whitespace
         )
         self.first_line = self.cfg.script.power_strip(
-            val_to_strip=stripped_sql.split("\n")[0].lower(),
+            val_to_strip=stripped_code.split("\n")[0].lower(),
             chars_to_strip="\n ",  # same for first line only
         )
         self.words_in_first_line = [
@@ -137,8 +129,30 @@ class Name(Generic):
             Scope(**kwargs) for kwargs in self.cfg.scopes_from_tag(t=self)
         }
 
+    def _pr_parse(self):
+        """Parses provided name into core components."""
+        self.part_desc = tuple(
+            v for v in self._nm_pr.partition(self.patt.core.delimiter) if v
+        )
+        if len(self.part_desc) == 3:  # ('create table', '~', 'sample_records')
+            anchor_vf = [  # ensure no extra space between words
+                self.cfg.script.power_strip(v, " ")
+                for v in self.part_desc[0].split(" ")
+                if self.cfg.script.power_strip(v, " ")
+            ]
+            self._anchor_pr = " ".join(anchor_vf)  # 'create table'
+            self._kw_pr = anchor_vf[0]  # 'create'
+            self._obj_pr = (  # 'table'
+                " ".join(anchor_vf[1:]) if len(anchor_vf) >= 2 else str()
+            )
+            self._desc_pr = " ".join(  # 'sample records'
+                self.cfg.script.power_strip(v, " ")
+                for v in self.part_desc[-1].split(" ")
+                if self.cfg.script.power_strip(v, " ")
+            )
+
     def scope(self, **kwargs) -> bool:
-        """Evaluates all component's of a tag's scope against a set of filter args.
+        """Evaluates all component's of a wrap's scope against a set of filter args.
 
             **kwargs:
                 Keyword arguments passed to :class:`Script.filter()` (e.g.
@@ -153,7 +167,7 @@ class Name(Generic):
         return self.is_included
 
     @property
-    def kw_ge(self):
+    def _kw_ge(self):
         """Generated `keyword` for statement."""
         return (
             self.cfg.sql.kw_exceptions.get(
@@ -162,31 +176,30 @@ class Name(Generic):
         )
 
     @property
-    def obj_ge(self):
-        """Generated `object` for statement."""
-        return (
-            self._obj_ge or
-            (
-                self.anchor_ge.split(' ')[-1]
-                if len(self.anchor_ge.split(' ')) > 1 else str()
-            )
-        )
-
-    @property
-    def _obj_ge(self):
-        """Generated `object` for statement."""
+    def _obj_ge_base(self):
+        """Base for    generated object."""
         non_overlapping = {
             i: t
             for i, t in self.matched_terms.items()
-            if t != self.kw_ge and self.kw_ge not in ['set', 'unset']
+            if t != self._kw_ge and self._kw_ge not in ['set', 'unset']
         }
-
         return (
             non_overlapping[min(non_overlapping)] if non_overlapping else str()
         )
 
     @property
-    def desc_ge(self) -> str:
+    def _obj_ge(self):
+        """Generated `object` for statement."""
+        return (
+            self._obj_ge_base or
+            (
+                self._anchor_ge.split(' ')[-1]
+                if len(self._anchor_ge.split(' ')) > 1 else str()
+            )
+        )
+
+    @property
+    def _desc_ge(self) -> str:
         """Generated `description` for statement."""
         idx_prefix = self.cfg.script.patterns.core.prefix
         if self.cfg.sql.desc_is_simple:
@@ -202,86 +215,128 @@ class Name(Generic):
         )
 
     @property
-    def anchor_ge(self):
+    def _anchor_ge(self):
         """Generated `anchor` for statement."""
-        generalized_anchor = self.cfg.sql.generic_anchors.get(self.kw_ge)
-        if generalized_anchor and self._obj_ge == str():
+        generalized_anchor = self.cfg.sql.generic_anchors.get(self._kw_ge)
+        if generalized_anchor and self._obj_ge_base == str():
             return generalized_anchor
-        s = " " if self.kw_ge and self._obj_ge else ""
-        return f"{self.kw_ge}{s}{self._obj_ge}"
+        s = " " if self._kw_ge and self._obj_ge_base else ""
+        return f"{self._kw_ge}{s}{self._obj_ge_base}"
 
     @property
-    def nm_ge(self):
+    def _nm_ge(self):
         """Generated `name`; all delimiters included."""
-        return f"{self.anchor_ge}{self.patt.core.delimiter}{self.desc_ge}"
+        return f"{self._anchor_ge}{self.patt.core.delimiter}{self._desc_ge}"
 
-    @property
-    def nm(self):
+    def _nm(self, og: bool) -> str:
+        """Constructing 'nm' from raw attributes if og=False."""
+        delim = self.cfg.script.patterns.core.delimiter
+        return (
+            self._nm_pr
+            if og else
+            f"{self._anchor(og)}{delim}{self.desc()}"
+        )
+        
+    def nm(
+        self, ge: bool = False, pr: bool = False, og: bool = True,
+    ) -> str:
         """The final statement's **name** that is used by the API.
 
-        This will be the full tag name if a statement tag exists and a
-        parsed/generated tag name otherwise.
+        This will be the full statement name if a tag exists and a
+        parsed/generated name otherwise.
 
         """
+        if ge:
+            return self._nm_ge
+        if pr:
+            return self._nm(og=og)
         if self.cfg.sql.pr_over_ge:
-            return self.nm_pr or self.nm_ge
-        return self.nm_ge
+            return self._nm(og=og) or self._nm_ge
+        return self._nm_ge
 
-    @property
-    def kw(self):
+    def kw(self, ge: bool = False, pr: bool = False):
         """The final statement's **keyword** that is used by the API.
 
-        This will be the provided keyword if a statement tag exists and a
-        parsed/generated keyword otherwise.
+        This will be the provided keyword if a statement wrap exists and a
+        parsed/ge keyword otherwise.
 
         """
+        if ge:
+            return self._kw_ge
+        if pr:
+            return self._kw_pr
         if self.cfg.sql.pr_over_ge:
-            return self.kw_pr or self.kw_ge
-        return self.kw_ge
+            return self._kw_pr or self._kw_ge
+        return self._kw_ge
 
-    @property
-    def obj(self):
+    def obj(self, ge: bool = False, pr: bool = False):
         """The final statement's **object** that is used by the API.
 
-        This will be the object within a tag if a statement tag exists and
-        follows the correct structure and a parsed/generated object otherwise.
+        This will be the object within a wrap if a statement wrap exists and
+        follows the correct structure and a parsed/ge object otherwise.
 
         """
+        if ge:
+            return self._obj_ge
+        if pr:
+            return self._obj_pr
         if self.cfg.sql.pr_over_ge:
-            return self.obj_pr or self.obj_ge
-        return self.obj_ge
+            return self._obj_pr or self._obj_ge
+        return self._obj_ge
 
-    @property
-    def desc(self):
+    def desc(self, ge: bool = False, pr: bool = False):
         """The final statement's **description** that is used by the API.
 
-        This will be the description within a tag if a statement tag exists
-        and follows the correct structure and a parsed/generated description
+        This will be the description within a wrap if a statement wrap exists
+        and follows the correct structure and a parsed/ge description
         otherwise.
 
         """
+        if ge:
+            return self._desc_ge
+        if pr:
+            return self._desc_pr
         if self.cfg.sql.pr_over_ge:
-            return self.desc_pr or self.desc_ge
-        return self.desc_ge
+            return self._desc_pr or self._desc_ge
+        return self._desc_ge
 
-    @property
-    def anchor(self):
+    def _anchor(self, og: bool) -> str:
+        """Constructing 'anchor' from raw attributes if og=False."""
+        return (
+            self._nm_pr
+            if og else
+            f"{self.kw()} {self.obj()}"
+        )
+
+    def anchor(self, ge: bool = False, pr: bool = False):
         """The final statement's **anchor** that is used by the API.
 
-        This will be the anchor within a tag if a statement tag exists
-        and follows the correct structure and a parsed/generated tag name
+        This will be the anchor within a wrap if a statement wrap exists
+        and follows the correct structure and a parsed/ge wrap name
         otherwise.
 
         """
+        if ge:
+            return self._anchor_ge
+        if pr:
+            return self._anchor_pr
         if self.cfg.sql.pr_over_ge:
-            return self.anchor_pr or self.anchor_ge
-        return self.anchor_ge
+            return self._anchor_pr or self._anchor_ge
+        return self._anchor_ge
+
+    def set(self, key, value) -> Name:
+        """Custom attribute setting."""
+        attrs = vars(self)
+        if f"_{key}_pr" in attrs:
+            key = f"_{key}_pr"
+        vars(self)[key] = value
+        return self
 
     def __bool__(self) -> bool:
         return self.is_included
 
     def __str__(self) -> str:
-        return f"statement.Name(nm='{self.nm}')"
+        return f"statement.Name(nm='{self.nm()}')"
 
     def __repr__(self) -> str:
-        return f"statement.Name(nm='{self.nm}')"
+        return f"statement.Name(nm='{self.nm()}')"

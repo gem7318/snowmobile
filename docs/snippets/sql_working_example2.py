@@ -9,7 +9,7 @@ sn1 = snowmobile.connect()
 sn2 = snowmobile.connect()
 
 for sn in [sn1, sn2]:
-    sn.sql.auto_run = False
+    sn.auto_run = False
 
 sn1.ex("create transient table sample_table as select 1 as sample_col")
 

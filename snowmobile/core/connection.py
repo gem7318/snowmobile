@@ -3,7 +3,7 @@
 :xref:`snowmobile`'s object model and a given instance is often shared across
 multiple objects at once.
 
-It is the primary method of executing statements against the warehouse and
+It is the primary method of executing statement against the warehouse and
 it stores the fully parsed & validated ``snowmobile.toml`` file it was
 instantiated with as its :attr:`~snowmobile.core.connection.Snowmobile.cfg`
 attribute.
@@ -33,10 +33,9 @@ from snowmobile.core import ExceptionHandler
 from snowmobile.core.snowframe import SnowFrame
 
 from . import Configuration
-from . import Generic
 
 
-class Snowmobile(Generic):
+class Snowmobile(sql.SQL):
     """Primary method of statement execution and accessor to parsed snowmobile.toml.
 
     Parameters:
@@ -68,30 +67,6 @@ class Snowmobile(Generic):
                 *   Credentials parameters associated with a given alias
                 *   Connection parameters associated with a given alias
 
-
-    Attributes:
-
-        cfg (snowmobile.core.configuration.Configuration):
-            :class:`snowmobile.Configuration` object, which represents a fully
-            parsed/validated `snowmobile.toml` file.
-        con (SnowflakeConnection):
-            :xref:`SnowflakeConnection` object; this attribute is populated
-            when a connection is established and can be `None` if the
-            :class:`Snowmobile` object was instantiated with `delay=True`.
-        sql (snowmobile.core.sql.SQL):
-            A :class:`snowmobile.SQL` object with the current connection
-            embedded; stores command sql commands as utility methods and is
-            heavily leveraged in `snowmobile`'s internals.
-        ensure_alive (bool):
-            Establish a new connection if a method requiring a connection
-            against the database is called while :attr:`alive` is `False`;
-            defaults to `True`.
-        e (ExceptionHandler):
-            A :class:`ExceptionHandler<snowmobile.core.ExceptionHandler`
-            class for orchestrating exceptions across objects; kept as a
-            public attribute on the class as examining its contents can be
-            helpful in debugging database errors.
-
     """
 
     def __init__(
@@ -101,24 +76,29 @@ class Snowmobile(Generic):
         ensure_alive: bool = True,
         config_file_nm: Optional[str] = None,
         from_config: Optional[str, Path] = None,
+        silence: bool = False,
         **connect_kwargs,
     ):
-        super().__init__()
 
-        # Parsed snowmobile.toml
         self.cfg: Configuration = Configuration(
-            creds=creds, config_file_nm=config_file_nm, from_config=from_config
+            creds=creds,
+            config_file_nm=config_file_nm,
+            from_config=from_config,
+            silence=silence,
         )
+        """snowmobile.core.configuration.Configuration: *snowmobile.toml*"""
 
-        # Snowflake Attributes; con = `None` until set by Snowmobile.connect()
+        super().__init__(_query_func=self.query, _cfg=self.cfg)
+        """snowmobile.core.sql.SQL: Generic sql commands."""
+        
         self.con: Optional[SnowflakeConnection] = None
-        self.sql: sql.SQL = sql.SQL(sn=self)
+        """SnowflakeConnection: Can be `None` until set by :meth:`Snowmobile.connect()`"""
 
-        # Exception / Context Management
         self.e: ExceptionHandler = ExceptionHandler(within=self).set(ctx_id=-1)
+        """snowmobile.core.exception_handler.ExceptionHandler: Exception / context management"""
 
-        # Connection
-        self.ensure_alive = ensure_alive
+        self.ensure_alive: bool = ensure_alive
+        """bool: Reconnect to :ref:`Snowflake` if connection is lost"""
 
         if not delay:
             self.connect(**connect_kwargs)
@@ -147,8 +127,7 @@ class Snowmobile(Generic):
                     **kwargs,  # any kwarg over-rides
                 }
             )
-            self.sql = sql.SQL(sn=self)
-            print(f"..connected: {str(self)}")
+            self.cfg._stdout.p(f"..connected: {str(self)}")
             return self
 
         except DatabaseError as e:
@@ -246,8 +225,7 @@ class Snowmobile(Generic):
         """Execute a query and return results.
 
          Default behavior of `results=True` will return results as a
-         :class:`pandas.DataFrame`, otherwise will execute the sql provided
-         with a :class:`SnowflakeCursor` and return the cursor object.
+         :class:`pandas.DataFrame`, otherwise will execute the sql provided          with a :class:`SnowflakeCursor` and return the cursor object.
 
         Args:
             sql (str):
@@ -276,7 +254,7 @@ class Snowmobile(Generic):
             as_df = True
         if as_df + as_cur + as_dcur + as_scalar != 1:
             raise ValueError(
-                "Only one of ('as_df', 'as_cur', 'as_dcur', 'as_scalar')"
+                "Only one of ('as_df', 'as_cur', 'as_dcur', 'as_scalar') "
                 "can evaluate to `True`"
             )
 

@@ -1,5 +1,5 @@
 """
-Tests for tag parsing.
+Tests for wrap parsing.
 """
 import pytest
 
@@ -9,19 +9,21 @@ from test import script as get_script
 # noinspection PyProtectedMember
 def _setup_for_test_tag_from_stripped_line():
     """Gets test cases and generates IDs for statement tags."""
-    # get script with tag test cases
+    # get script with wrap test cases
     script = get_script(script_name="no_tags.sql")
 
-    # remove index from generated tag
+    # remove index from ge wrap
     for s in script._statements_all.values():
         s.incl_idx_in_desc = False
 
     # generate test cases
-    test_cases = [(s.nm_ge, s.nm_pr) for s in script.statements.values()]
+    test_cases = [
+        (s.nm(ge=True), s.nm(pr=True)) for s in script.st.values()
+    ]
 
     # generate IDs test cases/console output
     # ids = [
-    #     f"FirstLine='{s.first_line}',Name='{s.nm}'" for s in script.statements.values()
+    #     f"FirstLine='{s.first_line}',Name='{s.nm}'" for s in script.st.values()
     # ]
     ids = [
         f"nm_ge='{t[1]}', nm_pr='{t[0]}'"
@@ -37,7 +39,7 @@ ids, test_cases = _setup_for_test_tag_from_stripped_line()
 @pytest.mark.names
 @pytest.mark.parametrize("tags", test_cases, ids=ids)
 def test_tag_from_stripped_line(sn, tags):
-    """Testing tag generation from sql statements in no_tags.sql."""
+    """Testing wrap generation from sql st in no_tags.sql."""
     tag_generated, tag_expected = tags
     assert tag_generated == tag_expected
 
@@ -50,7 +52,7 @@ def a_sample_tag(sn):
     # noinspection SqlResolve
     return Name(
         configuration=sn.cfg,
-        nm_pr="test-tag",
+        nm_pr="test-wrap",
         sql="select * from sample_table",
         index=1,
     )
@@ -68,4 +70,4 @@ def test_set_item_on_tag(a_sample_tag):
 @pytest.mark.names
 def test_repr_on_tag(a_sample_tag):
     """Testing __repr__ on Name.."""
-    assert a_sample_tag.__repr__() == "statement.Name(nm='test-tag')"
+    assert a_sample_tag.__repr__() == "statement.Name(nm='test-wrap')"

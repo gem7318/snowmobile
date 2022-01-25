@@ -14,7 +14,6 @@ from test.unit import INPUT_JSON, VALIDATION_SQL
 class SQLUnit(BaseTest):
     """Represents a unit test instance for a method of :class:`snowmobile.SQL`.
     """
-
     base: Any = Field(description="An instantiated instance of the SQL class.")
     base_attrs: Dict = Field(
         description="A dictionary of attributes to set on the SQL instance before running test."
@@ -70,7 +69,7 @@ class SQLUnit(BaseTest):
             else ""
         )
         return (
-            f"sql({init_args}).{self.method}({method_args})  # {self.value_expected_id}"
+            f"#{self.value_expected_id}: sql({init_args}).{self.method}({method_args})"
         )
 
 
@@ -87,7 +86,7 @@ def setup_for_sql_module_unit_tests():
             statement_test_cases_as_dict = {int(k): v for k, v in json.load(r).items()}
         # import expected outputs from .sql
         statements_to_validate_against: Dict[int, snowmobile.Statement] = (
-            script(script_name=VALIDATION_SQL).statements
+            script(script_name=VALIDATION_SQL).st
         )
 
     except (IOError, TypeError) as e:
@@ -100,7 +99,7 @@ def setup_for_sql_module_unit_tests():
 
     # instantiate a connector object, connection omitted
     sn = snowmobile.connect(creds=CREDS, config_file_nm=CONFIG_FILE_NM, delay=True)
-    sn.sql.auto_run = False  # turning off so `run=False` is imposed for test
+    sn.auto_run = False  # turning off so `run=False` is imposed for test
 
     for test_idx in shared_unit_test_ids:
 
@@ -108,11 +107,11 @@ def setup_for_sql_module_unit_tests():
         arguments_to_instantiate_test_case_with = statement_test_cases_as_dict[test_idx]
 
         # required value for test to pass
-        str_of_sql_to_validate_test_with = statements_to_validate_against[test_idx].sql
+        str_of_sql_to_validate_test_with = statements_to_validate_against[test_idx].sql()
 
         yield SQLUnit(
             cfg=sn.cfg,
-            base=sn.sql._reset(),
+            base=sn._reset(),
             **arguments_to_instantiate_test_case_with,
             value_expected=str_of_sql_to_validate_test_with,
             value_expected_id=test_idx,
@@ -134,6 +133,7 @@ def test_sql_module_unit_tests(sql_unit_test):
 
 
 @pytest.mark.sql
+@pytest.mark.skip(msg='old-functionality: needs refactor')
 def test_defaults(sn_delayed):
     """Test default values on an instance of :class:`SQL`."""
     # arrange

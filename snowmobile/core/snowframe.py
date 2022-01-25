@@ -146,7 +146,7 @@ class SnowFrame(Generic):
         )
 
     def lower(self, col: Optional[str] = None) -> pd.DataFrame:
-        """Lower cases all column names **or** all values within `col` if provided."""
+        """Lower cases all column names **or** all values within `col` if pr."""
         if col:
             self._obj[col] = self._obj[col].apply(lambda x: str(x).lower())
         else:
@@ -156,7 +156,7 @@ class SnowFrame(Generic):
         return self._obj
 
     def upper(self, col: Optional[str] = None) -> pd.DataFrame:
-        """Upper cases all column names **or** all values within `col` if provided."""
+        """Upper cases all column names **or** all values within `col` if pr."""
         if col:
             self._obj[col] = self._obj[col].apply(lambda x: str(x).lower())
         else:

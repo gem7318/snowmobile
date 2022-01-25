@@ -1,58 +1,29 @@
 (usage/script)=
 # Script
-<!--suppress ALL -->
 <hr class="sn-grey">
 <a
-    class="sphinx-bs badge badge-primary text-white reference external sn-api sn-link-container2"
-    href="../autoapi/snowmobile/core/script/index.html"
-    title="API Documentation">
-    <span>snowmobile.core.script</span>
+   class="sphinx-bs badge badge-primary text-white reference external sn-api sn-link-container2"
+   href="../autoapi/snowmobile/core/script/index.html"
+   title="API Documentation">
+   <span>snowmobile.core.script</span>
 </a>
 
-```{admonition} Warning: This page is incomplete.
- :class: error, sn-inherit-overflow
- &nbsp;
-```
-
-```{div} sn-dedent-v-b-h
-{class}`snowmobile.Script` parses a raw sql file into a composition of objects 
-that can be leveraged for:
-```
-```{div} sn-indent-h-cell-left-m, sn-block-list
->Documentation and standardization of sql
-> 
->Access to individual statements within a script
-> 
->Lightweight control flow and QA
-> 
->Code generation and warehouse cleanup
-```
+ ```{div} sn-dedent-v-b-h
+ {class}`snowmobile.Script` parses a raw sql file into a composition of objects 
+ that can be leveraged for:
+ ```
+ ```{div} sn-indent-h-cell-left-m, sn-block-list
+ >Documentation and standardization of sql
+ > 
+ >Access to individual statements within a script
+ > 
+ >Lightweight control flow and QA
+ > 
+ >Code generation and warehouse cleanup
+ ```
 
 <hr class="sn-spacer-thick">
 <hr class="sn-grey">
-<hr class="sn-spacer-thick">
-
-````{admonition} Simplest Execution Mechanism
-:class: tip, toggle, sn-code-pad
-
- ```{div} sn-unset-code-margins
- [](#script) is useful for operating on deep, analytic sql that is otherwise 
- difficult to manage; *the {xref}`execute_stream() method` 
- from the {xref}`snowflake.connector2` is the most straight-forward way to
- execute a raw sql file,* the API for which can be accessed from an instance of 
- <a class="fixture-sn" href="../index.html#fixture-sn"></a> with: 
- ```
- ```{code-block} python
- :emphasize-lines: 4,4
- from codecs import open
- 
- with open(sqlfile, 'r', encoding='utf-8') as f:
-    for cur in sn.con.execute_stream(f):
-        for ret in cur:
-            print(ret)
- ```
-
-````
 
 <hr class="sn-spacer-thick">
 
@@ -62,9 +33,10 @@ that can be leveraged for:
 ## Overview
 
 ```{div} sn-dedent-list
-- [](script/model-intro)
-  - [](script/model-intro/core-objects)
-  - [Sections & Markup](script/model-intro/sections-markup)
+- [](script/model)
+  - [](script/model/crash-course)
+  - [](script/model/core-objects)
+  - [Sections & Markup](script/model/sections-markup)
 - [](#statements)
   - [Quick Intro](script/statements/quick-intro)
   - [Statement Names](script/statements/statement-names)
@@ -76,34 +48,151 @@ that can be leveraged for:
   - [](#patterns)
 ```
 
+<hr class="sn-spacer-thick">
+
+````{admonition} Note: If you're just wanting to run some sql
+:class: note, toggle, sn-code-pad, sn-clear-title, sn-subtle-background-blue
+
+ ```{div} sn-unset-code-margins
+ *The most straight-forward way to execute a local sql file is
+ through the {xref}`SnowflakeConnection.execute_stream()` method*,
+ the API for which can be accessed from an instance of <a class="fixture-sn" href="../index.html#fixture-sn"></a> with: 
+ ```
+ ```{code-block} python
+ import snowmobile
+ 
+ from codecs import open
+ 
+ sn = snowmobile.connect()
+ with open(sqlfile, 'r', encoding='utf-8') as f:
+    for cur in sn.con.execute_stream(f):
+        for ret in cur:
+            print(ret)
+ ```
+
+````
+
 <hr class="sn-spacer-thick2">
 
 <body>
  <div class="sn-section-parent">
 
- (script/model-intro)=
+ (script/model)=
  ### Model Intro
  ---
 
  <div class="sn-section-connector">&nbsp;</div>
- <div class="sn-section">
+ <div class="sn-section toggle toggle-shown">
 
- (script/model-intro/script)=
- #### Script
+ <hr class="sn-spacer-thick2">
+
+ `````{admonition} **intro1.sql**
+ :class: toggle, sn-fixture, sn-fixture-local, sn-unset-margins, sn-block, sn-code-pad, toggle-shown
+ 
+ ````{div} sn-pre-code-s
+ This section creates a [](#script) from the following file, *intro1.sql*, 
+ containing 3 bare sql statements:
+ ````
+ ```{literalinclude} ../snippets/script/intro/intro1.sql
+ :language: sql
+ :lines: 1-10
+ :emphasize-lines: 3, 8, 10
+ ```
+ ```{div} sn-snippet
+ [{fa}`file-code-o` intro1.sql](../snippets.md#intro1sql)
+ ```
+ `````
+
+ <hr class="sn-spacer-thick">
+
+ (script/model/crash-course)=
+ #### Crash Course
  ----
 
   <div class="sn-sub1 sn-dedent-sub">
+  <hr class="sn-sub-h4">
 
- ```{admonition} Missing
-  :class: error, sn-inherit-overflow
-  &nbsp;
+<br>
+
+
+ ##### Creating a Script
+ ``````{tabbed} snowmobile.Script(path=path)
+ :class-content: sn-light-shadow
+ :class-label: sn-tabbed-stack
+
+ [snowmobile.Script](#script) identifies sql and metadata in a sql file; 
+ assuming *path* is a full path to
+ <a class="sn-local-fixture" href="./script.html#script-model-crash-course">
+  <span>intro1.sql</span>
+ </a>, **script** can be created with:
+ ```{literalinclude} ../snippets/script/intro/intro1.py
+ :language: python
+ :lines: 18-20
  ```
 
+ Each command is instantiated as its own
+ {class}`Statement<snowmobile.core.statement.Statement>` and stored according
+ to its position in the original script;
+ {meth}`script.dtl()<snowmobile.Script.dtl()>` is used to send a summary
+ of the contents parsed by **script** to the console:
+ ```{literalinclude} ../snippets/script/intro/intro1.py
+ :language: python
+ :lines: 23-23
+ ```
+ ````{div} sn-output
+ ```{literalinclude} ../snippets/script/intro/intro1.py
+ :language: python
+ :lines: 26-30
+ ```
+ ````
 
+ `````{admonition} FYI
+ :class: note, sn-inline-block-container, sn-clear-title, sn-free-margin, sn-subtle-background-black
+ {meth}`script.dtl()<snowmobile.Script.dtl()>` is generating its \
+ output with something like:
+ 
+ <hr class="sn-spacer-ultra-thin">
+ 
+ ```{literalinclude} ../snippets/script/intro/intro1.py
+ :language: python
+ :lines: 34-35
+ ```
+ ````{div} sn-output
+ ```{literalinclude} ../snippets/script/intro/intro1.py
+ :language: python
+ :lines: 38-40
+ ```
+ ````
+ <hr class="sn-spacer-thick">
+ `````
+ ``````
+ ``````{tabbed} Instantiating from raw sql
+ :class-content: sn-light-shadow
+ :class-label: sn-tabbed-stack
+ ```{admonition} Missing Content
+ :class: error
+ &nbsp;
+ ```
+ ``````
+ 
+ <hr class="sn-spacer-thick">
+
+
+
+ ```{div} sn-pre-code-s
+ Because these are bare sql statements..
+ ```
+ ```{literalinclude} ../snippets/script/intro/intro1.py
+ :language: python
+ :lines: 44-50
+ ```
+
+  <br>
  </div>
  <br>
+ 
 
- (script/model-intro/core-objects)=
+ (script/model/core-objects)=
  #### Core Objects
  ----
 
@@ -133,32 +222,22 @@ that can be leveraged for:
   
  ````
 
- These can be used to clearly define the following within a sql script:
- ```{div} sn-caret-list, sn-blue-list
- - Setup / DDL commands
- - Processing / DML commands
- - Descriptive / contextual statements
- - Simple QA checks
- - Tear-down / drop commands 
- - Statement-level context 
- - Script-level information
- ```
-
- The zen of the class is to enable unambiguously denoting text and code
- that serve a purpose within a sql script; in particular, implemented in a way 
- that is easily identifiable/human-readable, can be post-processed 
- programmatically, and allows for other content to exist within the file that 
- is ignored by {xref}`snowmobile`.
-
  ```{admonition} Note
  :class: note, sn-indent-h-cell-left-m, sn-indent-h-cell-right-m
- [](#script) intentionally ignores **all** comments that are not part of a [tag](#tags). 
+ The simple zen is to enable the consistent, <u>clear</u> annotation of
+ sql in a way that is: \
+ **(1)** easily human-readable / writable \
+ **(2)** syntactically (& idiomatically) compliant \
+ **(3)** identifiable and parsable by {xref}`snowmobile`
+ 
+ **To that end, [snowmobile.Script](#script) intentionally 
+ ignores <u>all</u> comments that are not part of a [tag](#tags)**. 
  ```
 
  </div>
  <br>
 
- (script/model-intro/sections-markup)=
+ (script/model/sections-markup)=
  #### Sections & Markup
  ----
 
@@ -298,7 +377,7 @@ that can be leveraged for:
  ````{tabbed} intro.sql
  ```{literalinclude} ../snippets/script/.snowmobile/intro/intro.sql
  :language: sql
- :lines: 1-18
+ :lines: 1-17
  ```
  ```` 
  
@@ -319,7 +398,6 @@ that can be leveraged for:
 
  <div class="sn-section-connector">&nbsp;</div>
  <div class="sn-section toggle toggle-shown">
-
 
 <hr class="sn-spacer-thick2">
 
@@ -348,7 +426,7 @@ that can be leveraged for:
  [overview.sql](script/statements/quick-intro) are arbitrary and chosen based only 
  on the loose criteria of:
  ```{div} sn-bold-list
- 1.  Includes the minimum variety of [Statements](#statements) and [](#markup) 
+ 1.  Includes the minimum variety of [Statements](#st) and [](#markup) 
      to demonstrate the fundamentals of how [](#script) parses sql
  1.  Is executable from top to bottom without requiring external setup
  ```
@@ -411,8 +489,8 @@ that can be leveraged for:
  ```
  
  ```{div} sn-pre-code-s, sn-post-code
- A {class}`~snowmobile.core.Statement` can be interacted with from its parent
- [](#script) or stored and interacted with independently; for 
+ A {class}`~snowmobile.core.Statement` can be interacted with off the
+ [](#script) or stored and used independently; for 
  example, here are two ways that the first statement in 
  [overview.sql](script/statements/quick-intro) can be executed: 
  ```
@@ -479,7 +557,7 @@ that can be leveraged for:
  which its final value is sourced.
 
  (script/note1)=
- *Generated* attributes are populated for all statements, whereas only those
+ *Generated* attributes are populated for all st, whereas only those
  with a name specified in a [tag](#tags) have populated *provided* attributes;
  consequently, a *provided* value takes precedent over its *generated* counterpart. 
  
@@ -666,8 +744,7 @@ that can be leveraged for:
         "with" = "select"
  ```
  The default included above is the reason that the
- {attr}`~snowmobile.core.name.Name.kw` for both the following statements
- is `select` as opposed to `select` and `with` respectively:
+ {attr}`~snowmobile.core.name.Name.kw` for both the following statements  is `select` as opposed to `select` and `with` respectively:
  ```{literalinclude} ../snippets/script/keyword_exceptions.sql
  :language: sql
  :lines: 3-10
@@ -706,8 +783,7 @@ that can be leveraged for:
  
  ```{code-block} toml
     named-objects = [
-        # 'grant' statements
-        "select",
+        # 'grant' statements         "select",
         "all",
         "drop",
 
@@ -937,15 +1013,14 @@ that can be leveraged for:
  ```{div} sn-hanging-p
  Using markup within a script enables:
  ```
- - Defining accessors for individual statements
- - Adding descriptive information to individual statements or to the script itself
+ - Defining accessors for individual statements  - Adding descriptive information to individual statements or to the script itself
  - Finer-grained control of the script's execution
  - Generating documentation and cleansed sql files from the working version of a script
 
  ```{div} sn-dedent-v-b-h
  {xref}`snowmobile` introduces two sql-compliant forms of adding markup to a sql file:
  ```
- 1. [Tags](#tags) enable constructing collections of attributes amidst sql statements, including
+ 1. [Tags](#tags) enable constructing collections of attributes amidst sql st, including
  those directly associated with a particular statement
  2. [Markers](#markers) are a collection of attributes that are **not** associated with a
  particular statement
@@ -978,7 +1053,7 @@ that can be leveraged for:
 
 `````{tabbed} +
 
- Consider the sql file, *tags_single-line.sql*, containing two statements, the first and second of which have valid and invalid
+ Consider the sql file, *tags_single-line.sql*, containing two st, the first and second of which have valid and invalid
  single-line tags respectively:
  ````{div} sn-inline-flex-container
  ```{literalinclude} ../snippets/script/tags_single-line.sql

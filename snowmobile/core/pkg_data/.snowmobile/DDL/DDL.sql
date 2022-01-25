@@ -1,8 +1,8 @@
 /*: ---------------------------------------------------------------------------
   * This file was stripped of all comments and exported by snowmobile.
 
-  * The tags above each statement either reflect a user-defined tag
-    or a tag that was generated in the absence of one.
+  * The tags above each statement either reflect a user-defined wrap
+    or a wrap that was generated in the absence of one.
 
   * For more information see: https://github.com/GEM7318/snowmobile
 --------------------------------------------------------------------------- :*/
@@ -10,9 +10,9 @@
 /*-
 __DDL.sql__
 __description***:
-This script stores the default DDL statements utilized by Snowmobile.
+This script stores the default DDL statement utilized by Snowmobile.
 - The statement tags include all components (keyword, object, and description) in order to be
-able to add additional statements as time progresses without worrying about creating duplicate tag names
+able to add additional statements as time progresses without worrying about creating duplicate wrap names
 	- For clarity, this is why the first statement below is titled _create-file format~snowmobile_default_psv_ as
 opposed to just _snowmobile_default_psv_.
 -*/

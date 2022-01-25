@@ -35,7 +35,7 @@ def test_using_from_str_instantiation(sn_delayed):
         sql=ANY_PIECE_OF_SQL,
         path=ANY_VALID_DIRECTORY / ANY_SCRIPT_NAME,
     )
-    assert script.source == ANY_PIECE_OF_SQL  # then 1.1
+    assert script.source() == ANY_PIECE_OF_SQL  # then 1.1
     assert script.path == ANY_VALID_DIRECTORY / ANY_SCRIPT_NAME  # then 1.2
 
     with pytest.raises(ValueError):  # then 2.1

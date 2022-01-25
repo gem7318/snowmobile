@@ -70,18 +70,6 @@ def strip(
     return "\n".join(splitter)
 
 
-# -- arg_to_list test cases
-# input_to_expected = [
-#     (
-#         """['.*_ignore', "ignore.*",'dummy pattern']""",
-#         ['.*_ignore', 'ignore.*', 'dummy pattern']
-#     ),
-# ]
-# for item in input_to_expected:
-#     input, expected = item
-#     assert arg_to_list(input) == expected
-
-
 def dict_flatten(
     attrs: dict,
     delim: Optional[str] = None,
@@ -112,9 +100,9 @@ def dict_flatten(
             1.  A string of the indentation to use; for 1st-level attributes,
                 this will just be the `bullet_char`.
             2.  The fully stratified key, including parents; for 1st-level
-                attributes this will mirror the original key that was provided.
+                attributes this will mirror the original key that was pr.
             3.  The value of the associated key; this will always mirror the
-                value that was provided.
+                value that was pr.
 
     """
     flattened = list()

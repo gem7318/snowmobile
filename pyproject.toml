@@ -1,3 +1,5 @@
+# -- snowmobile: pyproject.toml --
+
 [build-system]
 requires = ["flit_core >=2,<4",]
 build-backend = "flit_core.buildapi"
@@ -35,6 +37,31 @@ Code = "https://github.com/GEM7318/Snowmobile"
 [tool.flit.sdist]
 include = ["snowmobile/.*"]
 
+[tool.pytest.ini_options]
+testpaths = 'test'
+python_files = 'test_*.py'
+python_functions = 'test_*'
+markers = [
+    'cache',              # snowmobile/core/cache.py
+    'configuration',      # snowmobile/core/configuration.py
+    'connector',          # snowmobile/core/connection.py
+    'exception_handler',  # snowmobile/core/exception_handler.py
+    'exceptions',         # snowmobile/core/errors.py
+    'io',                 # snowmobile/core/configuration.py
+    'markers',            # snowmobile/core/script.py
+    'markup',             # snowmobile/core/script.py
+    'names',              # snowmobile/core/name.py
+    'parsing',            # snowmobile/core/script.py, snowmobile/core/statement.py
+    'qa',                 # snowmobile/core/qa.py
+    'scope',              # snowmobile/core/scope.py
+    'script',             # snowmobile/core/script.py
+    'sql',                # snowmobile/core/sql.py
+    'statement',          # snowmobile/core/statement.py
+    'table',              # snowmobile/core/statement.py
+    'tags',               # snowmobile/core/wrap.py
+]
+
+
 [tool.isort]
 profile = "black"
 src_paths = ["snowmobile", "tests"]
@@ -43,31 +70,6 @@ multi_line_output = 3
 include_trailing_comma = true
 float_to_top = true
 sections = ['FUTURE', 'STDLIB', 'THIRDPARTY', 'AIRFLOW', 'FIRSTPARTY', 'LOCALFOLDER']
-
-[tool.pytest.ini_options]
-testpaths = 'test'
-python_files = 'test_*.py'
-python_functions = 'test_*'
-markers = [
-    'script',
-    'tags',
-    'names',
-    'markers',
-    'connector',
-    'qa',
-    'table',
-    'markup',
-    'configuration',
-    'sql',
-    'parsing',
-    'cache',
-    'statement',
-    'scope',
-    'exceptions',
-    'exception_handler',
-    'io',
-]
-
 
 [tool.coverage]
 
@@ -100,7 +102,7 @@ docs = [
     'astroid==2.4.2',
     'async-generator==1.10',
     'atomicwrites==1.4.0',
-    'attrs==19.3.0',
+#    'tag==19.3.0',
     'auditwheel==3.1.1',
     'azure-common==1.1.25',
     'azure-core==1.8.2',

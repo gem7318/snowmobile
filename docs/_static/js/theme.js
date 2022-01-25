@@ -48,7 +48,7 @@ if (isEnabled === true) {
 // Stop watching for system color scheme.
 // DarkReader.auto(false);
 
-// Get the generated CSS of Dark Reader returned as a string.
+// Get the ge CSS of Dark Reader returned as a string.
 // const CSS = DarkReader.exportGeneratedCSS();
 
 // Check if Dark Reader is enabled.

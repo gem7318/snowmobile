@@ -41,13 +41,13 @@ Header-levels and formatting of tagged information is configured in the
                                   *[this is just a blank canvas of markdown..]
                                   *[..but this is configurable]
 
-        ## (1) create-table~dummy_name *[statements get 'h2' level headers]
+        ## (1) create-table~dummy_name *[st get 'h2' level headers]
         ----
 
         - **Tag1**: Value1       *[tags can also be validations arguments..
         - **Arg1**: Val2          [that snowmobile will run on the sql results]
 
-        **Description**          *[statements get one of these too]
+        **Description**          *[st get one of these too]
 
         **SQL**                  *[their rendered sql does as well]
             ...sql
@@ -64,6 +64,8 @@ Header-levels and formatting of tagged information is configured in the
 
 """
 from __future__ import annotations
+
+import re
 
 from typing import Dict, List, Optional, Tuple
 
@@ -210,9 +212,6 @@ class Item(Name):
             _w_s, _w_e = f"{_w_s}\n", f"\n{_w_e}"
         _res = results_sub.to_markdown(index=False, tablefmt=_format)
         return f"\n{_w_s}{_res}{_w_e}\n"
-        # return _res
-        # return f"\n{results_sub.to_markdown(index=False)}\n"
-        # return f"\n```\n{_res}\n```\n"
 
     @property
     def _as_md_parent(self):
@@ -270,7 +269,7 @@ class Section(Generic):
     In order to include execution metadata if available without sacrificing
     base-case parsing, the below implementation heavily relies
     properties over attributes to reconcile what's populated in
-    the :attr:`~snowmobile.Script.statements` vs
+    the :attr:`~snowmobile.Script.st` vs
     :attr:`~snowmobile.Script.executed` attributes of
     :class:`~snowmobile.core.Script`.
 
@@ -285,7 +284,7 @@ class Section(Generic):
         parsed (dict):
             Parsed arguments from the statement or marker within the script.
         raw (str):
-            Raw tag as :attr:`parsed` was parsed from.
+            Raw wrap as :attr:`parsed` was parsed from.
         sql (str):
             Statement's raw sql or *None* if marker.
         results (pd.DataFrame):
@@ -328,7 +327,8 @@ class Section(Generic):
         self.results = results if not self.transpose else results.transpose()
         if self.transpose and not self.results.empty:
             self.results.reset_index(inplace=True)
-            self.results.columns = ['field name', 'field value']
+            if self.results.shape[1] == 2:
+                self.results.columns = ['field name', 'field value']
         self.index: int = index
         self.raw = raw or str()
         self.incl_sql_tag = incl_sql_tag
@@ -413,8 +413,9 @@ class Section(Generic):
             sql = f"{sql};"
         if self.is_marker and not self.incl_sql_tag:
             return str()
-        char = "\n"
-        return f"```sql\n{sql.strip(char)}\n```"
+        char = '\n'
+        repl = '\t'
+        return f"```sql\n{re.sub(repl, '  ', sql.strip(char))}\n```"
 
     @property
     def body(self) -> str:

@@ -26,16 +26,16 @@ from an_example_table a;
 @pytest.mark.statement
 def test_statement_number_of_lines(sample_statement_object):
     """Tests the statement.lines property."""
-    assert sample_statement_object.lines == 3
+    assert len(sample_statement_object) == 3
 
 
 @pytest.mark.statement
 def test_multiline_attributes_without_a_name_causes_error(sample_statement_object):
-    """Verifies that a multiline tag without a '__name:' argument will raise an error."""
+    """Verifies that a multiline wrap without a '__name:' argument will raise an error."""
     from snowmobile.core.errors import InvalidTagsError
 
     multiline_tag_without_a_name_argument = """
-__description: This is an example of a multiline tag that will cause an error.
+__description: This is an example of a multiline wrap that will cause an error.
 """
 
     # given
@@ -66,7 +66,7 @@ def test_calling_run_with_results_on_invalid_sql_raises_database_error(
 
     # given
     an_invalid_sql_statement = "select * from *"
-    sample_statement_object.set_sql(sql=an_invalid_sql_statement)
+    sample_statement_object.sql(set_as=an_invalid_sql_statement)
 
     # then
     with pytest.raises(DatabaseError):
